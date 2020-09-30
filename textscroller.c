@@ -41,17 +41,17 @@ WORD fsmTextScroller(void){
 void initTextScroller(void){
     UWORD colortable0[] = { BLACK, RED, GREEN, BLUE, BLACK, RED, GREEN, BLUE };
     BYTE i = 0;
-    writeLog("\n== Initialize View: BallBlob ==\n");
+    writeLog("\n== Initialize View: TextScroller ==\n");
 
-    //Load Boingball Blob Sprite and its Colors
+    //Load Charset Sprite and its Colors
     ballBlob = loadBlob("img/ball_207_207_3.RAW", VIEW_TEXTSCROLLER_DEPTH, 
             VIEW_TEXTSCROLLER_BALL_WIDTH, VIEW_TEXTSCROLLER_BALL_HEIGHT);
     if(ballBlob == NULL){
-        writeLog("Error: Payload BallBlob, could not load ball blob\n");
+        writeLog("Error: Payload TextScroller, could not load ball blob\n");
         exitTextScroller();
         exitSystem(RETURN_ERROR); 
     }
-    writeLogFS("Ballblob BitMap: BytesPerRow: %d, Rows: %d, Flags: %d, pad: %d\n",
+    writeLogFS("TextScroller BitMap: BytesPerRow: %d, Rows: %d, Flags: %d, pad: %d\n",
             ballBlob->BytesPerRow, ballBlob->Rows, ballBlob->Flags, 
             ballBlob->pad);
     loadColorMap("img/ball_207_207_3.CMAP", colortable0, VIEW_TEXTSCROLLER_COLORS); 
