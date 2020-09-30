@@ -16,13 +16,13 @@ int main(void)
         switch(fsmCurrentState){
             case FSM_START:
                 initSystem(TRUE);
-                fsmNextState = FSM_BALLBLOB;
+                fsmNextState = FSM_TEXTSCROLLER;
                 break;
             
-            case FSM_BALLBLOB:
-                moduleStatus = fsmBallBlob();
+            case FSM_TEXTSCROLLER:
+                moduleStatus = fsmTextScroller();
                 if(moduleStatus==MODULE_CONTINUE){
-                    fsmNextState = FSM_BALLBLOB;
+                    fsmNextState = FSM_TEXTSCROLLER;
                 }
                 else{
                     fsmNextState = FSM_STOP;
