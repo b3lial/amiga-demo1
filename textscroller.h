@@ -21,4 +21,6 @@ void initTextScroller(void);
 BOOL executeTextScroller(void);
 void exitTextScroller(void);
 
+void displayText(struct BitMap* src, struct BitMap* dest, char* text);
+
 #endif

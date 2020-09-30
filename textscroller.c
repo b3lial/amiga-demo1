@@ -1,6 +1,8 @@
 #include "textscroller.h"
 
 #include <stdio.h>
+#include <ctype.h>
+
 #include <exec/types.h>
 #include <proto/graphics.h>
 #include <proto/exec.h>
@@ -74,7 +76,7 @@ void initTextScroller(void){
     addViewPort(textscrollerScreen, NULL, colortable0, VIEW_TEXTSCROLLER_COLORS, 
             0, 0, VIEW_TEXTSCROLLER_WIDTH, VIEW_TEXTSCROLLER_HEIGHT);
 
-    //Copy Ball into ViewPort
+    //Copy Text into ViewPort
     BltBitMap(fontBlob, 0, 0, textscrollerScreen, 10, 10, VIEW_TEXTSCROLLER_FONT_WIDTH,
             VIEW_TEXTSCROLLER_FONT_HEIGHT, 0xC0, 0xff, 0);
 
@@ -95,4 +97,20 @@ void exitTextScroller(void){
     stopView();
     cleanBitMap(textscrollerScreen);
     cleanBitMap(fontBlob);
+}
+
+/**
+ * Display text on screen using font provided in src bitmap
+ */
+void displayText(struct BitMap* src, struct BitMap* dest, char* text){
+	BYTE len = strlen(text);
+	BYTE i;
+
+	for(i=0;i<len;i++){
+		char currentChar = tolower(text[i]);
+		if(currentChar < 'a' || currentChar > 'z'){
+			writeLogFS("displayText: letter %s not supported, skipping\n", currentChar);
+			continue;
+		}
+	}
 }
