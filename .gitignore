@@ -1,0 +1,13 @@
+.cproject
+.project
+.settings/
+demo-1-gcc
+demo-1-sasc
+*.uaem
+*.lnk
+*.info
+tags
+*.o
+starlight-gcc-build
+starlight-sasc-build
+starlight-demo
