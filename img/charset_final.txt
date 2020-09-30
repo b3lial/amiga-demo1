@@ -1,0 +1,2 @@
+letters: A - Z
+Size: 288x160x3
