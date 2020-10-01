@@ -81,7 +81,8 @@ void initTextScroller(void) {
 			0, 0, VIEW_TEXTSCROLLER_WIDTH, VIEW_TEXTSCROLLER_HEIGHT);
 
 	//Copy Text into ViewPort
-	displayText("hi curly", 10, 10);
+	displayText("hi cs", 0, 10);
+	displayText("vx rulez", 0, 60);
 
 	//Make View visible
 	startView();
@@ -151,12 +152,12 @@ void displayCharacter(char letter, WORD *xPos, WORD *yPos) {
 		case 's': xSize = 39; ySize = 33; characterPosInFontX = 161; characterPosInFontY = 80; break;
 		case 't': xSize = 39; ySize = 33; characterPosInFontX = 201; characterPosInFontY = 80; break;
 		case 'u': xSize = 39; ySize = 33; characterPosInFontX = 241; characterPosInFontY = 80; break;
-		case 'v': xSize = 39; ySize = 33; characterPosInFontX = 1; characterPosInFontY = 12; break;
+		case 'v': xSize = 39; ySize = 33; characterPosInFontX = 1; characterPosInFontY = 120; break;
 		case 'w': xSize = 39; ySize = 33; characterPosInFontX = 41; characterPosInFontY = 120; break;
 		case 'x': xSize = 39; ySize = 33; characterPosInFontX = 81; characterPosInFontY = 120; break;
 		case 'y': xSize = 39; ySize = 33; characterPosInFontX = 121; characterPosInFontY = 120; break;
-		case 'z': xSize = 39; ySize = 33; characterPosInFontX = 201; characterPosInFontY = 120; break;
-		case ' ': xSize = 39; ySize = 33; characterPosInFontX = 241; characterPosInFontY = 120; break;
+		case 'z': xSize = 39; ySize = 33; characterPosInFontX = 161; characterPosInFontY = 120; break;
+		case ' ': xSize = 39; ySize = 33; characterPosInFontX = 201; characterPosInFontY = 120; break;
 		default: return;
 	}
 
