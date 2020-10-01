@@ -21,6 +21,7 @@ void initTextScroller(void);
 BOOL executeTextScroller(void);
 void exitTextScroller(void);
 
-void displayText(struct BitMap* src, struct BitMap* dest, char* text);
+void displayText(char *text, WORD xPos, WORD yPos);
+void displayCharacter(char letter, WORD *xPos, WORD *yPos);
 
 #endif
