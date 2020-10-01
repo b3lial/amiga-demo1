@@ -130,37 +130,40 @@ void displayCharacter(char letter, WORD *xPos, WORD *yPos) {
 
 	//get size and position in font of corresponding character
 	switch(letter){
-		case 'a': xSize = 39; ySize = 30; characterPosInFontX = 1; characterPosInFontY = 0; break;
-		case 'b': xSize = 39; ySize = 30; characterPosInFontX = 41; characterPosInFontY = 0; break;
-		case 'c': xSize = 39; ySize = 30; characterPosInFontX = 81; characterPosInFontY = 0; break;
-		case 'd': xSize = 39; ySize = 30; characterPosInFontX = 121; characterPosInFontY = 0; break;
-		case 'e': xSize = 39; ySize = 30; characterPosInFontX = 161; characterPosInFontY = 0; break;
-		case 'f': xSize = 39; ySize = 30; characterPosInFontX = 201; characterPosInFontY = 0; break;
-		case 'g': xSize = 39; ySize = 30; characterPosInFontX = 241; characterPosInFontY = 0; break;
-		case 'h': xSize = 39; ySize = 30; characterPosInFontX = 1; characterPosInFontY = 40; break;
-		case 'i': xSize = 39; ySize = 30; characterPosInFontX = 41; characterPosInFontY = 40; break;
-		case 'k': xSize = 39; ySize = 30; characterPosInFontX = 81; characterPosInFontY = 40; break;
-		case 'l': xSize = 39; ySize = 30; characterPosInFontX = 121; characterPosInFontY = 40; break;
-		case 'm': xSize = 39; ySize = 30; characterPosInFontX = 161; characterPosInFontY = 40; break;
-		case 'n': xSize = 39; ySize = 30; characterPosInFontX = 201; characterPosInFontY = 40; break;
-		case 'o': xSize = 39; ySize = 30; characterPosInFontX = 241; characterPosInFontY = 40; break;
-		case 'p': xSize = 39; ySize = 30; characterPosInFontX = 1; characterPosInFontY = 80; break;
-		case 'q': xSize = 39; ySize = 30; characterPosInFontX = 41; characterPosInFontY = 80; break;
-		case 'r': xSize = 39; ySize = 30; characterPosInFontX = 81; characterPosInFontY = 80; break;
-		case 's': xSize = 39; ySize = 30; characterPosInFontX = 121; characterPosInFontY = 80; break;
-		case 't': xSize = 39; ySize = 30; characterPosInFontX = 161; characterPosInFontY = 80; break;
-		case 'u': xSize = 39; ySize = 30; characterPosInFontX = 201; characterPosInFontY = 80; break;
-		case 'v': xSize = 39; ySize = 30; characterPosInFontX = 241; characterPosInFontY = 80; break;
-		case 'w': xSize = 39; ySize = 30; characterPosInFontX = 1; characterPosInFontY = 120; break;
-		case 'x': xSize = 39; ySize = 30; characterPosInFontX = 41; characterPosInFontY = 120; break;
-		case 'y': xSize = 39; ySize = 30; characterPosInFontX = 81; characterPosInFontY = 120; break;
-		case 'z': xSize = 39; ySize = 30; characterPosInFontX = 121; characterPosInFontY = 120; break;
-		case ' ': xSize = 39; ySize = 30; characterPosInFontX = 161; characterPosInFontY = 120; break;
+		case 'a': xSize = 39; ySize = 33; characterPosInFontX = 1; characterPosInFontY = 0; break;
+		case 'b': xSize = 39; ySize = 33; characterPosInFontX = 41; characterPosInFontY = 0; break;
+		case 'c': xSize = 39; ySize = 33; characterPosInFontX = 81; characterPosInFontY = 0; break;
+		case 'd': xSize = 39; ySize = 33; characterPosInFontX = 121; characterPosInFontY = 0; break;
+		case 'e': xSize = 39; ySize = 33; characterPosInFontX = 161; characterPosInFontY = 0; break;
+		case 'f': xSize = 39; ySize = 33; characterPosInFontX = 201; characterPosInFontY = 0; break;
+		case 'g': xSize = 39; ySize = 33; characterPosInFontX = 241; characterPosInFontY = 0; break;
+		case 'h': xSize = 39; ySize = 33; characterPosInFontX = 1; characterPosInFontY = 40; break;
+		case 'i': xSize = 39; ySize = 33; characterPosInFontX = 41; characterPosInFontY = 40; break;
+		case 'j': xSize = 39; ySize = 33; characterPosInFontX = 81; characterPosInFontY = 40; break;
+		case 'k': xSize = 39; ySize = 33; characterPosInFontX = 121; characterPosInFontY = 40; break;
+		case 'l': xSize = 39; ySize = 33; characterPosInFontX = 161; characterPosInFontY = 40; break;
+		case 'm': xSize = 39; ySize = 33; characterPosInFontX = 201; characterPosInFontY = 40; break;
+		case 'n': xSize = 39; ySize = 33; characterPosInFontX = 241; characterPosInFontY = 40; break;
+		case 'o': xSize = 39; ySize = 33; characterPosInFontX = 1; characterPosInFontY = 80; break;
+		case 'p': xSize = 39; ySize = 33; characterPosInFontX = 41; characterPosInFontY = 80; break;
+		case 'q': xSize = 39; ySize = 33; characterPosInFontX = 81; characterPosInFontY = 80; break;
+		case 'r': xSize = 39; ySize = 33; characterPosInFontX = 121; characterPosInFontY = 80; break;
+		case 's': xSize = 39; ySize = 33; characterPosInFontX = 161; characterPosInFontY = 80; break;
+		case 't': xSize = 39; ySize = 33; characterPosInFontX = 201; characterPosInFontY = 80; break;
+		case 'u': xSize = 39; ySize = 33; characterPosInFontX = 241; characterPosInFontY = 80; break;
+		case 'v': xSize = 39; ySize = 33; characterPosInFontX = 1; characterPosInFontY = 12; break;
+		case 'w': xSize = 39; ySize = 33; characterPosInFontX = 41; characterPosInFontY = 120; break;
+		case 'x': xSize = 39; ySize = 33; characterPosInFontX = 81; characterPosInFontY = 120; break;
+		case 'y': xSize = 39; ySize = 33; characterPosInFontX = 121; characterPosInFontY = 120; break;
+		case 'z': xSize = 39; ySize = 33; characterPosInFontX = 201; characterPosInFontY = 120; break;
+		case ' ': xSize = 39; ySize = 33; characterPosInFontX = 241; characterPosInFontY = 120; break;
 		default: return;
 	}
 
+	writeLogFS("displayCharacter: letter %c in font(%d,%d) to display(%d,%d)\n",
+			letter, characterPosInFontX, characterPosInFontY, *xPos, *yPos);
+
 	BltBitMap(fontBlob, characterPosInFontX, characterPosInFontY,
-			textscrollerScreen, *xPos, *yPos, characterPosInFontX,
-			characterPosInFontY, 0xC0, 0xff, 0);
+			textscrollerScreen, *xPos, *yPos, xSize, ySize, 0xC0, 0xff, 0);
 	*xPos += xSize;
 }
