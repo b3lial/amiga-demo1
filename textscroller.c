@@ -81,10 +81,10 @@ void initTextScroller(void) {
 			0, 0, VIEW_TEXTSCROLLER_WIDTH, VIEW_TEXTSCROLLER_HEIGHT);
 
 	//Copy Text into ViewPort
-	displayText("abcdefg", 0, 10);
-	displayText("hijklmn", 0, 60);
-	displayText("opqrstu", 0, 110);
-	displayText("vwxyz", 0, 160);
+	displayText("hi curly", 0, 10);
+	displayText("tolles", 0, 60);
+	displayText("neues", 0, 110);
+	displayText("haus", 0, 160);
 
 	//Make View visible
 	startView();
@@ -140,8 +140,8 @@ void displayCharacter(char letter, WORD *xPos, WORD *yPos) {
 		case 'e': xSize = 19; ySize = 33; characterPosInFontX = 161; characterPosInFontY = 0; break;
 		case 'f': xSize = 19; ySize = 33; characterPosInFontX = 201; characterPosInFontY = 0; break;
 		case 'g': xSize = 24; ySize = 33; characterPosInFontX = 241; characterPosInFontY = 0; break;
-		case 'h': xSize = 20; ySize = 33; characterPosInFontX = 1; characterPosInFontY = 40; break;
-		case 'i': xSize = 4; ySize = 33; characterPosInFontX = 41; characterPosInFontY = 40; break;
+		case 'h': xSize = 21; ySize = 33; characterPosInFontX = 1; characterPosInFontY = 40; break;
+		case 'i': xSize = 5; ySize = 33; characterPosInFontX = 41; characterPosInFontY = 40; break;
 		case 'j': xSize = 19; ySize = 33; characterPosInFontX = 81; characterPosInFontY = 40; break;
 		case 'k': xSize = 18; ySize = 33; characterPosInFontX = 121; characterPosInFontY = 40; break;
 		case 'l': xSize = 19; ySize = 33; characterPosInFontX = 161; characterPosInFontY = 40; break;
@@ -159,7 +159,7 @@ void displayCharacter(char letter, WORD *xPos, WORD *yPos) {
 		case 'x': xSize = 25; ySize = 33; characterPosInFontX = 81; characterPosInFontY = 120; break;
 		case 'y': xSize = 26; ySize = 33; characterPosInFontX = 121; characterPosInFontY = 120; break;
 		case 'z': xSize = 20; ySize = 33; characterPosInFontX = 161; characterPosInFontY = 120; break;
-		case ' ': xSize = 30; ySize = 33; characterPosInFontX = 201; characterPosInFontY = 120; break;
+		case ' ': xSize = 15; ySize = 33; characterPosInFontX = 201; characterPosInFontY = 120; break;
 		default: return;
 	}
 
