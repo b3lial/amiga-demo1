@@ -4,6 +4,6 @@
 #include <exec/types.h>
 
 struct BitMap* loadBlob(const char*, UBYTE, UWORD, UWORD);
-BOOL loadColorMap(char*, UWORD*, UBYTE);
+BOOL loadColorMap(char*, UWORD*, UWORD);
 
 #endif

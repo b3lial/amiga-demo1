@@ -10,7 +10,7 @@
  * Loads a set of unsigned words from file and copies them into
  * an array to use them as input for background color registers
  */
-BOOL loadColorMap(char* fileName, UWORD* map, UBYTE mapLength){
+BOOL loadColorMap(char* fileName, UWORD* map, UWORD mapLength){
     LONG dataRead = 0;
     BPTR mapFileHandle = NULL;
     writeLogFS("Trying to load color table %s\n", fileName);
