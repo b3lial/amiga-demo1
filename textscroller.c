@@ -15,25 +15,25 @@
 #include "starlight/starlight.h"
 #include "main.h"
 
-WORD payloadTextScrollerState = VIEW_TEXTSCROLLER_INIT;
+WORD payloadTextScrollerState = TEXTSCROLLER_INIT;
 struct BitMap *fontBlob = NULL;
 struct BitMap *spaceBlob = NULL;
 struct BitMap *textscrollerScreen = NULL;
 
 WORD fsmTextScroller(void) {
 	switch (payloadTextScrollerState) {
-	case VIEW_TEXTSCROLLER_INIT:
+	case TEXTSCROLLER_INIT:
 		initTextScroller();
-		payloadTextScrollerState = VIEW_TEXTSCROLLER_RUNNING;
+		payloadTextScrollerState = TEXTSCROLLER_RUNNING;
 		break;
 
-	case VIEW_TEXTSCROLLER_RUNNING:
+	case TEXTSCROLLER_RUNNING:
 		if (!executeTextScroller()) {
-			payloadTextScrollerState = VIEW_TEXTSCROLLER_SHUTDOWN;
+			payloadTextScrollerState = TEXTSCROLLER_SHUTDOWN;
 		}
 		break;
 
-	case VIEW_TEXTSCROLLER_SHUTDOWN:
+	case TEXTSCROLLER_SHUTDOWN:
 		exitTextScroller();
 		return MODULE_FINISHED;
 	}
@@ -48,8 +48,8 @@ void initTextScroller(void) {
 	writeLog("\n== Initialize View: TextScroller ==\n");
 
 	//Load Charset Sprite and its Colors
-	fontBlob = loadBlob("img/charset_final.RAW", VIEW_TEXTSCROLLER_FONT_DEPTH,
-	VIEW_TEXTSCROLLER_FONT_WIDTH, VIEW_TEXTSCROLLER_FONT_HEIGHT);
+	fontBlob = loadBlob("img/charset_final.RAW", TEXTSCROLLER_BLOB_FONT_DEPTH,
+	TEXTSCROLLER_BLOB_FONT_WIDTH, TEXTSCROLLER_BLOB_FONT_HEIGHT);
 	if (fontBlob == NULL) {
 		writeLog("Error: Payload TextScroller, could not load font blob\n");
 		exitTextScroller();
@@ -60,11 +60,11 @@ void initTextScroller(void) {
 			fontBlob->BytesPerRow, fontBlob->Rows, fontBlob->Flags,
 			fontBlob->pad);
 	loadColorMap("img/charset_final.CMAP", colortable0,
-			VIEW_TEXTSCROLLER_FONT_COLORS);
+			TEXTSCROLLER_BLOB_FONT_COLORS);
 
 	//Load Space Background and its colors
-	spaceBlob = loadBlob("img/space3_320_148_8.RAW", VIEW_TEXTSCROLLER_SPACE_DEPTH,
-	VIEW_TEXTSCROLLER_SPACE_WIDTH, VIEW_TEXTSCROLLER_SPACE_HEIGHT);
+	spaceBlob = loadBlob("img/space3_320_148_8.RAW", TEXTSCROLLER_BLOB_SPACE_DEPTH,
+	TEXTSCROLLER_BLOB_SPACE_WIDTH, TEXTSCROLLER_BLOB_SPACE_HEIGHT);
 	if (spaceBlob == NULL) {
 		writeLog("Error: Payload TextScroller, could not load space blob\n");
 		exitTextScroller();
@@ -75,16 +75,16 @@ void initTextScroller(void) {
 			spaceBlob->BytesPerRow, spaceBlob->Rows, spaceBlob->Flags,
 			spaceBlob->pad);
 	loadColorMap("img/space3_320_148_8.CMAP", colortable1,
-			VIEW_TEXTSCROLLER_SPACE_COLORS);
+			TEXTSCROLLER_BLOB_SPACE_COLORS);
 
 	//Create View and ViewExtra memory structures
 	initView();
 
 	//Create Bitmap for ViewPort
-	textscrollerScreen = createBitMap(VIEW_TEXTSCROLLER_FONT_DEPTH,
-			VIEW_TEXTSCROLLER_WIDTH,
-			VIEW_TEXTSCROLLER_HEIGHT);
-	for (i = 0; i < VIEW_TEXTSCROLLER_FONT_DEPTH; i++) {
+	textscrollerScreen = createBitMap(TEXTSCROLLER_BLOB_FONT_DEPTH,
+			TEXTSCROLLER_VIEW_WIDTH,
+			TEXTSCROLLER_VIEW_TEXTSECTION_HEIGHT);
+	for (i = 0; i < TEXTSCROLLER_BLOB_FONT_DEPTH; i++) {
 		BltClear(textscrollerScreen->Planes[i],
 				(textscrollerScreen->BytesPerRow) * (textscrollerScreen->Rows),
 				1);
@@ -93,12 +93,17 @@ void initTextScroller(void) {
 			textscrollerScreen->BytesPerRow, textscrollerScreen->Rows,
 			textscrollerScreen->Flags, textscrollerScreen->pad);
 
-	//Add previously created BitMap to ViewPort so its shown on Screen
-	addViewPort(textscrollerScreen, NULL, colortable0, VIEW_TEXTSCROLLER_FONT_COLORS,
-			0, 0, VIEW_TEXTSCROLLER_WIDTH, VIEW_TEXTSCROLLER_HEIGHT);
+	//Add previously created BitMap for text display to ViewPort so its shown on Screen
+	addViewPort(textscrollerScreen, NULL, colortable0, TEXTSCROLLER_BLOB_FONT_COLORS,
+			0, 0, TEXTSCROLLER_VIEW_WIDTH, TEXTSCROLLER_VIEW_TEXTSECTION_HEIGHT);
+
+	//Add space background BitMap to ViewPort so its shown on Screen
+	addViewPort(spaceBlob, NULL, colortable1, TEXTSCROLLER_BLOB_SPACE_COLORS,
+			0, TEXTSCROLLER_VIEW_TEXTSECTION_HEIGHT+2, TEXTSCROLLER_VIEW_WIDTH,
+			TEXTSCROLLER_VIEW_SPACESECTION_HEIGHT);
 
 	//Copy Text into ViewPort
-	displayText("hi there", 50, 50);
+	displayText("hi there", 70, 60);
 
 	//Make View visible
 	startView();
@@ -117,7 +122,7 @@ void exitTextScroller(void) {
 	cleanBitMap(textscrollerScreen);
 	cleanBitMap(fontBlob);
 	cleanBitMap(spaceBlob);
-	payloadTextScrollerState = VIEW_TEXTSCROLLER_INIT;
+	payloadTextScrollerState = TEXTSCROLLER_INIT;
 }
 
 /**
