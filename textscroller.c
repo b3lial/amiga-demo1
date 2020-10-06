@@ -81,10 +81,7 @@ void initTextScroller(void) {
 			0, 0, VIEW_TEXTSCROLLER_WIDTH, VIEW_TEXTSCROLLER_HEIGHT);
 
 	//Copy Text into ViewPort
-	displayText("hi curly", 0, 10);
-	displayText("tolles", 0, 60);
-	displayText("neues", 0, 110);
-	displayText("haus", 0, 160);
+	displayText("hi there", 50, 50);
 
 	//Make View visible
 	startView();
@@ -159,14 +156,18 @@ void displayCharacter(char letter, WORD *xPos, WORD *yPos) {
 		case 'x': xSize = 25; ySize = 33; characterPosInFontX = 81; characterPosInFontY = 120; break;
 		case 'y': xSize = 26; ySize = 33; characterPosInFontX = 121; characterPosInFontY = 120; break;
 		case 'z': xSize = 20; ySize = 33; characterPosInFontX = 161; characterPosInFontY = 120; break;
-		case ' ': xSize = 15; ySize = 33; characterPosInFontX = 201; characterPosInFontY = 120; break;
+		case ' ': xSize = 12; ySize = 33; characterPosInFontX = 201; characterPosInFontY = 120; break;
 		default: return;
 	}
 
 	writeLogFS("displayCharacter: letter %c in font(%d,%d) to display(%d,%d)\n",
 			letter, characterPosInFontX, characterPosInFontY, *xPos, *yPos);
 
+	/*
+	 * Don't erase background if character rectangle (B) is blitted into destination (C,D)
+	 * Therefore, we use minterm: BC+NBC+BNC -> 1110xxxx -> 0xE0
+	 */
 	BltBitMap(fontBlob, characterPosInFontX, characterPosInFontY,
-			textscrollerScreen, *xPos, *yPos, xSize, ySize, 0xC0, 0xff, 0);
-	*xPos += (xSize + 7);
+			textscrollerScreen, *xPos, *yPos, xSize, ySize, 0xE0, 0xff, 0);
+	*xPos += (xSize + 5);
 }
