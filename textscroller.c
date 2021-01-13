@@ -19,6 +19,7 @@ WORD payloadTextScrollerState = TEXTSCROLLER_INIT;
 struct BitMap *fontBlob = NULL;
 struct BitMap *spaceBlob = NULL;
 struct BitMap *textscrollerScreen = NULL;
+ULONG* colortable1 = NULL;
 
 WORD fsmTextScroller(void) {
 	switch (payloadTextScrollerState) {
@@ -43,7 +44,6 @@ WORD fsmTextScroller(void) {
 
 void initTextScroller(void) {
 	UWORD colortable0[8];
-	UWORD colortable1[256];
 	BYTE i = 0;
 	writeLog("\n== Initialize View: TextScroller ==\n");
 
@@ -63,7 +63,7 @@ void initTextScroller(void) {
 			TEXTSCROLLER_BLOB_FONT_COLORS);
 
 	//Load Space Background and its colors
-	spaceBlob = loadBlob("img/space3_320_148_8.RAW", TEXTSCROLLER_BLOB_SPACE_DEPTH,
+	spaceBlob = loadBlob("img/blah.raw", TEXTSCROLLER_BLOB_SPACE_DEPTH,
 	TEXTSCROLLER_BLOB_SPACE_WIDTH, TEXTSCROLLER_BLOB_SPACE_HEIGHT);
 	if (spaceBlob == NULL) {
 		writeLog("Error: Payload TextScroller, could not load space blob\n");
@@ -74,8 +74,15 @@ void initTextScroller(void) {
 			"TextScroller Space Background: BytesPerRow: %d, Rows: %d, Flags: %d, pad: %d\n",
 			spaceBlob->BytesPerRow, spaceBlob->Rows, spaceBlob->Flags,
 			spaceBlob->pad);
-	loadColorMap("img/space3_320_148_8.CMAP", colortable1,
-			TEXTSCROLLER_BLOB_SPACE_COLORS);
+	colortable1 = AllocVec(COLORMAP32_BYTE_SIZE(TEXTSCROLLER_BLOB_SPACE_COLORS), MEMF_ANY);
+	if(!colortable1){
+		writeLog("Error: Payload TextScroller, could not allocate memory for space blob colortable\n");
+		exitTextScroller();
+		exitSystem(RETURN_ERROR);
+	}
+	writeLogFS("TextScroller Space Colortable: Allocated %d  bytes\n",
+			COLORMAP32_BYTE_SIZE(TEXTSCROLLER_BLOB_SPACE_COLORS));
+	loadColorMap32("img/blah.CMAP", colortable1, TEXTSCROLLER_BLOB_SPACE_COLORS);
 
 	//Create View and ViewExtra memory structures
 	initView();
@@ -102,6 +109,11 @@ void initTextScroller(void) {
 			0, TEXTSCROLLER_VIEW_TEXTSECTION_HEIGHT+2, TEXTSCROLLER_VIEW_WIDTH,
 			TEXTSCROLLER_VIEW_SPACESECTION_HEIGHT);
 
+	//clean the allocated memory of colortable, we dont need it anymore because we
+	//have a proper copperlist now
+	FreeVec(colortable1);
+	colortable1 = NULL;
+
 	//Copy Text into ViewPort
 	displayText("hi there", 70, 60);
 
@@ -118,6 +130,12 @@ BOOL executeTextScroller(void) {
 }
 
 void exitTextScroller(void) {
+	if(colortable1){
+		FreeVec(colortable1);
+		colortable1 = NULL;
+		writeLogFS("Freeing %d bytes of colormap\n",
+				COLORMAP32_BYTE_SIZE(TEXTSCROLLER_BLOB_SPACE_COLORS));
+	}
 	stopView();
 	cleanBitMap(textscrollerScreen);
 	cleanBitMap(fontBlob);

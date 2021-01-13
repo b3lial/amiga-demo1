@@ -33,6 +33,28 @@ BOOL loadColorMap(char* fileName, UWORD* map, UWORD mapLength){
 }
 
 /**
+ * Loads a colormap from file. First ULONG is reserved for (colorAmount,startregister),
+ * followed by (r,g,b) (each color value is a ULONG), final character in array is 0.
+ * For usage with LoadRGB32(),
+ * see http://amigadev.elowar.com/read/ADCD_2.1/Includes_and_Autodocs_3._guide/node02FB.html
+ * for details.
+ */
+BOOL loadColorMap32(char* fileName, ULONG* map, UWORD colorAmount){
+    LONG dataRead = 0;
+    BPTR mapFileHandle = NULL;
+	writeLogFS("Trying to load 32 bit color table %s\n", fileName);
+
+    //Open input file
+    mapFileHandle = Open(fileName, MODE_OLDFILE);
+    if(!mapFileHandle){
+        writeLogFS("Error: Could not read %s\n", fileName);
+        return FALSE;
+    }
+
+	return TRUE;
+}
+
+/**
  * Load non-interlaced graphic blob from file system and copy it into bitplances
  */
 struct BitMap* loadBlob(const char* fileName, UBYTE depth, UWORD width, 
