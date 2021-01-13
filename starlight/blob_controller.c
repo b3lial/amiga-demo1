@@ -28,6 +28,8 @@ BOOL loadColorMap(char* fileName, UWORD* map, UWORD mapLength){
         Close(mapFileHandle);
         return FALSE;
     }
+    writeLogFS("Read %d bytes into color table buffer\n", dataRead);
+
     Close(mapFileHandle);
     return TRUE;
 }
@@ -40,16 +42,31 @@ BOOL loadColorMap(char* fileName, UWORD* map, UWORD mapLength){
  * for details.
  */
 BOOL loadColorMap32(char* fileName, ULONG* map, UWORD colorAmount){
-    LONG dataRead = 0;
-    BPTR mapFileHandle = NULL;
-	writeLogFS("Trying to load 32 bit color table %s\n", fileName);
+    ULONG buffer[colorAmount];
+    UWORD i;
+    UBYTE r;
+    UBYTE g;
+    UBYTE b;
 
-    //Open input file
-    mapFileHandle = Open(fileName, MODE_OLDFILE);
-    if(!mapFileHandle){
-        writeLogFS("Error: Could not read %s\n", fileName);
-        return FALSE;
+    //reuse loadColorMap() because as a first step we need its content in a buffer
+    if(!loadColorMap(fileName, (UWORD*) buffer, colorAmount*2)){
+    	return FALSE;
     }
+    writeLogFS("Loaded 32 bit color table\n");
+
+    //header
+    map[0] = (((ULONG)colorAmount)<<16)+0;
+
+    //convert rgb bytes to ulong triples
+    for(i=1;i<=colorAmount;i++){
+    	r = (UBYTE) (0x000000ff & buffer[i-1]);
+    	g = (UBYTE) (0x0000ff00 & buffer[i-1]);
+    	b = (UBYTE) (0x00ff0000 & buffer[i-1]);
+    	//BAUSTELLE
+    }
+
+    //null termination ulong
+    map[COLORMAP32_BYTE_SIZE(colorAmount)/4-1] = 0;
 
 	return TRUE;
 }
