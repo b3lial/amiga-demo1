@@ -24,7 +24,7 @@ BOOL loadColorMap(char* fileName, UWORD* map, UWORD mapLength){
 
     dataRead = Read(mapFileHandle, map, mapLength*2); 
     if(dataRead==-1){
-        writeLogFS("Error: Could not read from color map input file\n");
+        writeLog("Error: Could not read from color map input file\n");
         Close(mapFileHandle);
         return FALSE;
     }
@@ -52,21 +52,23 @@ BOOL loadColorMap32(char* fileName, ULONG* map, UWORD colorAmount){
     if(!loadColorMap(fileName, (UWORD*) buffer, colorAmount*2)){
     	return FALSE;
     }
-    writeLogFS("Loaded 32 bit color table\n");
+    writeLog("Loaded 32 bit color table\n");
 
     //header
     map[0] = (((ULONG)colorAmount)<<16)+0;
 
     //convert rgb bytes to ulong triples
-    for(i=1;i<=colorAmount;i++){
-    	r = (UBYTE) (0x000000ff & buffer[i-1]);
-    	g = (UBYTE) (0x0000ff00 & buffer[i-1]);
-    	b = (UBYTE) (0x00ff0000 & buffer[i-1]);
-    	//BAUSTELLE
+    for(i=0;i<colorAmount;i++){
+    	r = (UBYTE) (0x000000ff & buffer[i]);
+    	g = (UBYTE) (0x0000ff00 & buffer[i]);
+    	b = (UBYTE) (0x00ff0000 & buffer[i]);
+    	map[1+i*3+0] = SPREAD(r);
+    	map[1+i*3+1] = SPREAD(g);
+    	map[1+i*3+2] = SPREAD(b);
     }
 
     //null termination ulong
-    map[COLORMAP32_BYTE_SIZE(colorAmount)/4-1] = 0;
+    map[COLORMAP32_LONG_SIZE(colorAmount)-1] = 0;
 
 	return TRUE;
 }
@@ -104,7 +106,7 @@ struct BitMap* loadBlob(const char* fileName, UBYTE depth, UWORD width,
     for(i=0; i<depth; i++){
         dataRead = Read(blobFileHandle, blobBitMap->Planes[i], planeSize); 
         if(dataRead==-1){
-            writeLogFS("Error: Could not read from Blob input file\n");
+            writeLog("Error: Could not read from Blob input file\n");
             Close(blobFileHandle);
             return NULL;
         }

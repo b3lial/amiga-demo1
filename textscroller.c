@@ -101,11 +101,12 @@ void initTextScroller(void) {
 			textscrollerScreen->Flags, textscrollerScreen->pad);
 
 	//Add previously created BitMap for text display to ViewPort so its shown on Screen
-	addViewPort(textscrollerScreen, NULL, colortable0, TEXTSCROLLER_BLOB_FONT_COLORS,
+	addViewPort(textscrollerScreen, NULL, colortable0, TEXTSCROLLER_BLOB_FONT_COLORS, FALSE,
 			0, 0, TEXTSCROLLER_VIEW_WIDTH, TEXTSCROLLER_VIEW_TEXTSECTION_HEIGHT);
 
 	//Add space background BitMap to ViewPort so its shown on Screen
-	addViewPort(spaceBlob, NULL, colortable1, TEXTSCROLLER_BLOB_SPACE_COLORS,
+	addViewPort(spaceBlob, NULL, colortable1,
+			COLORMAP32_LONG_SIZE(TEXTSCROLLER_BLOB_SPACE_COLORS), TRUE,
 			0, TEXTSCROLLER_VIEW_TEXTSECTION_HEIGHT+2, TEXTSCROLLER_VIEW_WIDTH,
 			TEXTSCROLLER_VIEW_SPACESECTION_HEIGHT);
 

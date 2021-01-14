@@ -68,8 +68,8 @@ void initView(void){
 }
 
 void addViewPort(struct BitMap *bitMap, struct BitMap *doubleBuffer, 
-        UWORD *colortable, WORD colortableSize, WORD x, WORD y, WORD width, 
-        WORD height){
+        void *colortable, UWORD colortableSize, BOOL useColorMap32,
+		UWORD x, UWORD y, UWORD width, UWORD height){
     struct DimensionInfo querydims = { {0} };
     struct TagItem vcTags[] = {
         { VTAG_ATTACH_CM_SET, NULL },
@@ -187,6 +187,7 @@ void addViewPort(struct BitMap *bitMap, struct BitMap *doubleBuffer,
         stopView();
         exitSystem(RETURN_ERROR); 
     }
+    writeLogFS("Created a ColorMap with type %d\n", colormaps[vpPointer]->Type);
 
     if(GfxBase->LibNode.lib_Version >= 36){
         vcTags[0].ti_Data = (ULONG) viewPorts[vpPointer];
@@ -199,7 +200,14 @@ void addViewPort(struct BitMap *bitMap, struct BitMap *doubleBuffer,
     else{
         viewPorts[vpPointer]->ColorMap = colormaps[vpPointer];
     }
-    LoadRGB4(viewPorts[vpPointer], colortable, colortableSize);
+
+    //colormap loading is different for normal 4 bit colors and 32 bit colors
+    if(!useColorMap32){
+    	LoadRGB4(viewPorts[vpPointer], (UWORD*) colortable, colortableSize);
+    }
+    else{
+    	LoadRGB32(viewPorts[vpPointer], (ULONG*) colortable);
+    }
 
     vpPointer++;
 }
