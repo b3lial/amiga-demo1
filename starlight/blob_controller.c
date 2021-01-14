@@ -59,9 +59,9 @@ BOOL loadColorMap32(char* fileName, ULONG* map, UWORD colorAmount){
 
     //convert rgb bytes to ulong triples
     for(i=0;i<colorAmount;i++){
-    	r = (UBYTE) (0x000000ff & buffer[i]);
-    	g = (UBYTE) (0x0000ff00 & buffer[i]);
-    	b = (UBYTE) (0x00ff0000 & buffer[i]);
+    	b = (UBYTE) (0x000000ff & buffer[i]);
+    	g = (UBYTE) ((0x0000ff00 & buffer[i])>>8);
+    	r = (UBYTE) ((0x00ff0000 & buffer[i])>>16);
     	map[1+i*3+0] = SPREAD(r);
     	map[1+i*3+1] = SPREAD(g);
     	map[1+i*3+2] = SPREAD(b);
