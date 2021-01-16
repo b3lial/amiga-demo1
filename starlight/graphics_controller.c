@@ -78,6 +78,13 @@ void addViewPort(struct BitMap *bitMap, struct BitMap *doubleBuffer,
         { VTAG_END_CM, NULL }
     };
 
+    if(useColorMap32 && GfxBase->LibNode.lib_Version < 39){
+        writeLogFS("Error: Requesting 24 bit color depth but Kickstart Gfx version is %d\n",
+        		GfxBase->LibNode.lib_Version);
+        stopView();
+        exitSystem(RETURN_ERROR);
+    }
+
     writeLogFS("Creating Viewport: %d\n", vpPointer);
 
     if(vpPointer >= MAX_VIEW_PORTS){
