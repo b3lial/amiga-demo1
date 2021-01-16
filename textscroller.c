@@ -49,49 +49,51 @@ WORD fsmTextScroller(void) {
 void initTextScroller(void) {
 	UWORD colortable0[8];
 	BYTE i = 0;
-	writeLog("\n== Initialize View: TextScroller ==\n");
+	writeLog("\n== initTextScroller() ==\n");
 
-	//Load Charset Sprite and its Colors
+	//Load font bitmap and its colors
 	fontBlob = loadBlob("img/charset_final.RAW", TEXTSCROLLER_BLOB_FONT_DEPTH,
 	TEXTSCROLLER_BLOB_FONT_WIDTH, TEXTSCROLLER_BLOB_FONT_HEIGHT);
 	if (fontBlob == NULL) {
-		writeLog("Error: Payload TextScroller, could not load font blob\n");
+		writeLog("Error: Could not load font blob\n");
 		exitTextScroller();
 		exitSystem(RETURN_ERROR);
 	}
 	writeLogFS(
-			"TextScroller BitMap: BytesPerRow: %d, Rows: %d, Flags: %d, pad: %d\n",
+			"Font BitMap: BytesPerRow: %d, Rows: %d, Flags: %d, pad: %d\n",
 			fontBlob->BytesPerRow, fontBlob->Rows, fontBlob->Flags,
 			fontBlob->pad);
 	loadColorMap("img/charset_final.CMAP", colortable0,
 			TEXTSCROLLER_BLOB_FONT_COLORS);
 
-	//Load Space Background and its colors
+	//Load space background bitmap
 	spaceBlob = loadBlob("img/blah.raw", TEXTSCROLLER_BLOB_SPACE_DEPTH,
 	TEXTSCROLLER_BLOB_SPACE_WIDTH, TEXTSCROLLER_BLOB_SPACE_HEIGHT);
 	if (spaceBlob == NULL) {
-		writeLog("Error: Payload TextScroller, could not load space blob\n");
+		writeLog("Error: Could not load space blob\n");
 		exitTextScroller();
 		exitSystem(RETURN_ERROR);
 	}
 	writeLogFS(
-			"TextScroller Space Background: BytesPerRow: %d, Rows: %d, Flags: %d, pad: %d\n",
+			"Space Bitmap: BytesPerRow: %d, Rows: %d, Flags: %d, pad: %d\n",
 			spaceBlob->BytesPerRow, spaceBlob->Rows, spaceBlob->Flags,
 			spaceBlob->pad);
+
+	//Load space background color table
 	colortable1 = AllocVec(COLORMAP32_BYTE_SIZE(TEXTSCROLLER_BLOB_SPACE_COLORS), MEMF_ANY);
 	if(!colortable1){
-		writeLog("Error: Payload TextScroller, could not allocate memory for space blob colortable\n");
+		writeLog("Error: Could not allocate memory for space bitmap color table\n");
 		exitTextScroller();
 		exitSystem(RETURN_ERROR);
 	}
-	writeLogFS("TextScroller Space Colortable: Allocated %d  bytes\n",
+	writeLogFS("Allocating %d  bytes for space bitmap color table\n",
 			COLORMAP32_BYTE_SIZE(TEXTSCROLLER_BLOB_SPACE_COLORS));
 	loadColorMap32("img/blah.CMAP", colortable1, TEXTSCROLLER_BLOB_SPACE_COLORS);
 
 	//Create View and ViewExtra memory structures
 	initView();
 
-	//Create Bitmap for ViewPort
+	//Create Textscroller Screen Bitmap
 	textscrollerScreen = createBitMap(TEXTSCROLLER_BLOB_FONT_DEPTH,
 			TEXTSCROLLER_VIEW_WIDTH,
 			TEXTSCROLLER_VIEW_TEXTSECTION_HEIGHT);
@@ -100,7 +102,7 @@ void initTextScroller(void) {
 				(textscrollerScreen->BytesPerRow) * (textscrollerScreen->Rows),
 				1);
 	}
-	writeLogFS("Screen BitMap: BytesPerRow: %d, Rows: %d, Flags: %d, pad: %d\n",
+	writeLogFS("TextScroller Screen BitMap: BytesPerRow: %d, Rows: %d, Flags: %d, pad: %d\n",
 			textscrollerScreen->BytesPerRow, textscrollerScreen->Rows,
 			textscrollerScreen->Flags, textscrollerScreen->pad);
 
@@ -117,6 +119,8 @@ void initTextScroller(void) {
 	//clean the allocated memory of colortable, we dont need it anymore because we
 	//have a proper copperlist now
 	FreeVec(colortable1);
+	writeLogFS("Freeing %d bytes of colormap\n",
+			COLORMAP32_BYTE_SIZE(TEXTSCROLLER_BLOB_SPACE_COLORS));
 	colortable1 = NULL;
 
 	//Copy Text into ViewPort
@@ -135,6 +139,8 @@ BOOL executeTextScroller(void) {
 }
 
 void exitTextScroller(void) {
+	writeLog("\n== exitTextScroller() ==\n");
+
 	if(colortable1){
 		FreeVec(colortable1);
 		colortable1 = NULL;
