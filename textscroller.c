@@ -2,14 +2,18 @@
 
 #include <stdio.h>
 #include <ctype.h>
+#include <string.h>
 
 #include <exec/types.h>
+#include <exec/memory.h>
+
 #include <proto/graphics.h>
 #include <proto/exec.h>
 
 #include <graphics/displayinfo.h>
 #include <graphics/gfxbase.h>
 #include <graphics/videocontrol.h>
+
 #include <dos/dos.h>
 
 #include "starlight/starlight.h"

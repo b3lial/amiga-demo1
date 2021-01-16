@@ -35,21 +35,41 @@ BOOL loadColorMap(char* fileName, UWORD* map, UWORD mapLength){
 }
 
 /**
- * Loads a colormap from file. First ULONG is reserved for (colorAmount,startregister),
+ * Loads a colormap from file.
+ *
+ * input file format:
+ *
+ * Set of ULONG with (0,r,g,b), (0,r,g,b), ...
+ *
+ * map format:
+ *
+ * First ULONG is reserved for (colorAmount,startregister),
  * followed by (r,g,b) (each color value is a ULONG), final character in array is 0.
  * For usage with LoadRGB32(),
  * see http://amigadev.elowar.com/read/ADCD_2.1/Includes_and_Autodocs_3._guide/node02FB.html
  * for details.
  */
 BOOL loadColorMap32(char* fileName, ULONG* map, UWORD colorAmount){
-    ULONG buffer[colorAmount];
+    ULONG* buffer;
     UWORD i;
     UBYTE r;
     UBYTE g;
     UBYTE b;
 
+    //we need a buffer which contains the input file for further processing
+    buffer = AllocMem(colorAmount * sizeof(ULONG), MEMF_ANY);
+    if(!buffer){
+    	writeLog("Error: Could not allocate memory for 32 bit color table input file\n");
+    	return FALSE;
+    }
+    writeLogFS("Allocated %d bytes for 32 bit color table input file\n",
+    		colorAmount * sizeof(ULONG));
+
     //reuse loadColorMap() because as a first step we need its content in a buffer
     if(!loadColorMap(fileName, (UWORD*) buffer, colorAmount*2)){
+        FreeMem(buffer, colorAmount * sizeof(ULONG));
+        writeLogFS("Freeing %d bytes of 32 bit color table input file buffer\n",
+        		colorAmount * sizeof(ULONG));
     	return FALSE;
     }
     writeLog("Loaded 32 bit color table\n");
@@ -70,6 +90,9 @@ BOOL loadColorMap32(char* fileName, ULONG* map, UWORD colorAmount){
     //null termination ulong
     map[COLORMAP32_LONG_SIZE(colorAmount)-1] = 0;
 
+    FreeMem(buffer, colorAmount * sizeof(ULONG));
+    writeLogFS("Freeing %d bytes of 32 bit color table input file buffer\n",
+    		colorAmount * sizeof(ULONG));
 	return TRUE;
 }
 
