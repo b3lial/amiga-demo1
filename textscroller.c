@@ -67,7 +67,7 @@ void initTextScroller(void) {
 			TEXTSCROLLER_BLOB_FONT_COLORS);
 
 	//Load space background bitmap
-	spaceBlob = loadBlob("img/blah.raw", TEXTSCROLLER_BLOB_SPACE_DEPTH,
+	spaceBlob = loadBlob("img/space3_320_148_8.RAW", TEXTSCROLLER_BLOB_SPACE_DEPTH,
 	TEXTSCROLLER_BLOB_SPACE_WIDTH, TEXTSCROLLER_BLOB_SPACE_HEIGHT);
 	if (spaceBlob == NULL) {
 		writeLog("Error: Could not load space blob\n");
@@ -86,9 +86,9 @@ void initTextScroller(void) {
 		exitTextScroller();
 		exitSystem(RETURN_ERROR);
 	}
-	writeLogFS("Allocating %d  bytes for space bitmap color table\n",
+	writeLogFS("Allocated %d  bytes for space bitmap color table\n",
 			COLORMAP32_BYTE_SIZE(TEXTSCROLLER_BLOB_SPACE_COLORS));
-	loadColorMap32("img/blah.CMAP", colortable1, TEXTSCROLLER_BLOB_SPACE_COLORS);
+	loadColorMap32("img/space3_320_148_8.CMAP", colortable1, TEXTSCROLLER_BLOB_SPACE_COLORS);
 
 	//Create View and ViewExtra memory structures
 	initView();
@@ -119,7 +119,7 @@ void initTextScroller(void) {
 	//clean the allocated memory of colortable, we dont need it anymore because we
 	//have a proper copperlist now
 	FreeVec(colortable1);
-	writeLogFS("Freeing %d bytes of colormap\n",
+	writeLogFS("Freeing %d bytes of space bitmap color table\n",
 			COLORMAP32_BYTE_SIZE(TEXTSCROLLER_BLOB_SPACE_COLORS));
 	colortable1 = NULL;
 
@@ -144,7 +144,7 @@ void exitTextScroller(void) {
 	if(colortable1){
 		FreeVec(colortable1);
 		colortable1 = NULL;
-		writeLogFS("Freeing %d bytes of colormap\n",
+		writeLogFS("Freeing %d bytes of space bitmap color table\n",
 				COLORMAP32_BYTE_SIZE(TEXTSCROLLER_BLOB_SPACE_COLORS));
 	}
 	stopView();
