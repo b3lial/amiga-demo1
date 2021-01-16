@@ -52,6 +52,7 @@ void initTextScroller(void) {
 	writeLog("\n== initTextScroller() ==\n");
 
 	//Load font bitmap and its colors
+	writeLog("Load font bitmap and colors\n");
 	fontBlob = loadBlob("img/charset_final.RAW", TEXTSCROLLER_BLOB_FONT_DEPTH,
 	TEXTSCROLLER_BLOB_FONT_WIDTH, TEXTSCROLLER_BLOB_FONT_HEIGHT);
 	if (fontBlob == NULL) {
@@ -66,7 +67,8 @@ void initTextScroller(void) {
 	loadColorMap("img/charset_final.CMAP", colortable0,
 			TEXTSCROLLER_BLOB_FONT_COLORS);
 
-	//Load space background bitmap
+	//Load space background bitmap and colors
+	writeLog("\nLoad space background bitmap and colors\n");
 	spaceBlob = loadBlob("img/space3_320_148_8.RAW", TEXTSCROLLER_BLOB_SPACE_DEPTH,
 	TEXTSCROLLER_BLOB_SPACE_WIDTH, TEXTSCROLLER_BLOB_SPACE_HEIGHT);
 	if (spaceBlob == NULL) {
@@ -90,10 +92,8 @@ void initTextScroller(void) {
 			COLORMAP32_BYTE_SIZE(TEXTSCROLLER_BLOB_SPACE_COLORS));
 	loadColorMap32("img/space3_320_148_8.CMAP", colortable1, TEXTSCROLLER_BLOB_SPACE_COLORS);
 
-	//Create View and ViewExtra memory structures
-	initView();
-
-	//Create Textscroller Screen Bitmap
+	//Load Textscroller Screen Bitmap
+	writeLog("\nLoad textscroller screen background bitmap\n");
 	textscrollerScreen = createBitMap(TEXTSCROLLER_BLOB_FONT_DEPTH,
 			TEXTSCROLLER_VIEW_WIDTH,
 			TEXTSCROLLER_VIEW_TEXTSECTION_HEIGHT);
@@ -105,6 +105,10 @@ void initTextScroller(void) {
 	writeLogFS("TextScroller Screen BitMap: BytesPerRow: %d, Rows: %d, Flags: %d, pad: %d\n",
 			textscrollerScreen->BytesPerRow, textscrollerScreen->Rows,
 			textscrollerScreen->Flags, textscrollerScreen->pad);
+
+	//Create View and ViewExtra memory structures
+	writeLog("\nCreate view\n");
+	initView();
 
 	//Add previously created BitMap for text display to ViewPort so its shown on Screen
 	addViewPort(textscrollerScreen, NULL, colortable0, TEXTSCROLLER_BLOB_FONT_COLORS, FALSE,
@@ -161,6 +165,7 @@ void displayText(char *text, WORD xPos, WORD yPos) {
 	BYTE len = strlen(text);
 	BYTE i;
 
+	writeLog("\n== displayText() ==\n");
 	for (i = 0; i < len; i++) {
 		char currentChar = tolower(text[i]);
 		//ignore not supported characters
