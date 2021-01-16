@@ -4,7 +4,7 @@
 
 OBJS= starlight/graphics_controller.o starlight/bitmap_controller.o \
 	  starlight/blob_controller.o starlight/init.o starlight/utils.o \
-	  main.o textscroller.o
+	  main.o textscroller.o textcontroller.o
 
 demo-1-sasc: $(OBJS)
    sc link to demo-1-sasc with <<
@@ -24,6 +24,8 @@ main.o: main.c main.h
 starlight/utils.o: starlight/utils.c starlight/starlight.h
 
 textscroller.o: textscroller.c textscroller.h
+
+textcontroller.o: textcontroller.c textcontroller.h
 
 
 

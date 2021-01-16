@@ -3,7 +3,9 @@
 
 #include <graphics/gfxbase.h>
 
+#include <stdio.h>
 #include <ctype.h>
+#include <string.h>
 
 extern struct BitMap *fontBlob;
 extern struct BitMap *textscrollerScreen;
