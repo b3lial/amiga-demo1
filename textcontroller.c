@@ -10,6 +10,40 @@
 extern struct BitMap *fontBlob;
 extern struct BitMap *textscrollerScreen;
 
+/*
+ * Vorgehen:
+ *
+ * execute() methode im vsync ausführen
+ * hat zeiger auf aktuelles char und dessen gewünschte position
+ *
+ * loop über char array:
+ * - variablen: zeiger auf aktuelles zeichen, dessen zielposition, dessen aktuelle position
+ * - lösche letztes zeichen, außer wenn gerade neues zeichen beginnt
+ * - zeichne zeichen bei x+1
+ * - gucke ob zeichen ziel erreicht hat, wenn ja setze zeiger auf nächstes zeichen
+ *   -> berechne dessen zielposition
+ */
+
+UWORD firstCharXPos;
+UWORD firstCharYPos;
+UWORD currentCharPosX;
+UWORD currentCharPosY;
+char *currentText;
+UWORD currentChar;
+
+void initTextScrollEngine(char *text, UWORD firstX, UWORD firstY){
+	firstCharXPos = firstX;
+	firstCharYPos = firstY;
+	currentCharPosX = 0;
+	currentCharPosY = 0;
+	currentText = text;
+	currentChar = 0;
+}
+
+void executeTextScrollEngine(){
+
+}
+
 /**
  * Display text on screen using font provided in src bitmap
  */

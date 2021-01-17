@@ -10,6 +10,9 @@
 
 #include <exec/types.h>
 
+void initTextScrollEngine(char *text, UWORD firstX, UWORD firstY);
+void executeTextScrollEngine();
+
 void displayText(char *text, WORD xPos, WORD yPos);
 void displayCharacter(char letter, WORD *xPos, WORD *yPos);
 
