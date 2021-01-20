@@ -44,6 +44,10 @@ void executeTextScrollEngine(){
 
 }
 
+void terminateTextScrollEngine(){
+
+}
+
 /**
  * Display text on screen using font provided in src bitmap
  */

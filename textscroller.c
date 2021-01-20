@@ -129,6 +129,7 @@ void initTextScroller(void) {
 	colortable1 = NULL;
 
 	//Copy Text into ViewPort
+	initTextScrollEngine("hi there", 70, 60);
 	displayText("hi there", 70, 60);
 
 	//Make View visible
@@ -137,8 +138,12 @@ void initTextScroller(void) {
 
 BOOL executeTextScroller(void) {
 	if (mouseClick()) {
+		terminateTextScrollEngine();
 		return FALSE;
 	} else {
+		//scroll in characters
+		WaitTOF();
+		executeTextScrollEngine();
 		return TRUE;
 	}
 }
