@@ -10,7 +10,8 @@
 
 #include <exec/types.h>
 
-void initTextScrollEngine(char *text, UWORD firstX, UWORD firstY);
+void initTextScrollEngine(char *text, UWORD firstX, UWORD firstY,
+		UWORD depth);
 void executeTextScrollEngine();
 void terminateTextScrollEngine();
 

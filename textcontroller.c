@@ -24,20 +24,25 @@ extern struct BitMap *textscrollerScreen;
  *   -> berechne dessen zielposition
  */
 
-UWORD firstCharXPos;
-UWORD firstCharYPos;
-UWORD currentCharPosX;
-UWORD currentCharPosY;
-char *currentText;
-UWORD currentChar;
+UWORD firstCharXPos = 0;
+UWORD firstCharYPos = 0;
+UWORD currentCharPosX = 0;
+UWORD currentCharPosY = 0;
+char *currentText = NULL;
+UWORD currentChar = 0;
+struct BitMap *previousCharacterData = NULL;
 
-void initTextScrollEngine(char *text, UWORD firstX, UWORD firstY){
+void initTextScrollEngine(char *text, UWORD firstX, UWORD firstY,
+		UWORD depth){
 	firstCharXPos = firstX;
 	firstCharYPos = firstY;
 	currentCharPosX = 0;
 	currentCharPosY = 0;
 	currentText = text;
 	currentChar = 0;
+
+	//50*50 is enough because biggest character is about 30*33
+	previousCharacterData = createBitMap(depth, 50, 50);
 }
 
 void executeTextScrollEngine(){
@@ -45,7 +50,7 @@ void executeTextScrollEngine(){
 }
 
 void terminateTextScrollEngine(){
-
+	cleanBitMap(previousCharacterData);
 }
 
 /**
