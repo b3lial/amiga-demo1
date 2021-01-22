@@ -129,8 +129,10 @@ void initTextScroller(void) {
 	colortable1 = NULL;
 
 	//Copy Text into ViewPort
-	initTextScrollEngine("hi there", 70, 60, TEXTSCROLLER_BLOB_FONT_DEPTH);
-	displayText("hi there", 70, 60);
+	initTextScrollEngine("hi there", 70, 60, TEXTSCROLLER_BLOB_FONT_DEPTH,
+			TEXTSCROLLER_VIEW_WIDTH,
+			TEXTSCROLLER_VIEW_TEXTSECTION_HEIGHT);
+	//displayText("hi there", 70, 60);
 
 	//Make View visible
 	startView();

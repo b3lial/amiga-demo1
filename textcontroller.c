@@ -32,25 +32,65 @@ char *currentText = NULL;
 UWORD currentChar = 0;
 struct BitMap *previousCharacterData = NULL;
 
+UWORD scrollControlWidth = 0;
+UWORD scrollControlHeight = 0;
+
 void initTextScrollEngine(char *text, UWORD firstX, UWORD firstY,
-		UWORD depth){
+		UWORD depth,UWORD screenWidth, UWORD screenHeight){
+	struct FontInfo fontInfo;
+
 	firstCharXPos = firstX;
 	firstCharYPos = firstY;
-	currentCharPosX = 0;
-	currentCharPosY = 0;
+
+	scrollControlWidth = screenWidth;
+	scrollControlHeight = screenHeight;
+
+	getCharData(text[0], &fontInfo);
+	currentCharPosX = screenWidth - fontInfo.xSize;
+	currentCharPosY = firstY;
+
 	currentText = text;
 	currentChar = 0;
 
 	//50*50 is enough because biggest character is about 30*33
 	previousCharacterData = createBitMap(depth, 50, 50);
+	saveBackground(currentText[currentChar], currentCharPosX, currentCharPosY);
 }
 
 void executeTextScrollEngine(){
+	if(currentCharPosX == firstCharXPos){
+		return;
+	}
 
+	restoreBackground(currentText[currentChar], currentCharPosX, currentCharPosY);
+	saveBackground(currentText[currentChar], currentCharPosX-1, currentCharPosY);
+	displayCharacter(currentText[currentChar], currentCharPosX, currentCharPosY);
+	currentCharPosX--;
 }
 
 void terminateTextScrollEngine(){
 	cleanBitMap(previousCharacterData);
+}
+
+/**
+ * Save part of background bitmap in previousCharacterData
+ */
+void saveBackground(char letter, UWORD xPos, UWORD yPos) {
+	struct FontInfo fontInfo;
+	getCharData(letter, &fontInfo);
+	BltBitMap(textscrollerScreen, xPos, xPos, previousCharacterData, 0, 0,
+			fontInfo.xSize, fontInfo.ySize, 0xC0, 0xff, 0);
+}
+
+/**
+ * Restore part of background bitmap from previousCharacterData
+ */
+void restoreBackground(char letter, UWORD xPos, UWORD yPos){
+	struct FontInfo fontInfo;
+	getCharData(letter, &fontInfo);
+	BltBitMap(previousCharacterData, 0,
+			0, textscrollerScreen, xPos, yPos,
+			fontInfo.xSize, fontInfo.ySize, 0xC0, 0xff, 0);
 }
 
 /**
@@ -70,7 +110,7 @@ void displayText(char *text, WORD xPos, WORD yPos) {
 			continue;
 		}
 
-		displayCharacter(currentChar, &xPos, &yPos);
+		//displayCharacter(currentChar, &xPos, &yPos);
 	}
 }
 
@@ -78,7 +118,7 @@ void displayText(char *text, WORD xPos, WORD yPos) {
  * Print a character on screen. Add size on xPos/yPos to have coordinates
  * for the next character.
  */
-void displayCharacter(char letter, WORD *xPos, WORD *yPos) {
+void displayCharacter(char letter, WORD xPos, WORD yPos) {
 	struct FontInfo fontInfo;
 
 	//get size and position in font of corresponding character
@@ -86,16 +126,16 @@ void displayCharacter(char letter, WORD *xPos, WORD *yPos) {
 
 	writeLogFS("displayCharacter: letter %c in font(%d,%d) to display(%d,%d)\n",
 			letter, fontInfo.characterPosInFontX, fontInfo.characterPosInFontY,
-			*xPos, *yPos);
+			xPos, yPos);
 
 	/*
 	 * Don't erase background if character rectangle (B) is blitted into destination (C,D)
 	 * Therefore, we use minterm: BC+NBC+BNC -> 1110xxxx -> 0xE0
 	 */
 	BltBitMap(fontBlob, fontInfo.characterPosInFontX,
-			fontInfo.characterPosInFontY, textscrollerScreen, *xPos, *yPos,
+			fontInfo.characterPosInFontY, textscrollerScreen, xPos, yPos,
 			fontInfo.xSize, fontInfo.ySize, 0xE0, 0xff, 0);
-	*xPos += (fontInfo.xSize + 5);
+	//*xPos += (fontInfo.xSize + 5);
 }
 
 /**
