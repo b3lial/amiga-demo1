@@ -79,48 +79,197 @@ void displayText(char *text, WORD xPos, WORD yPos) {
  * for the next character.
  */
 void displayCharacter(char letter, WORD *xPos, WORD *yPos) {
-	WORD xSize, ySize, characterPosInFontX, characterPosInFontY;
+	struct FontInfo fontInfo;
 
 	//get size and position in font of corresponding character
-	switch(letter){
-		case 'a': xSize = 28; ySize = 33; characterPosInFontX = 1; characterPosInFontY = 0; break;
-		case 'b': xSize = 21; ySize = 33; characterPosInFontX = 41; characterPosInFontY = 0; break;
-		case 'c': xSize = 22; ySize = 33; characterPosInFontX = 81; characterPosInFontY = 0; break;
-		case 'd': xSize = 25; ySize = 33; characterPosInFontX = 121; characterPosInFontY = 0; break;
-		case 'e': xSize = 19; ySize = 33; characterPosInFontX = 161; characterPosInFontY = 0; break;
-		case 'f': xSize = 19; ySize = 33; characterPosInFontX = 201; characterPosInFontY = 0; break;
-		case 'g': xSize = 24; ySize = 33; characterPosInFontX = 241; characterPosInFontY = 0; break;
-		case 'h': xSize = 21; ySize = 33; characterPosInFontX = 1; characterPosInFontY = 40; break;
-		case 'i': xSize = 5; ySize = 33; characterPosInFontX = 41; characterPosInFontY = 40; break;
-		case 'j': xSize = 19; ySize = 33; characterPosInFontX = 81; characterPosInFontY = 40; break;
-		case 'k': xSize = 18; ySize = 33; characterPosInFontX = 121; characterPosInFontY = 40; break;
-		case 'l': xSize = 19; ySize = 33; characterPosInFontX = 161; characterPosInFontY = 40; break;
-		case 'm': xSize = 27; ySize = 33; characterPosInFontX = 201; characterPosInFontY = 40; break;
-		case 'n': xSize = 21; ySize = 33; characterPosInFontX = 241; characterPosInFontY = 40; break;
-		case 'o': xSize = 27; ySize = 33; characterPosInFontX = 1; characterPosInFontY = 80; break;
-		case 'p': xSize = 23; ySize = 33; characterPosInFontX = 41; characterPosInFontY = 80; break;
-		case 'q': xSize = 30; ySize = 33; characterPosInFontX = 81; characterPosInFontY = 80; break;
-		case 'r': xSize = 23; ySize = 33; characterPosInFontX = 121; characterPosInFontY = 80; break;
-		case 's': xSize = 22; ySize = 33; characterPosInFontX = 161; characterPosInFontY = 80; break;
-		case 't': xSize = 27; ySize = 33; characterPosInFontX = 201; characterPosInFontY = 80; break;
-		case 'u': xSize = 21; ySize = 33; characterPosInFontX = 241; characterPosInFontY = 80; break;
-		case 'v': xSize = 25; ySize = 33; characterPosInFontX = 1; characterPosInFontY = 120; break;
-		case 'w': xSize = 27; ySize = 33; characterPosInFontX = 41; characterPosInFontY = 120; break;
-		case 'x': xSize = 25; ySize = 33; characterPosInFontX = 81; characterPosInFontY = 120; break;
-		case 'y': xSize = 26; ySize = 33; characterPosInFontX = 121; characterPosInFontY = 120; break;
-		case 'z': xSize = 20; ySize = 33; characterPosInFontX = 161; characterPosInFontY = 120; break;
-		case ' ': xSize = 12; ySize = 33; characterPosInFontX = 201; characterPosInFontY = 120; break;
-		default: return;
-	}
+	getCharData(letter, &fontInfo);
 
 	writeLogFS("displayCharacter: letter %c in font(%d,%d) to display(%d,%d)\n",
-			letter, characterPosInFontX, characterPosInFontY, *xPos, *yPos);
+			letter, fontInfo.characterPosInFontX, fontInfo.characterPosInFontY,
+			*xPos, *yPos);
 
 	/*
 	 * Don't erase background if character rectangle (B) is blitted into destination (C,D)
 	 * Therefore, we use minterm: BC+NBC+BNC -> 1110xxxx -> 0xE0
 	 */
-	BltBitMap(fontBlob, characterPosInFontX, characterPosInFontY,
-			textscrollerScreen, *xPos, *yPos, xSize, ySize, 0xE0, 0xff, 0);
-	*xPos += (xSize + 5);
+	BltBitMap(fontBlob, fontInfo.characterPosInFontX,
+			fontInfo.characterPosInFontY, textscrollerScreen, *xPos, *yPos,
+			fontInfo.xSize, fontInfo.ySize, 0xE0, 0xff, 0);
+	*xPos += (fontInfo.xSize + 5);
+}
+
+/**
+ * This data highly depends on the font
+ */
+void getCharData(char letter, struct FontInfo *fontInfo) {
+	switch (letter) {
+	case 'a':
+		fontInfo->xSize = 28;
+		fontInfo->ySize = 33;
+		fontInfo->characterPosInFontX = 1;
+		fontInfo->characterPosInFontY = 0;
+		break;
+	case 'b':
+		fontInfo->xSize = 21;
+		fontInfo->ySize = 33;
+		fontInfo->characterPosInFontX = 41;
+		fontInfo->characterPosInFontY = 0;
+		break;
+	case 'c':
+		fontInfo->xSize = 22;
+		fontInfo->ySize = 33;
+		fontInfo->characterPosInFontX = 81;
+		fontInfo->characterPosInFontY = 0;
+		break;
+	case 'd':
+		fontInfo->xSize = 25;
+		fontInfo->ySize = 33;
+		fontInfo->characterPosInFontX = 121;
+		fontInfo->characterPosInFontY = 0;
+		break;
+	case 'e':
+		fontInfo->xSize = 19;
+		fontInfo->ySize = 33;
+		fontInfo->characterPosInFontX = 161;
+		fontInfo->characterPosInFontY = 0;
+		break;
+	case 'f':
+		fontInfo->xSize = 19;
+		fontInfo->ySize = 33;
+		fontInfo->characterPosInFontX = 201;
+		fontInfo->characterPosInFontY = 0;
+		break;
+	case 'g':
+		fontInfo->xSize = 24;
+		fontInfo->ySize = 33;
+		fontInfo->characterPosInFontX = 241;
+		fontInfo->characterPosInFontY = 0;
+		break;
+	case 'h':
+		fontInfo->xSize = 21;
+		fontInfo->ySize = 33;
+		fontInfo->characterPosInFontX = 1;
+		fontInfo->characterPosInFontY = 40;
+		break;
+	case 'i':
+		fontInfo->xSize = 5;
+		fontInfo->ySize = 33;
+		fontInfo->characterPosInFontX = 41;
+		fontInfo->characterPosInFontY = 40;
+		break;
+	case 'j':
+		fontInfo->xSize = 19;
+		fontInfo->ySize = 33;
+		fontInfo->characterPosInFontX = 81;
+		fontInfo->characterPosInFontY = 40;
+		break;
+	case 'k':
+		fontInfo->xSize = 18;
+		fontInfo->ySize = 33;
+		fontInfo->characterPosInFontX = 121;
+		fontInfo->characterPosInFontY = 40;
+		break;
+	case 'l':
+		fontInfo->xSize = 19;
+		fontInfo->ySize = 33;
+		fontInfo->characterPosInFontX = 161;
+		fontInfo->characterPosInFontY = 40;
+		break;
+	case 'm':
+		fontInfo->xSize = 27;
+		fontInfo->ySize = 33;
+		fontInfo->characterPosInFontX = 201;
+		fontInfo->characterPosInFontY = 40;
+		break;
+	case 'n':
+		fontInfo->xSize = 21;
+		fontInfo->ySize = 33;
+		fontInfo->characterPosInFontX = 241;
+		fontInfo->characterPosInFontY = 40;
+		break;
+	case 'o':
+		fontInfo->xSize = 27;
+		fontInfo->ySize = 33;
+		fontInfo->characterPosInFontX = 1;
+		fontInfo->characterPosInFontY = 80;
+		break;
+	case 'p':
+		fontInfo->xSize = 23;
+		fontInfo->ySize = 33;
+		fontInfo->characterPosInFontX = 41;
+		fontInfo->characterPosInFontY = 80;
+		break;
+	case 'q':
+		fontInfo->xSize = 30;
+		fontInfo->ySize = 33;
+		fontInfo->characterPosInFontX = 81;
+		fontInfo->characterPosInFontY = 80;
+		break;
+	case 'r':
+		fontInfo->xSize = 23;
+		fontInfo->ySize = 33;
+		fontInfo->characterPosInFontX = 121;
+		fontInfo->characterPosInFontY = 80;
+		break;
+	case 's':
+		fontInfo->xSize = 22;
+		fontInfo->ySize = 33;
+		fontInfo->characterPosInFontX = 161;
+		fontInfo->characterPosInFontY = 80;
+		break;
+	case 't':
+		fontInfo->xSize = 27;
+		fontInfo->ySize = 33;
+		fontInfo->characterPosInFontX = 201;
+		fontInfo->characterPosInFontY = 80;
+		break;
+	case 'u':
+		fontInfo->xSize = 21;
+		fontInfo->ySize = 33;
+		fontInfo->characterPosInFontX = 241;
+		fontInfo->characterPosInFontY = 80;
+		break;
+	case 'v':
+		fontInfo->xSize = 25;
+		fontInfo->ySize = 33;
+		fontInfo->characterPosInFontX = 1;
+		fontInfo->characterPosInFontY = 120;
+		break;
+	case 'w':
+		fontInfo->xSize = 27;
+		fontInfo->ySize = 33;
+		fontInfo->characterPosInFontX = 41;
+		fontInfo->characterPosInFontY = 120;
+		break;
+	case 'x':
+		fontInfo->xSize = 25;
+		fontInfo->ySize = 33;
+		fontInfo->characterPosInFontX = 81;
+		fontInfo->characterPosInFontY = 120;
+		break;
+	case 'y':
+		fontInfo->xSize = 26;
+		fontInfo->ySize = 33;
+		fontInfo->characterPosInFontX = 121;
+		fontInfo->characterPosInFontY = 120;
+		break;
+	case 'z':
+		fontInfo->xSize = 20;
+		fontInfo->ySize = 33;
+		fontInfo->characterPosInFontX = 161;
+		fontInfo->characterPosInFontY = 120;
+		break;
+	case ' ':
+		fontInfo->xSize = 12;
+		fontInfo->ySize = 33;
+		fontInfo->characterPosInFontX = 201;
+		fontInfo->characterPosInFontY = 120;
+		break;
+	default:
+		fontInfo->xSize = 12;
+		fontInfo->ySize = 33;
+		fontInfo->characterPosInFontX = 201;
+		fontInfo->characterPosInFontY = 120;
+		break;
+	}
 }
