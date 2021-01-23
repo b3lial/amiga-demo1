@@ -35,6 +35,11 @@ struct BitMap *previousCharacterData = NULL;
 UWORD scrollControlWidth = 0;
 UWORD scrollControlHeight = 0;
 
+/*
+ * Calculate start positions of characters, initialize
+ * their stop position, allocate memory for background
+ * save/restore buffer
+ */
 void initTextScrollEngine(char *text, UWORD firstX, UWORD firstY,
 		UWORD depth,UWORD screenWidth, UWORD screenHeight){
 	struct FontInfo fontInfo;
@@ -66,21 +71,41 @@ void executeTextScrollEngine(){
 		return;
 	}
 
-	//save/restore background and print character at next position
+	//save/restore background and move character at next position
 	restoreBackground(letter, currentCharPosX, currentCharPosY);
-	currentCharPosX--;
+	currentCharPosX-=TEXT_MOVEMENT_SPEED;
 	saveBackground(letter, currentCharPosX, currentCharPosY);
 	displayCharacter(letter, currentCharPosX, currentCharPosY);
 
 	//check whether we have to switch to next letter
 	if(currentCharPosX <= firstCharXPos){
+		//calculate final position of next character
 		getCharData(letter, &fontInfo);
 		firstCharXPos += (fontInfo.xSize + 5);
 
+		//skip space
 		currentChar++;
-		getCharData(currentText[currentChar], &fontInfo);
+		letter = currentText[currentChar];
+		//reach end of string
+		if(letter == 0){
+			return;
+		}
+
+		while(letter < 'a' || letter > 'z'){
+			firstCharXPos += 12;
+			currentChar++;
+			letter = currentText[currentChar];
+
+			//reach end of string
+			if(letter == 0){
+				return;
+			}
+		}
+
+		//found next character, prepare everything for his arrival
+		getCharData(letter, &fontInfo);
 		currentCharPosX = scrollControlWidth - fontInfo.xSize;
-		saveBackground(currentText[currentChar], currentCharPosX, currentCharPosY);
+		saveBackground(letter, currentCharPosX, currentCharPosY);
 	}
 }
 
@@ -139,10 +164,6 @@ void displayCharacter(char letter, WORD xPos, WORD yPos) {
 
 	//get size and position in font of corresponding character
 	getCharData(letter, &fontInfo);
-
-	writeLogFS("displayCharacter: letter %c in font(%d,%d) to display(%d,%d)\n",
-			letter, fontInfo.characterPosInFontX, fontInfo.characterPosInFontY,
-			xPos, yPos);
 
 	/*
 	 * Don't erase background if character rectangle (B) is blitted into destination (C,D)

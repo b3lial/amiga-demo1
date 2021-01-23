@@ -10,6 +10,8 @@
 
 #include <exec/types.h>
 
+#define TEXT_MOVEMENT_SPEED 2
+
 struct FontInfo{
 	UWORD xSize;
 	UWORD ySize;
