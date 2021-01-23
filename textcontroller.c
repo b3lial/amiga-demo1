@@ -78,7 +78,7 @@ void terminateTextScrollEngine(){
 void saveBackground(char letter, UWORD xPos, UWORD yPos) {
 	struct FontInfo fontInfo;
 	getCharData(letter, &fontInfo);
-	BltBitMap(textscrollerScreen, xPos, xPos, previousCharacterData, 0, 0,
+	BltBitMap(textscrollerScreen, xPos, yPos, previousCharacterData, 0, 0,
 			fontInfo.xSize, fontInfo.ySize, 0xC0, 0xff, 0);
 }
 
