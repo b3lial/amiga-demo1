@@ -21,8 +21,8 @@ struct FontInfo{
 
 void initTextScrollEngine(char *text, UWORD firstX, UWORD firstY,
 		UWORD depth, UWORD screenWidth);
-void executeTextScrollEngine();
-void terminateTextScrollEngine();
+void executeTextScrollEngine(void);
+void terminateTextScrollEngine(void);
 
 void getCharData(char letter, struct FontInfo* fontInfo);
 void displayText(char *text, WORD xPos, WORD yPos);
