@@ -62,10 +62,11 @@ void executeTextScrollEngine(){
 		return;
 	}
 
+	//save/restore background and print character at next position
 	restoreBackground(currentText[currentChar], currentCharPosX, currentCharPosY);
-	saveBackground(currentText[currentChar], currentCharPosX-1, currentCharPosY);
-	displayCharacter(currentText[currentChar], currentCharPosX, currentCharPosY);
 	currentCharPosX--;
+	saveBackground(currentText[currentChar], currentCharPosX, currentCharPosY);
+	displayCharacter(currentText[currentChar], currentCharPosX, currentCharPosY);
 }
 
 void terminateTextScrollEngine(){
