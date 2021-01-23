@@ -46,7 +46,7 @@ void initTextScrollEngine(char *text, UWORD firstX, UWORD firstY,
 	scrollControlHeight = screenHeight;
 
 	getCharData(text[0], &fontInfo);
-	currentCharPosX = screenWidth - fontInfo.xSize;
+	currentCharPosX = scrollControlWidth - fontInfo.xSize;
 	currentCharPosY = firstY;
 
 	currentText = text;
@@ -58,15 +58,30 @@ void initTextScrollEngine(char *text, UWORD firstX, UWORD firstY,
 }
 
 void executeTextScrollEngine(){
-	if(currentCharPosX == firstCharXPos){
+	struct FontInfo fontInfo;
+	char letter = currentText[currentChar];
+
+	//check whether every char was moved at its position
+	if(letter == 0){
 		return;
 	}
 
 	//save/restore background and print character at next position
-	restoreBackground(currentText[currentChar], currentCharPosX, currentCharPosY);
+	restoreBackground(letter, currentCharPosX, currentCharPosY);
 	currentCharPosX--;
-	saveBackground(currentText[currentChar], currentCharPosX, currentCharPosY);
-	displayCharacter(currentText[currentChar], currentCharPosX, currentCharPosY);
+	saveBackground(letter, currentCharPosX, currentCharPosY);
+	displayCharacter(letter, currentCharPosX, currentCharPosY);
+
+	//check whether we have to switch to next letter
+	if(currentCharPosX <= firstCharXPos){
+		getCharData(letter, &fontInfo);
+		firstCharXPos += (fontInfo.xSize + 5);
+
+		currentChar++;
+		getCharData(currentText[currentChar], &fontInfo);
+		currentCharPosX = scrollControlWidth - fontInfo.xSize;
+		saveBackground(currentText[currentChar], currentCharPosX, currentCharPosY);
+	}
 }
 
 void terminateTextScrollEngine(){
