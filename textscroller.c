@@ -130,8 +130,7 @@ void initTextScroller(void) {
 
 	//Copy Text into ViewPort
 	initTextScrollEngine("hi there", 70, 60, TEXTSCROLLER_BLOB_FONT_DEPTH,
-			TEXTSCROLLER_VIEW_WIDTH,
-			TEXTSCROLLER_VIEW_TEXTSECTION_HEIGHT);
+			TEXTSCROLLER_VIEW_WIDTH);
 	//displayText("hi there", 70, 60);
 
 	//Make View visible

@@ -10,22 +10,8 @@
 extern struct BitMap *fontBlob;
 extern struct BitMap *textscrollerScreen;
 
-/*
- * Vorgehen:
- *
- * execute() methode im vsync ausführen
- * hat zeiger auf aktuelles char und dessen gewünschte position
- *
- * loop über char array:
- * - variablen: zeiger auf aktuelles zeichen, dessen zielposition, dessen aktuelle position
- * - lösche letztes zeichen, außer wenn gerade neues zeichen beginnt
- * - zeichne zeichen bei x+1
- * - gucke ob zeichen ziel erreicht hat, wenn ja setze zeiger auf nächstes zeichen
- *   -> berechne dessen zielposition
- */
-
-UWORD firstCharXPos = 0;
-UWORD firstCharYPos = 0;
+UWORD charXPosDestination = 0;
+UWORD charYPosDestination = 0;
 UWORD currentCharPosX = 0;
 UWORD currentCharPosY = 0;
 char *currentText = NULL;
@@ -33,26 +19,23 @@ UWORD currentChar = 0;
 struct BitMap *previousCharacterData = NULL;
 
 UWORD scrollControlWidth = 0;
-UWORD scrollControlHeight = 0;
 
 /*
  * Calculate start positions of characters, initialize
  * their stop position, allocate memory for background
  * save/restore buffer
  */
-void initTextScrollEngine(char *text, UWORD firstX, UWORD firstY,
-		UWORD depth,UWORD screenWidth, UWORD screenHeight){
+void initTextScrollEngine(char *text, UWORD firstXPosDestination,
+		UWORD firstYPosDestination, UWORD depth, UWORD screenWidth) {
 	struct FontInfo fontInfo;
 
-	firstCharXPos = firstX;
-	firstCharYPos = firstY;
-
+	charXPosDestination = firstXPosDestination;
+	charYPosDestination = firstYPosDestination;
 	scrollControlWidth = screenWidth;
-	scrollControlHeight = screenHeight;
 
 	getCharData(text[0], &fontInfo);
 	currentCharPosX = scrollControlWidth - fontInfo.xSize;
-	currentCharPosY = firstY;
+	currentCharPosY = firstYPosDestination;
 
 	currentText = text;
 	currentChar = 0;
@@ -78,10 +61,10 @@ void executeTextScrollEngine(){
 	displayCharacter(letter, currentCharPosX, currentCharPosY);
 
 	//check whether we have to switch to next letter
-	if(currentCharPosX <= firstCharXPos){
+	if(currentCharPosX <= charXPosDestination){
 		//calculate final position of next character
 		getCharData(letter, &fontInfo);
-		firstCharXPos += (fontInfo.xSize + 5);
+		charXPosDestination += (fontInfo.xSize + 5);
 
 		//skip space
 		currentChar++;
@@ -92,7 +75,7 @@ void executeTextScrollEngine(){
 		}
 
 		while(letter < 'a' || letter > 'z'){
-			firstCharXPos += 12;
+			charXPosDestination += 12;
 			currentChar++;
 			letter = currentText[currentChar];
 

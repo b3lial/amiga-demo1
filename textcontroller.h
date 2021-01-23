@@ -10,7 +10,7 @@
 
 #include <exec/types.h>
 
-#define TEXT_MOVEMENT_SPEED 2
+#define TEXT_MOVEMENT_SPEED 3
 
 struct FontInfo{
 	UWORD xSize;
@@ -20,7 +20,7 @@ struct FontInfo{
 };
 
 void initTextScrollEngine(char *text, UWORD firstX, UWORD firstY,
-		UWORD depth, UWORD screenWidth, UWORD screenHeight);
+		UWORD depth, UWORD screenWidth);
 void executeTextScrollEngine();
 void terminateTextScrollEngine();
 
