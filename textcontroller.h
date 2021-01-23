@@ -24,8 +24,6 @@ void initTextScrollEngine(char *text, UWORD firstX, UWORD firstY,
 void executeTextScrollEngine();
 void terminateTextScrollEngine();
 
-void saveBackground(char letter, UWORD xPos, UWORD yPos);
-void restoreBackground(char letter, UWORD xPos, UWORD yPos);
 void getCharData(char letter, struct FontInfo* fontInfo);
 void displayText(char *text, WORD xPos, WORD yPos);
 UWORD displayCharacter(char letter, WORD xPos, WORD yPos);

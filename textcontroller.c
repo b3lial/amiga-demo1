@@ -38,26 +38,40 @@ void initTextScrollEngine(char *text, UWORD firstXPosDestination,
 	currentCharPosX = scrollControlWidth - fontInfo.xSize;
 	currentCharPosY = firstYPosDestination;
 
-	//50*50 is enough because biggest character is about 30*33
+	//save background at character starting position
 	previousCharacterData = createBitMap(depth, 50, 50);
-	saveBackground(currentText[currentChar], currentCharPosX, currentCharPosY);
+	BltBitMap(textscrollerScreen, currentCharPosX, currentCharPosY,
+			previousCharacterData, 0, 0, fontInfo.xSize, fontInfo.ySize, 0xC0,
+			0xff, 0);
 }
 
 void executeTextScrollEngine(){
-	char letter = tolower(currentText[currentChar]);
+	struct FontInfo fontInfo;
+	char letter = currentText[currentChar];
+	getCharData(letter, &fontInfo);
 
 	//check whether every char was moved at its position
 	if(letter == 0){
 		return;
 	}
 
-	//save/restore background and move character at next position
-	restoreBackground(letter, currentCharPosX, currentCharPosY);
+	//restore previously saved background and character position
+	BltBitMap(previousCharacterData, 0,
+				0, textscrollerScreen, currentCharPosX, currentCharPosY,
+				fontInfo.xSize, fontInfo.ySize, 0xC0, 0xff, 0);
+
+	//move character to next position
 	currentCharPosX-=TEXT_MOVEMENT_SPEED;
-	saveBackground(letter, currentCharPosX, currentCharPosY);
+
+	//save background there
+	BltBitMap(textscrollerScreen, currentCharPosX, currentCharPosY,
+			previousCharacterData, 0, 0, fontInfo.xSize, fontInfo.ySize, 0xC0,
+			0xff, 0);
+
+	//blit character on screen
 	displayCharacter(letter, currentCharPosX, currentCharPosY);
 
-	//check whether we have to switch to next letter
+	//finally, check whether we have to switch to next letter
 	if(currentCharPosX <= charXPosDestination){
 		prepareForNextCharacter(letter);
 	}
@@ -96,32 +110,15 @@ void prepareForNextCharacter(char letter) {
 	//found next character, prepare everything for his arrival
 	getCharData(letter, &fontInfo);
 	currentCharPosX = scrollControlWidth - fontInfo.xSize;
-	saveBackground(letter, currentCharPosX, currentCharPosY);
+
+	//save background at character starting position
+	BltBitMap(textscrollerScreen, currentCharPosX, currentCharPosY,
+			previousCharacterData, 0, 0, fontInfo.xSize, fontInfo.ySize, 0xC0,
+			0xff, 0);
 }
 
 void terminateTextScrollEngine(){
 	cleanBitMap(previousCharacterData);
-}
-
-/**
- * Save part of background bitmap in previousCharacterData
- */
-void saveBackground(char letter, UWORD xPos, UWORD yPos) {
-	struct FontInfo fontInfo;
-	getCharData(letter, &fontInfo);
-	BltBitMap(textscrollerScreen, xPos, yPos, previousCharacterData, 0, 0,
-			fontInfo.xSize, fontInfo.ySize, 0xC0, 0xff, 0);
-}
-
-/**
- * Restore part of background bitmap from previousCharacterData
- */
-void restoreBackground(char letter, UWORD xPos, UWORD yPos){
-	struct FontInfo fontInfo;
-	getCharData(letter, &fontInfo);
-	BltBitMap(previousCharacterData, 0,
-			0, textscrollerScreen, xPos, yPos,
-			fontInfo.xSize, fontInfo.ySize, 0xC0, 0xff, 0);
 }
 
 /**
