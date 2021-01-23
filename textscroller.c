@@ -3,22 +3,27 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <string.h>
+#include <stdlib.h>
 
 #include <exec/types.h>
 #include <exec/memory.h>
 
 #include <proto/graphics.h>
 #include <proto/exec.h>
+#include <proto/alib.h>
 
 #include <graphics/displayinfo.h>
 #include <graphics/gfxbase.h>
 #include <graphics/videocontrol.h>
+#include <graphics/rastport.h>
 
 #include <dos/dos.h>
 
 #include "starlight/starlight.h"
 #include "main.h"
 #include "textcontroller.h"
+
+void createStars(struct BitMap *bitmap);
 
 WORD payloadTextScrollerState = TEXTSCROLLER_INIT;
 struct BitMap *fontBlob = NULL;
@@ -106,6 +111,7 @@ void initTextScroller(void) {
 	writeLogFS("TextScroller Screen BitMap: BytesPerRow: %d, Rows: %d, Flags: %d, pad: %d\n",
 			textscrollerScreen->BytesPerRow, textscrollerScreen->Rows,
 			textscrollerScreen->Flags, textscrollerScreen->pad);
+	createStars(textscrollerScreen);
 
 	//Create View and ViewExtra memory structures
 	writeLog("\nCreate view\n");
@@ -163,4 +169,21 @@ void exitTextScroller(void) {
 	cleanBitMap(fontBlob);
 	cleanBitMap(spaceBlob);
 	payloadTextScrollerState = TEXTSCROLLER_INIT;
+}
+
+void createStars(struct BitMap *bitmap){
+	BYTE i;
+	UWORD x,y;
+
+	struct RastPort rastPort = {0};
+	InitRastPort(&rastPort);
+	rastPort.BitMap = bitmap;
+
+	SetAPen(&rastPort, 6);
+	for(i=0;i<50;i++){
+		x = RangeRand(TEXTSCROLLER_VIEW_WIDTH);
+		y = RangeRand(TEXTSCROLLER_VIEW_TEXTSECTION_HEIGHT);
+		writeLogFS("random value x %d, y %d\n", x, y);
+		WritePixel(&rastPort, x, y);
+	}
 }

@@ -159,7 +159,7 @@ UWORD displayCharacter(char letter, WORD xPos, WORD yPos) {
 	 */
 	BltBitMap(fontBlob, fontInfo.characterPosInFontX,
 			fontInfo.characterPosInFontY, textscrollerScreen, xPos, yPos,
-			fontInfo.xSize, fontInfo.ySize, 0xE0, 0xff, 0);
+			fontInfo.xSize, fontInfo.ySize, 0xC0, 0xff, 0);
 	return (UWORD) (xPos + fontInfo.xSize + 5);
 }
 
