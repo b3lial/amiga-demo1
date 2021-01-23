@@ -28,17 +28,15 @@ UWORD scrollControlWidth = 0;
 void initTextScrollEngine(char *text, UWORD firstXPosDestination,
 		UWORD firstYPosDestination, UWORD depth, UWORD screenWidth) {
 	struct FontInfo fontInfo;
-
 	charXPosDestination = firstXPosDestination;
 	charYPosDestination = firstYPosDestination;
 	scrollControlWidth = screenWidth;
-
-	getCharData(text[0], &fontInfo);
-	currentCharPosX = scrollControlWidth - fontInfo.xSize;
-	currentCharPosY = firstYPosDestination;
-
 	currentText = text;
 	currentChar = 0;
+
+	getCharData(currentText[currentChar], &fontInfo);
+	currentCharPosX = scrollControlWidth - fontInfo.xSize;
+	currentCharPosY = firstYPosDestination;
 
 	//50*50 is enough because biggest character is about 30*33
 	previousCharacterData = createBitMap(depth, 50, 50);
@@ -46,8 +44,7 @@ void initTextScrollEngine(char *text, UWORD firstXPosDestination,
 }
 
 void executeTextScrollEngine(){
-	struct FontInfo fontInfo;
-	char letter = currentText[currentChar];
+	char letter = tolower(currentText[currentChar]);
 
 	//check whether every char was moved at its position
 	if(letter == 0){
@@ -62,34 +59,44 @@ void executeTextScrollEngine(){
 
 	//check whether we have to switch to next letter
 	if(currentCharPosX <= charXPosDestination){
-		//calculate final position of next character
-		getCharData(letter, &fontInfo);
-		charXPosDestination += (fontInfo.xSize + 5);
+		prepareForNextCharacter(letter);
+	}
+}
 
-		//skip space
+/*
+ * Search in text string for next non-whitespace
+ * character and initialize its destination position
+ */
+void prepareForNextCharacter(char letter) {
+	struct FontInfo fontInfo;
+
+	//calculate final position of next character
+	getCharData(letter, &fontInfo);
+	charXPosDestination += (fontInfo.xSize + 5);
+
+	//skip space
+	currentChar++;
+	letter = tolower(currentText[currentChar]);
+	//reach end of string
+	if (letter == 0) {
+		return;
+	}
+
+	while (letter < 'a' || letter > 'z') {
+		charXPosDestination += 15;
 		currentChar++;
 		letter = currentText[currentChar];
+
 		//reach end of string
-		if(letter == 0){
+		if (letter == 0) {
 			return;
 		}
-
-		while(letter < 'a' || letter > 'z'){
-			charXPosDestination += 12;
-			currentChar++;
-			letter = currentText[currentChar];
-
-			//reach end of string
-			if(letter == 0){
-				return;
-			}
-		}
-
-		//found next character, prepare everything for his arrival
-		getCharData(letter, &fontInfo);
-		currentCharPosX = scrollControlWidth - fontInfo.xSize;
-		saveBackground(letter, currentCharPosX, currentCharPosY);
 	}
+
+	//found next character, prepare everything for his arrival
+	getCharData(letter, &fontInfo);
+	currentCharPosX = scrollControlWidth - fontInfo.xSize;
+	saveBackground(letter, currentCharPosX, currentCharPosY);
 }
 
 void terminateTextScrollEngine(){
@@ -134,15 +141,16 @@ void displayText(char *text, WORD xPos, WORD yPos) {
 			continue;
 		}
 
-		//displayCharacter(currentChar, &xPos, &yPos);
+		//print character on screen and save position of next char
+		xPos = displayCharacter(currentChar, xPos, yPos);
 	}
 }
 
 /**
- * Print a character on screen. Add size on xPos/yPos to have coordinates
- * for the next character.
+ * Print a character on screen. Return position of next
+ * character
  */
-void displayCharacter(char letter, WORD xPos, WORD yPos) {
+UWORD displayCharacter(char letter, WORD xPos, WORD yPos) {
 	struct FontInfo fontInfo;
 
 	//get size and position in font of corresponding character
@@ -155,13 +163,15 @@ void displayCharacter(char letter, WORD xPos, WORD yPos) {
 	BltBitMap(fontBlob, fontInfo.characterPosInFontX,
 			fontInfo.characterPosInFontY, textscrollerScreen, xPos, yPos,
 			fontInfo.xSize, fontInfo.ySize, 0xE0, 0xff, 0);
-	//*xPos += (fontInfo.xSize + 5);
+	return (xPos + fontInfo.xSize + 5);
 }
 
 /**
  * This data highly depends on the font
  */
 void getCharData(char letter, struct FontInfo *fontInfo) {
+	letter = tolower(letter);
+
 	switch (letter) {
 	case 'a':
 		fontInfo->xSize = 28;
