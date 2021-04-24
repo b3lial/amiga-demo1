@@ -80,7 +80,7 @@ void initTextScroller(void)
 
 	//Load space background bitmap and colors
 	writeLog("\nLoad space background bitmap and colors\n");
-	spaceBlob = loadBlob("img/space3_320_125_8.RAW", TEXTSCROLLER_BLOB_SPACE_DEPTH,
+	spaceBlob = loadBlob("img/space4_320_125_8.RAW", TEXTSCROLLER_BLOB_SPACE_DEPTH,
 						 TEXTSCROLLER_BLOB_SPACE_WIDTH, TEXTSCROLLER_BLOB_SPACE_HEIGHT);
 	if (spaceBlob == NULL)
 	{
