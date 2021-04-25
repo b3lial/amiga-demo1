@@ -1,5 +1,7 @@
-#ifndef __VIEW_BALLBLOB_H__
-#define __VIEW_BALLBLOB_H__
+// Copyright 2021 Christian Ammann
+
+#ifndef TEXTSCROLLER_H__
+#define TEXTSCROLLER_H__
 
 #include <exec/types.h>
 #include <proto/graphics.h>
@@ -26,5 +28,6 @@ WORD fsmTextScroller(void);
 void initTextScroller(void);
 BOOL executeTextScroller(void);
 void exitTextScroller(void);
+void createStars(struct BitMap *bitmap);
 
-#endif
+#endif  // TEXTSCROLLER_H__

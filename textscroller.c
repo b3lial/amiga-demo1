@@ -21,8 +21,6 @@
 #include "starlight/starlight.h"
 #include "textcontroller.h"
 
-void createStars(struct BitMap *bitmap);
-
 WORD payloadTextScrollerState = TEXTSCROLLER_INIT;
 struct BitMap *fontBlob = NULL;
 struct BitMap *spaceBlob = NULL;
