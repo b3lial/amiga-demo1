@@ -23,6 +23,6 @@ void terminateTextScrollEngine(void);
 
 void getCharData(char letter, struct FontInfo *fontInfo);
 UWORD displayCurrentCharacter(WORD xPos, WORD yPos);
-void prepareForNextCharacter();
+void prepareForNextCharacter(void);
 
 #endif  // TEXTCONTROLLER_H_

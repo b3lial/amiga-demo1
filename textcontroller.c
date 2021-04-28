@@ -12,15 +12,25 @@
 extern struct BitMap *fontBlob;
 extern struct BitMap *textscrollerScreen;
 
-UWORD charXPosDestination = 0;
-UWORD charYPosDestination = 0;
-UWORD charDepth = 0;
-
-UWORD currentCharPosX = 0;
-UWORD currentCharPosY = 0;
+/*
+ * Contains the text which is displayed and 
+ * an index to current char
+ */
 char *currentText = NULL;
 UWORD currentChar = 0;
 
+// At which position do we want to move the current character
+UWORD charXPosDestination = 0;
+UWORD charYPosDestination = 0;
+
+// At which position IS the current character
+UWORD currentCharPosX = 0;
+UWORD currentCharPosY = 0;
+
+// Color depth of font blob
+UWORD charDepth = 0;
+
+// contains data of characters blitted on screen
 UBYTE currentCharacterOnScreen;
 struct FontInfo charactersOnScreen[MAX_CHAR_PER_LINE];
 
@@ -33,6 +43,7 @@ UWORD scrollControlWidth = 0;
  */
 void initTextScrollEngine(char *text, UWORD firstXPosDestination,
                           UWORD firstYPosDestination, UWORD depth, UWORD screenWidth) {
+    // Init engines global variables
     currentCharacterOnScreen = 0;
     memset(charactersOnScreen, 0, sizeof(charactersOnScreen));
 
