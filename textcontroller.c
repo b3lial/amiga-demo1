@@ -27,8 +27,8 @@ UWORD charYPosDestination = 0;
 UWORD charDepth = 0;
 
 // contains data of characters blitted on screen
-UBYTE currentCharacterOnScreen;
-struct FontInfo charactersOnScreen[MAX_CHAR_PER_LINE];
+UBYTE charIndex;
+struct CharBlob characters[MAX_CHAR_PER_LINE];
 
 UWORD scrollControlWidth = 0;
 
@@ -40,8 +40,8 @@ UWORD scrollControlWidth = 0;
 void initTextScrollEngine(char *text, UWORD firstXPosDestination,
                           UWORD firstYPosDestination, UWORD depth, UWORD screenWidth) {
     // Init engines global variables
-    currentCharacterOnScreen = 0;
-    memset(charactersOnScreen, 0, sizeof(charactersOnScreen));
+    charIndex = 0;
+    memset(characters, 0, sizeof(characters));
 
     charXPosDestination = firstXPosDestination;
     charYPosDestination = firstYPosDestination;
@@ -50,18 +50,18 @@ void initTextScrollEngine(char *text, UWORD firstXPosDestination,
     currentChar = 0;
     charDepth = depth;
 
-    getCharData(currentText[currentChar], &(charactersOnScreen[currentCharacterOnScreen]));
-    charactersOnScreen[currentCharacterOnScreen].xPos =
-        scrollControlWidth - charactersOnScreen[currentCharacterOnScreen].xSize;
-    charactersOnScreen[currentCharacterOnScreen].yPos = charYPosDestination;
+    getCharData(currentText[currentChar], &(characters[charIndex]));
+    characters[charIndex].xPos =
+        scrollControlWidth - characters[charIndex].xSize;
+    characters[charIndex].yPos = charYPosDestination;
 
     // save background at character starting position
-    charactersOnScreen[currentCharacterOnScreen].oldBackground = createBitMap(charDepth, 50, 50);
-    BltBitMap(textscrollerScreen, charactersOnScreen[currentCharacterOnScreen].xPos,
-              charactersOnScreen[currentCharacterOnScreen].yPos,
-              charactersOnScreen[currentCharacterOnScreen].oldBackground, 0, 0,
-              charactersOnScreen[currentCharacterOnScreen].xSize,
-              charactersOnScreen[currentCharacterOnScreen].ySize, 0xC0,
+    characters[charIndex].oldBackground = createBitMap(charDepth, 50, 50);
+    BltBitMap(textscrollerScreen, characters[charIndex].xPos,
+              characters[charIndex].yPos,
+              characters[charIndex].oldBackground, 0, 0,
+              characters[charIndex].xSize,
+              characters[charIndex].ySize, 0xC0,
               0xff, 0);
 }
 
@@ -72,30 +72,30 @@ void executeTextScrollEngine() {
     }
 
     // restore previously saved background and character position
-    BltBitMap(charactersOnScreen[currentCharacterOnScreen].oldBackground, 0, 0,
-              textscrollerScreen, charactersOnScreen[currentCharacterOnScreen].xPos,
-              charactersOnScreen[currentCharacterOnScreen].yPos,
-              charactersOnScreen[currentCharacterOnScreen].xSize,
-              charactersOnScreen[currentCharacterOnScreen].ySize, 0xC0, 0xff, 0);
+    BltBitMap(characters[charIndex].oldBackground, 0, 0,
+              textscrollerScreen, characters[charIndex].xPos,
+              characters[charIndex].yPos,
+              characters[charIndex].xSize,
+              characters[charIndex].ySize, 0xC0, 0xff, 0);
 
     // move character to next position
-    charactersOnScreen[currentCharacterOnScreen].xPos -= TEXT_MOVEMENT_SPEED;
+    characters[charIndex].xPos -= TEXT_MOVEMENT_SPEED;
 
     // save background there
     BltBitMap(textscrollerScreen,
-              charactersOnScreen[currentCharacterOnScreen].xPos,
-              charactersOnScreen[currentCharacterOnScreen].yPos,
-              charactersOnScreen[currentCharacterOnScreen].oldBackground, 0, 0,
-              charactersOnScreen[currentCharacterOnScreen].xSize,
-              charactersOnScreen[currentCharacterOnScreen].ySize, 0xC0,
+              characters[charIndex].xPos,
+              characters[charIndex].yPos,
+              characters[charIndex].oldBackground, 0, 0,
+              characters[charIndex].xSize,
+              characters[charIndex].ySize, 0xC0,
               0xff, 0);
 
     // blit character on screen
-    displayCurrentCharacter(charactersOnScreen[currentCharacterOnScreen].xPos,
-                            charactersOnScreen[currentCharacterOnScreen].yPos);
+    displayCurrentCharacter(characters[charIndex].xPos,
+                            characters[charIndex].yPos);
 
     // finally, check whether we have to switch to next letter
-    if (charactersOnScreen[currentCharacterOnScreen].xPos <= charXPosDestination) {
+    if (characters[charIndex].xPos <= charXPosDestination) {
         prepareForNextCharacter();
     }
 }
@@ -106,7 +106,7 @@ void executeTextScrollEngine() {
  */
 void prepareForNextCharacter() {
     char letter = 0;
-    charXPosDestination += (charactersOnScreen[currentCharacterOnScreen].xSize + 5);
+    charXPosDestination += (characters[charIndex].xSize + 5);
 
     // skip space
     currentChar++;
@@ -128,29 +128,29 @@ void prepareForNextCharacter() {
     }
 
     // found next character, prepare everything for his arrival
-    currentCharacterOnScreen++;
-    getCharData(letter, &(charactersOnScreen[currentCharacterOnScreen]));
-    charactersOnScreen[currentCharacterOnScreen].oldBackground = createBitMap(charDepth, 50, 50);
-    charactersOnScreen[currentCharacterOnScreen].xPos =
-        scrollControlWidth - charactersOnScreen[currentCharacterOnScreen].xSize;
-    charactersOnScreen[currentCharacterOnScreen].yPos = charYPosDestination;
+    charIndex++;
+    getCharData(letter, &(characters[charIndex]));
+    characters[charIndex].oldBackground = createBitMap(charDepth, 50, 50);
+    characters[charIndex].xPos =
+        scrollControlWidth - characters[charIndex].xSize;
+    characters[charIndex].yPos = charYPosDestination;
 
     // save background at character starting position
     BltBitMap(textscrollerScreen,
-              charactersOnScreen[currentCharacterOnScreen].xPos,
-              charactersOnScreen[currentCharacterOnScreen].yPos,
-              charactersOnScreen[currentCharacterOnScreen].oldBackground, 0, 0,
-              charactersOnScreen[currentCharacterOnScreen].xSize,
-              charactersOnScreen[currentCharacterOnScreen].ySize, 0xC0,
+              characters[charIndex].xPos,
+              characters[charIndex].yPos,
+              characters[charIndex].oldBackground, 0, 0,
+              characters[charIndex].xSize,
+              characters[charIndex].ySize, 0xC0,
               0xff, 0);
 }
 
 void terminateTextScrollEngine() {
     UBYTE i = 0;
     for (; i < MAX_CHAR_PER_LINE; i++) {
-        if (charactersOnScreen[i].oldBackground) {
-            cleanBitMap(charactersOnScreen[i].oldBackground);
-            charactersOnScreen[i].oldBackground = NULL;
+        if (characters[i].oldBackground) {
+            cleanBitMap(characters[i].oldBackground);
+            characters[i].oldBackground = NULL;
         }
     }
 }
@@ -165,188 +165,188 @@ UWORD displayCurrentCharacter(WORD xPos, WORD yPos) {
 	 * Therefore, we use minterm: BC+NBC+BNC -> 1110xxxx -> 0xE0
 	 */
     BltBitMap(fontBlob,
-              charactersOnScreen[currentCharacterOnScreen].characterPosInFontX,
-              charactersOnScreen[currentCharacterOnScreen].characterPosInFontY,
+              characters[charIndex].xPosInFont,
+              characters[charIndex].yPosInFont,
               textscrollerScreen, xPos, yPos,
-              charactersOnScreen[currentCharacterOnScreen].xSize,
-              charactersOnScreen[currentCharacterOnScreen].ySize, 0xC0, 0xff, 0);
-    return (UWORD)(xPos + charactersOnScreen[currentCharacterOnScreen].xSize + 5);
+              characters[charIndex].xSize,
+              characters[charIndex].ySize, 0xC0, 0xff, 0);
+    return (UWORD)(xPos + characters[charIndex].xSize + 5);
 }
 
 /**
  * This data highly depends on the font
  */
-void getCharData(char letter, struct FontInfo *fontInfo) {
+void getCharData(char letter, struct CharBlob *charBlob) {
     letter = tolower(letter);
 
     switch (letter) {
         case 'a':
-            fontInfo->xSize = 28;
-            fontInfo->ySize = 33;
-            fontInfo->characterPosInFontX = 1;
-            fontInfo->characterPosInFontY = 0;
+            charBlob->xSize = 28;
+            charBlob->ySize = 33;
+            charBlob->xPosInFont = 1;
+            charBlob->yPosInFont = 0;
             break;
         case 'b':
-            fontInfo->xSize = 21;
-            fontInfo->ySize = 33;
-            fontInfo->characterPosInFontX = 41;
-            fontInfo->characterPosInFontY = 0;
+            charBlob->xSize = 21;
+            charBlob->ySize = 33;
+            charBlob->xPosInFont = 41;
+            charBlob->yPosInFont = 0;
             break;
         case 'c':
-            fontInfo->xSize = 22;
-            fontInfo->ySize = 33;
-            fontInfo->characterPosInFontX = 81;
-            fontInfo->characterPosInFontY = 0;
+            charBlob->xSize = 22;
+            charBlob->ySize = 33;
+            charBlob->xPosInFont = 81;
+            charBlob->yPosInFont = 0;
             break;
         case 'd':
-            fontInfo->xSize = 25;
-            fontInfo->ySize = 33;
-            fontInfo->characterPosInFontX = 121;
-            fontInfo->characterPosInFontY = 0;
+            charBlob->xSize = 25;
+            charBlob->ySize = 33;
+            charBlob->xPosInFont = 121;
+            charBlob->yPosInFont = 0;
             break;
         case 'e':
-            fontInfo->xSize = 19;
-            fontInfo->ySize = 33;
-            fontInfo->characterPosInFontX = 161;
-            fontInfo->characterPosInFontY = 0;
+            charBlob->xSize = 19;
+            charBlob->ySize = 33;
+            charBlob->xPosInFont = 161;
+            charBlob->yPosInFont = 0;
             break;
         case 'f':
-            fontInfo->xSize = 19;
-            fontInfo->ySize = 33;
-            fontInfo->characterPosInFontX = 201;
-            fontInfo->characterPosInFontY = 0;
+            charBlob->xSize = 19;
+            charBlob->ySize = 33;
+            charBlob->xPosInFont = 201;
+            charBlob->yPosInFont = 0;
             break;
         case 'g':
-            fontInfo->xSize = 24;
-            fontInfo->ySize = 33;
-            fontInfo->characterPosInFontX = 241;
-            fontInfo->characterPosInFontY = 0;
+            charBlob->xSize = 24;
+            charBlob->ySize = 33;
+            charBlob->xPosInFont = 241;
+            charBlob->yPosInFont = 0;
             break;
         case 'h':
-            fontInfo->xSize = 21;
-            fontInfo->ySize = 33;
-            fontInfo->characterPosInFontX = 1;
-            fontInfo->characterPosInFontY = 40;
+            charBlob->xSize = 21;
+            charBlob->ySize = 33;
+            charBlob->xPosInFont = 1;
+            charBlob->yPosInFont = 40;
             break;
         case 'i':
-            fontInfo->xSize = 5;
-            fontInfo->ySize = 33;
-            fontInfo->characterPosInFontX = 41;
-            fontInfo->characterPosInFontY = 40;
+            charBlob->xSize = 5;
+            charBlob->ySize = 33;
+            charBlob->xPosInFont = 41;
+            charBlob->yPosInFont = 40;
             break;
         case 'j':
-            fontInfo->xSize = 19;
-            fontInfo->ySize = 33;
-            fontInfo->characterPosInFontX = 81;
-            fontInfo->characterPosInFontY = 40;
+            charBlob->xSize = 19;
+            charBlob->ySize = 33;
+            charBlob->xPosInFont = 81;
+            charBlob->yPosInFont = 40;
             break;
         case 'k':
-            fontInfo->xSize = 18;
-            fontInfo->ySize = 33;
-            fontInfo->characterPosInFontX = 121;
-            fontInfo->characterPosInFontY = 40;
+            charBlob->xSize = 18;
+            charBlob->ySize = 33;
+            charBlob->xPosInFont = 121;
+            charBlob->yPosInFont = 40;
             break;
         case 'l':
-            fontInfo->xSize = 19;
-            fontInfo->ySize = 33;
-            fontInfo->characterPosInFontX = 161;
-            fontInfo->characterPosInFontY = 40;
+            charBlob->xSize = 19;
+            charBlob->ySize = 33;
+            charBlob->xPosInFont = 161;
+            charBlob->yPosInFont = 40;
             break;
         case 'm':
-            fontInfo->xSize = 27;
-            fontInfo->ySize = 33;
-            fontInfo->characterPosInFontX = 201;
-            fontInfo->characterPosInFontY = 40;
+            charBlob->xSize = 27;
+            charBlob->ySize = 33;
+            charBlob->xPosInFont = 201;
+            charBlob->yPosInFont = 40;
             break;
         case 'n':
-            fontInfo->xSize = 21;
-            fontInfo->ySize = 33;
-            fontInfo->characterPosInFontX = 241;
-            fontInfo->characterPosInFontY = 40;
+            charBlob->xSize = 21;
+            charBlob->ySize = 33;
+            charBlob->xPosInFont = 241;
+            charBlob->yPosInFont = 40;
             break;
         case 'o':
-            fontInfo->xSize = 27;
-            fontInfo->ySize = 33;
-            fontInfo->characterPosInFontX = 1;
-            fontInfo->characterPosInFontY = 80;
+            charBlob->xSize = 27;
+            charBlob->ySize = 33;
+            charBlob->xPosInFont = 1;
+            charBlob->yPosInFont = 80;
             break;
         case 'p':
-            fontInfo->xSize = 23;
-            fontInfo->ySize = 33;
-            fontInfo->characterPosInFontX = 41;
-            fontInfo->characterPosInFontY = 80;
+            charBlob->xSize = 23;
+            charBlob->ySize = 33;
+            charBlob->xPosInFont = 41;
+            charBlob->yPosInFont = 80;
             break;
         case 'q':
-            fontInfo->xSize = 30;
-            fontInfo->ySize = 33;
-            fontInfo->characterPosInFontX = 81;
-            fontInfo->characterPosInFontY = 80;
+            charBlob->xSize = 30;
+            charBlob->ySize = 33;
+            charBlob->xPosInFont = 81;
+            charBlob->yPosInFont = 80;
             break;
         case 'r':
-            fontInfo->xSize = 23;
-            fontInfo->ySize = 33;
-            fontInfo->characterPosInFontX = 121;
-            fontInfo->characterPosInFontY = 80;
+            charBlob->xSize = 23;
+            charBlob->ySize = 33;
+            charBlob->xPosInFont = 121;
+            charBlob->yPosInFont = 80;
             break;
         case 's':
-            fontInfo->xSize = 22;
-            fontInfo->ySize = 33;
-            fontInfo->characterPosInFontX = 161;
-            fontInfo->characterPosInFontY = 80;
+            charBlob->xSize = 22;
+            charBlob->ySize = 33;
+            charBlob->xPosInFont = 161;
+            charBlob->yPosInFont = 80;
             break;
         case 't':
-            fontInfo->xSize = 27;
-            fontInfo->ySize = 33;
-            fontInfo->characterPosInFontX = 201;
-            fontInfo->characterPosInFontY = 80;
+            charBlob->xSize = 27;
+            charBlob->ySize = 33;
+            charBlob->xPosInFont = 201;
+            charBlob->yPosInFont = 80;
             break;
         case 'u':
-            fontInfo->xSize = 21;
-            fontInfo->ySize = 33;
-            fontInfo->characterPosInFontX = 241;
-            fontInfo->characterPosInFontY = 80;
+            charBlob->xSize = 21;
+            charBlob->ySize = 33;
+            charBlob->xPosInFont = 241;
+            charBlob->yPosInFont = 80;
             break;
         case 'v':
-            fontInfo->xSize = 25;
-            fontInfo->ySize = 33;
-            fontInfo->characterPosInFontX = 1;
-            fontInfo->characterPosInFontY = 120;
+            charBlob->xSize = 25;
+            charBlob->ySize = 33;
+            charBlob->xPosInFont = 1;
+            charBlob->yPosInFont = 120;
             break;
         case 'w':
-            fontInfo->xSize = 27;
-            fontInfo->ySize = 33;
-            fontInfo->characterPosInFontX = 41;
-            fontInfo->characterPosInFontY = 120;
+            charBlob->xSize = 27;
+            charBlob->ySize = 33;
+            charBlob->xPosInFont = 41;
+            charBlob->yPosInFont = 120;
             break;
         case 'x':
-            fontInfo->xSize = 25;
-            fontInfo->ySize = 33;
-            fontInfo->characterPosInFontX = 81;
-            fontInfo->characterPosInFontY = 120;
+            charBlob->xSize = 25;
+            charBlob->ySize = 33;
+            charBlob->xPosInFont = 81;
+            charBlob->yPosInFont = 120;
             break;
         case 'y':
-            fontInfo->xSize = 26;
-            fontInfo->ySize = 33;
-            fontInfo->characterPosInFontX = 121;
-            fontInfo->characterPosInFontY = 120;
+            charBlob->xSize = 26;
+            charBlob->ySize = 33;
+            charBlob->xPosInFont = 121;
+            charBlob->yPosInFont = 120;
             break;
         case 'z':
-            fontInfo->xSize = 20;
-            fontInfo->ySize = 33;
-            fontInfo->characterPosInFontX = 161;
-            fontInfo->characterPosInFontY = 120;
+            charBlob->xSize = 20;
+            charBlob->ySize = 33;
+            charBlob->xPosInFont = 161;
+            charBlob->yPosInFont = 120;
             break;
         case ' ':
-            fontInfo->xSize = 12;
-            fontInfo->ySize = 33;
-            fontInfo->characterPosInFontX = 201;
-            fontInfo->characterPosInFontY = 120;
+            charBlob->xSize = 12;
+            charBlob->ySize = 33;
+            charBlob->xPosInFont = 201;
+            charBlob->yPosInFont = 120;
             break;
         default:
-            fontInfo->xSize = 12;
-            fontInfo->ySize = 33;
-            fontInfo->characterPosInFontX = 201;
-            fontInfo->characterPosInFontY = 120;
+            charBlob->xSize = 12;
+            charBlob->ySize = 33;
+            charBlob->xPosInFont = 201;
+            charBlob->yPosInFont = 120;
             break;
     }
 }

@@ -8,13 +8,13 @@
 #define TEXT_MOVEMENT_SPEED 3
 #define MAX_CHAR_PER_LINE 20
 
-struct FontInfo {
+struct CharBlob {
     UWORD xSize;
     UWORD ySize;
     UWORD xPos;
     UWORD yPos;
-    UWORD characterPosInFontX;
-    UWORD characterPosInFontY;
+    UWORD xPosInFont;
+    UWORD yPosInFont;
     struct BitMap *oldBackground;
 };
 
@@ -23,7 +23,7 @@ void initTextScrollEngine(char *text, UWORD firstX, UWORD firstY,
 void executeTextScrollEngine(void);
 void terminateTextScrollEngine(void);
 
-void getCharData(char letter, struct FontInfo *fontInfo);
+void getCharData(char letter, struct CharBlob *charBlob);
 UWORD displayCurrentCharacter(WORD xPos, WORD yPos);
 void prepareForNextCharacter(void);
 
