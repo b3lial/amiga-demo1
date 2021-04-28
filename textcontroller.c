@@ -23,10 +23,6 @@ UWORD currentChar = 0;
 UWORD charXPosDestination = 0;
 UWORD charYPosDestination = 0;
 
-// At which position IS the current character
-UWORD currentCharPosX = 0;
-UWORD currentCharPosY = 0;
-
 // Color depth of font blob
 UWORD charDepth = 0;
 
@@ -55,12 +51,14 @@ void initTextScrollEngine(char *text, UWORD firstXPosDestination,
     charDepth = depth;
 
     getCharData(currentText[currentChar], &(charactersOnScreen[currentCharacterOnScreen]));
-    currentCharPosX = scrollControlWidth - charactersOnScreen[currentCharacterOnScreen].xSize;
-    currentCharPosY = firstYPosDestination;
+    charactersOnScreen[currentCharacterOnScreen].xPos =
+        scrollControlWidth - charactersOnScreen[currentCharacterOnScreen].xSize;
+    charactersOnScreen[currentCharacterOnScreen].yPos = charYPosDestination;
 
     // save background at character starting position
     charactersOnScreen[currentCharacterOnScreen].oldBackground = createBitMap(charDepth, 50, 50);
-    BltBitMap(textscrollerScreen, currentCharPosX, currentCharPosY,
+    BltBitMap(textscrollerScreen, charactersOnScreen[currentCharacterOnScreen].xPos,
+              charactersOnScreen[currentCharacterOnScreen].yPos,
               charactersOnScreen[currentCharacterOnScreen].oldBackground, 0, 0,
               charactersOnScreen[currentCharacterOnScreen].xSize,
               charactersOnScreen[currentCharacterOnScreen].ySize, 0xC0,
@@ -74,26 +72,30 @@ void executeTextScrollEngine() {
     }
 
     // restore previously saved background and character position
-    BltBitMap(charactersOnScreen[currentCharacterOnScreen].oldBackground, 0,
-              0, textscrollerScreen, currentCharPosX, currentCharPosY,
+    BltBitMap(charactersOnScreen[currentCharacterOnScreen].oldBackground, 0, 0,
+              textscrollerScreen, charactersOnScreen[currentCharacterOnScreen].xPos,
+              charactersOnScreen[currentCharacterOnScreen].yPos,
               charactersOnScreen[currentCharacterOnScreen].xSize,
               charactersOnScreen[currentCharacterOnScreen].ySize, 0xC0, 0xff, 0);
 
     // move character to next position
-    currentCharPosX -= TEXT_MOVEMENT_SPEED;
+    charactersOnScreen[currentCharacterOnScreen].xPos -= TEXT_MOVEMENT_SPEED;
 
     // save background there
-    BltBitMap(textscrollerScreen, currentCharPosX, currentCharPosY,
+    BltBitMap(textscrollerScreen,
+              charactersOnScreen[currentCharacterOnScreen].xPos,
+              charactersOnScreen[currentCharacterOnScreen].yPos,
               charactersOnScreen[currentCharacterOnScreen].oldBackground, 0, 0,
               charactersOnScreen[currentCharacterOnScreen].xSize,
               charactersOnScreen[currentCharacterOnScreen].ySize, 0xC0,
               0xff, 0);
 
     // blit character on screen
-    displayCurrentCharacter(currentCharPosX, currentCharPosY);
+    displayCurrentCharacter(charactersOnScreen[currentCharacterOnScreen].xPos,
+                            charactersOnScreen[currentCharacterOnScreen].yPos);
 
     // finally, check whether we have to switch to next letter
-    if (currentCharPosX <= charXPosDestination) {
+    if (charactersOnScreen[currentCharacterOnScreen].xPos <= charXPosDestination) {
         prepareForNextCharacter();
     }
 }
@@ -129,10 +131,14 @@ void prepareForNextCharacter() {
     currentCharacterOnScreen++;
     getCharData(letter, &(charactersOnScreen[currentCharacterOnScreen]));
     charactersOnScreen[currentCharacterOnScreen].oldBackground = createBitMap(charDepth, 50, 50);
-    currentCharPosX = scrollControlWidth - charactersOnScreen[currentCharacterOnScreen].xSize;
+    charactersOnScreen[currentCharacterOnScreen].xPos =
+        scrollControlWidth - charactersOnScreen[currentCharacterOnScreen].xSize;
+    charactersOnScreen[currentCharacterOnScreen].yPos = charYPosDestination;
 
     // save background at character starting position
-    BltBitMap(textscrollerScreen, currentCharPosX, currentCharPosY,
+    BltBitMap(textscrollerScreen,
+              charactersOnScreen[currentCharacterOnScreen].xPos,
+              charactersOnScreen[currentCharacterOnScreen].yPos,
               charactersOnScreen[currentCharacterOnScreen].oldBackground, 0, 0,
               charactersOnScreen[currentCharacterOnScreen].xSize,
               charactersOnScreen[currentCharacterOnScreen].ySize, 0xC0,

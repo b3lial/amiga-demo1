@@ -11,6 +11,8 @@
 struct FontInfo {
     UWORD xSize;
     UWORD ySize;
+    UWORD xPos;
+    UWORD yPos;
     UWORD characterPosInFontX;
     UWORD characterPosInFontY;
     struct BitMap *oldBackground;
