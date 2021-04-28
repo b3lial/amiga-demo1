@@ -6,12 +6,14 @@
 #include <exec/types.h>
 
 #define TEXT_MOVEMENT_SPEED 3
+#define MAX_CHAR_PER_LINE 20
 
 struct FontInfo {
     UWORD xSize;
     UWORD ySize;
     UWORD characterPosInFontX;
     UWORD characterPosInFontY;
+    struct BitMap *oldBackground;
 };
 
 void initTextScrollEngine(char *text, UWORD firstX, UWORD firstY,
@@ -20,8 +22,7 @@ void executeTextScrollEngine(void);
 void terminateTextScrollEngine(void);
 
 void getCharData(char letter, struct FontInfo *fontInfo);
-void displayText(char *text, WORD xPos, WORD yPos);
-UWORD displayCharacter(char letter, WORD xPos, WORD yPos);
-void prepareForNextCharacter(char letter);
+UWORD displayCurrentCharacter(WORD xPos, WORD yPos);
+void prepareForNextCharacter();
 
 #endif  // TEXTCONTROLLER_H_

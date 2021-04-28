@@ -14,11 +14,15 @@ extern struct BitMap *textscrollerScreen;
 
 UWORD charXPosDestination = 0;
 UWORD charYPosDestination = 0;
+UWORD charDepth = 0;
+
 UWORD currentCharPosX = 0;
 UWORD currentCharPosY = 0;
 char *currentText = NULL;
 UWORD currentChar = 0;
-struct BitMap *previousCharacterData = NULL;
+
+UBYTE currentCharacterOnScreen;
+struct FontInfo charactersOnScreen[MAX_CHAR_PER_LINE];
 
 UWORD scrollControlWidth = 0;
 
@@ -29,53 +33,57 @@ UWORD scrollControlWidth = 0;
  */
 void initTextScrollEngine(char *text, UWORD firstXPosDestination,
                           UWORD firstYPosDestination, UWORD depth, UWORD screenWidth) {
-    struct FontInfo fontInfo;
+    currentCharacterOnScreen = 0;
+    memset(charactersOnScreen, 0, sizeof(charactersOnScreen));
+
     charXPosDestination = firstXPosDestination;
     charYPosDestination = firstYPosDestination;
     scrollControlWidth = screenWidth;
     currentText = text;
     currentChar = 0;
+    charDepth = depth;
 
-    getCharData(currentText[currentChar], &fontInfo);
-    currentCharPosX = scrollControlWidth - fontInfo.xSize;
+    getCharData(currentText[currentChar], &(charactersOnScreen[currentCharacterOnScreen]));
+    currentCharPosX = scrollControlWidth - charactersOnScreen[currentCharacterOnScreen].xSize;
     currentCharPosY = firstYPosDestination;
 
     // save background at character starting position
-    previousCharacterData = createBitMap(depth, 50, 50);
+    charactersOnScreen[currentCharacterOnScreen].oldBackground = createBitMap(charDepth, 50, 50);
     BltBitMap(textscrollerScreen, currentCharPosX, currentCharPosY,
-              previousCharacterData, 0, 0, fontInfo.xSize, fontInfo.ySize, 0xC0,
+              charactersOnScreen[currentCharacterOnScreen].oldBackground, 0, 0,
+              charactersOnScreen[currentCharacterOnScreen].xSize,
+              charactersOnScreen[currentCharacterOnScreen].ySize, 0xC0,
               0xff, 0);
 }
 
 void executeTextScrollEngine() {
-    struct FontInfo fontInfo;
-    char letter = currentText[currentChar];
-    getCharData(letter, &fontInfo);
-
     // check whether every char was moved at its position
-    if (letter == 0) {
+    if (currentText[currentChar] == 0) {
         return;
     }
 
     // restore previously saved background and character position
-    BltBitMap(previousCharacterData, 0,
+    BltBitMap(charactersOnScreen[currentCharacterOnScreen].oldBackground, 0,
               0, textscrollerScreen, currentCharPosX, currentCharPosY,
-              fontInfo.xSize, fontInfo.ySize, 0xC0, 0xff, 0);
+              charactersOnScreen[currentCharacterOnScreen].xSize,
+              charactersOnScreen[currentCharacterOnScreen].ySize, 0xC0, 0xff, 0);
 
     // move character to next position
     currentCharPosX -= TEXT_MOVEMENT_SPEED;
 
     // save background there
     BltBitMap(textscrollerScreen, currentCharPosX, currentCharPosY,
-              previousCharacterData, 0, 0, fontInfo.xSize, fontInfo.ySize, 0xC0,
+              charactersOnScreen[currentCharacterOnScreen].oldBackground, 0, 0,
+              charactersOnScreen[currentCharacterOnScreen].xSize,
+              charactersOnScreen[currentCharacterOnScreen].ySize, 0xC0,
               0xff, 0);
 
     // blit character on screen
-    displayCharacter(letter, currentCharPosX, currentCharPosY);
+    displayCurrentCharacter(currentCharPosX, currentCharPosY);
 
     // finally, check whether we have to switch to next letter
     if (currentCharPosX <= charXPosDestination) {
-        prepareForNextCharacter(letter);
+        prepareForNextCharacter();
     }
 }
 
@@ -83,12 +91,9 @@ void executeTextScrollEngine() {
  * Search in text string for next non-whitespace
  * character and initialize its destination position
  */
-void prepareForNextCharacter(char letter) {
-    struct FontInfo fontInfo;
-
-    // calculate final position of next character
-    getCharData(letter, &fontInfo);
-    charXPosDestination += (fontInfo.xSize + 5);
+void prepareForNextCharacter() {
+    char letter = 0;
+    charXPosDestination += (charactersOnScreen[currentCharacterOnScreen].xSize + 5);
 
     // skip space
     currentChar++;
@@ -101,7 +106,7 @@ void prepareForNextCharacter(char letter) {
     while (letter < 'a' || letter > 'z') {
         charXPosDestination += 15;
         currentChar++;
-        letter = currentText[currentChar];
+        letter = tolower(currentText[currentChar]);
 
         // reach end of string
         if (letter == 0) {
@@ -110,38 +115,26 @@ void prepareForNextCharacter(char letter) {
     }
 
     // found next character, prepare everything for his arrival
-    getCharData(letter, &fontInfo);
-    currentCharPosX = scrollControlWidth - fontInfo.xSize;
+    currentCharacterOnScreen++;
+    getCharData(letter, &(charactersOnScreen[currentCharacterOnScreen]));
+    charactersOnScreen[currentCharacterOnScreen].oldBackground = createBitMap(charDepth, 50, 50);
+    currentCharPosX = scrollControlWidth - charactersOnScreen[currentCharacterOnScreen].xSize;
 
     // save background at character starting position
     BltBitMap(textscrollerScreen, currentCharPosX, currentCharPosY,
-              previousCharacterData, 0, 0, fontInfo.xSize, fontInfo.ySize, 0xC0,
+              charactersOnScreen[currentCharacterOnScreen].oldBackground, 0, 0,
+              charactersOnScreen[currentCharacterOnScreen].xSize,
+              charactersOnScreen[currentCharacterOnScreen].ySize, 0xC0,
               0xff, 0);
 }
 
 void terminateTextScrollEngine() {
-    cleanBitMap(previousCharacterData);
-}
-
-/**
- * Display text on screen using font provided in src bitmap
- */
-void displayText(char *text, WORD xPos, WORD yPos) {
-    BYTE len = strlen(text);
-    BYTE i;
-
-    writeLog("\n== displayText() ==\n");
-    for (i = 0; i < len; i++) {
-        char currentChar = tolower(text[i]);
-        // ignore not supported characters
-        if (currentChar != ' ' && (currentChar < 'a' || currentChar > 'z')) {
-            writeLogFS("displayText: letter %s not supported, skipping\n",
-                       currentChar);
-            continue;
+    UBYTE i = 0;
+    for (; i < MAX_CHAR_PER_LINE; i++) {
+        if (charactersOnScreen[i].oldBackground) {
+            cleanBitMap(charactersOnScreen[i].oldBackground);
+            charactersOnScreen[i].oldBackground = NULL;
         }
-
-        // print character on screen and save position of next char
-        xPos = displayCharacter(currentChar, xPos, yPos);
     }
 }
 
@@ -149,20 +142,18 @@ void displayText(char *text, WORD xPos, WORD yPos) {
  * Print a character on screen. Return position of next
  * character
  */
-UWORD displayCharacter(char letter, WORD xPos, WORD yPos) {
-    struct FontInfo fontInfo;
-
-    // get size and position in font of corresponding character
-    getCharData(letter, &fontInfo);
-
+UWORD displayCurrentCharacter(WORD xPos, WORD yPos) {
     /*
 	 * Don't erase background if character rectangle (B) is blitted into destination (C,D)
 	 * Therefore, we use minterm: BC+NBC+BNC -> 1110xxxx -> 0xE0
 	 */
-    BltBitMap(fontBlob, fontInfo.characterPosInFontX,
-              fontInfo.characterPosInFontY, textscrollerScreen, xPos, yPos,
-              fontInfo.xSize, fontInfo.ySize, 0xC0, 0xff, 0);
-    return (UWORD)(xPos + fontInfo.xSize + 5);
+    BltBitMap(fontBlob,
+              charactersOnScreen[currentCharacterOnScreen].characterPosInFontX,
+              charactersOnScreen[currentCharacterOnScreen].characterPosInFontY,
+              textscrollerScreen, xPos, yPos,
+              charactersOnScreen[currentCharacterOnScreen].xSize,
+              charactersOnScreen[currentCharacterOnScreen].ySize, 0xC0, 0xff, 0);
+    return (UWORD)(xPos + charactersOnScreen[currentCharacterOnScreen].xSize + 5);
 }
 
 /**
