@@ -28,9 +28,17 @@ UWORD charDepth = 0;
 
 // contains data of characters blitted on screen
 UBYTE charIndex;
+UBYTE maxCharIndex;
 struct CharBlob characters[MAX_CHAR_PER_LINE];
 
 UWORD scrollControlWidth = 0;
+
+/*
+ * When the effect starts, a sequence of characters is moved from
+ * right to left on screen. When each char is at its position, they
+ * scoll out from right to left.
+ */
+BOOL moveIn = TRUE;
 
 /*
  * Calculate start positions of characters, initialize
@@ -63,11 +71,21 @@ void initTextScrollEngine(char *text, UWORD firstXPosDestination,
               characters[charIndex].xSize,
               characters[charIndex].ySize, 0xC0,
               0xff, 0);
+
+    moveIn = TRUE;
 }
 
 void executeTextScrollEngine() {
+    moveIn ? textScrollIn() : textScrollOut();
+}
+
+void textScrollIn() {
     // check whether every char was moved at its position
     if (currentText[currentChar] == 0) {
+        maxCharIndex = charIndex;
+        charIndex = 0;
+        charXPosDestination = 0;
+        moveIn = FALSE;
         return;
     }
 
@@ -98,6 +116,45 @@ void executeTextScrollEngine() {
     if (characters[charIndex].xPos <= charXPosDestination) {
         prepareForNextCharacter();
     }
+}
+
+void textScrollOut() {
+    // check whether every char was scrolled out and we are finished
+    if (charIndex > maxCharIndex) {
+        return;
+    }
+
+    // restore previously saved background and character position
+    BltBitMap(characters[charIndex].oldBackground, 0, 0,
+              textscrollerScreen, characters[charIndex].xPos,
+              characters[charIndex].yPos,
+              characters[charIndex].xSize,
+              characters[charIndex].ySize, 0xC0, 0xff, 0);
+
+    // char reached left side, delete it and switch to next char
+    if (characters[charIndex].xPos == charXPosDestination) {
+        charIndex++;
+        return;
+    }
+
+    // move character to next position
+    characters[charIndex].xPos -= TEXT_MOVEMENT_SPEED;
+    if (characters[charIndex].xPos < 0) {
+        characters[charIndex].xPos = 0;
+    }
+
+    // save background there
+    BltBitMap(textscrollerScreen,
+              characters[charIndex].xPos,
+              characters[charIndex].yPos,
+              characters[charIndex].oldBackground, 0, 0,
+              characters[charIndex].xSize,
+              characters[charIndex].ySize, 0xC0,
+              0xff, 0);
+
+    // blit character on screen
+    displayCurrentCharacter(characters[charIndex].xPos,
+                            characters[charIndex].yPos);
 }
 
 /*

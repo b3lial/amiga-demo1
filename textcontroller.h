@@ -11,7 +11,7 @@
 struct CharBlob {
     UWORD xSize;
     UWORD ySize;
-    UWORD xPos;
+    WORD xPos;  // can become negative when scrolling out
     UWORD yPos;
     UWORD xPosInFont;
     UWORD yPosInFont;
@@ -21,6 +21,8 @@ struct CharBlob {
 void initTextScrollEngine(char *text, UWORD firstX, UWORD firstY,
                           UWORD depth, UWORD screenWidth);
 void executeTextScrollEngine(void);
+void textScrollIn(void);
+void textScrollOut(void);
 void terminateTextScrollEngine(void);
 
 void getCharData(char letter, struct CharBlob *charBlob);
