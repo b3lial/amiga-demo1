@@ -143,6 +143,11 @@ BOOL executeTextScroller(void) {
     if (mouseClick()) {
         terminateTextScrollEngine();
         return FALSE;
+    } else if (textScrollIsFinished()) {
+        terminateTextScrollEngine();
+        initTextScrollEngine("hi there", 70, 60, TEXTSCROLLER_BLOB_FONT_DEPTH,
+                             TEXTSCROLLER_VIEW_WIDTH);
+        return TRUE;
     } else {
         // scroll in characters
         WaitTOF();

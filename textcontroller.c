@@ -40,6 +40,9 @@ UWORD scrollControlWidth = 0;
  */
 BOOL moveIn = TRUE;
 
+// true if text has left the building
+BOOL textScrollFinished = FALSE;
+
 /*
  * Calculate start positions of characters, initialize
  * their stop position, allocate memory for background
@@ -73,6 +76,7 @@ void initTextScrollEngine(char *text, UWORD firstXPosDestination,
               0xff, 0);
 
     moveIn = TRUE;
+    textScrollFinished = FALSE;
 }
 
 void executeTextScrollEngine() {
@@ -121,6 +125,7 @@ void textScrollIn() {
 void textScrollOut() {
     // check whether every char was scrolled out and we are finished
     if (charIndex > maxCharIndex) {
+        textScrollFinished = TRUE;
         return;
     }
 
@@ -155,6 +160,10 @@ void textScrollOut() {
     // blit character on screen
     displayCurrentCharacter(characters[charIndex].xPos,
                             characters[charIndex].yPos);
+}
+
+BOOL textScrollIsFinished(void) {
+    return textScrollFinished;
 }
 
 /*

@@ -24,6 +24,7 @@ void executeTextScrollEngine(void);
 void textScrollIn(void);
 void textScrollOut(void);
 void terminateTextScrollEngine(void);
+BOOL textScrollIsFinished(void);
 
 void getCharData(char letter, struct CharBlob *charBlob);
 UWORD displayCurrentCharacter(WORD xPos, WORD yPos);
