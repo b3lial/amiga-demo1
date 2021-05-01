@@ -34,11 +34,19 @@ WORD fsmTextScroller(void) {
             WaitTOF();
             initTextScrollEngine("hi there", 70, 60, TEXTSCROLLER_BLOB_FONT_DEPTH,
                     TEXTSCROLLER_VIEW_WIDTH);
-            payloadTextScrollerState = TEXTSCROLLER_RUNNING;
+            payloadTextScrollerState = TEXTSCROLLER_MSG_1;
             break;
 
-        case TEXTSCROLLER_RUNNING:
-            payloadTextScrollerState = executeTextScroller(TEXTSCROLLER_RUNNING, TEXTSCROLLER_SHUTDOWN);
+        case TEXTSCROLLER_MSG_1:
+            payloadTextScrollerState = executeTextScroller(TEXTSCROLLER_MSG_1, TEXTSCROLLER_MSG_2);
+            if(payloadTextScrollerState == TEXTSCROLLER_MSG_2){
+                initTextScrollEngine("belial here", 20, 60, TEXTSCROLLER_BLOB_FONT_DEPTH,
+                    TEXTSCROLLER_VIEW_WIDTH);
+            }
+            break;
+
+        case TEXTSCROLLER_MSG_2:
+            payloadTextScrollerState = executeTextScroller(TEXTSCROLLER_MSG_2, TEXTSCROLLER_SHUTDOWN);
             break;
 
         case TEXTSCROLLER_SHUTDOWN:
