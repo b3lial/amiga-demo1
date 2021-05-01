@@ -31,13 +31,14 @@ WORD fsmTextScroller(void) {
     switch (payloadTextScrollerState) {
         case TEXTSCROLLER_INIT:
             initTextScroller();
+            WaitTOF();
+            initTextScrollEngine("hi there", 70, 60, TEXTSCROLLER_BLOB_FONT_DEPTH,
+                    TEXTSCROLLER_VIEW_WIDTH);
             payloadTextScrollerState = TEXTSCROLLER_RUNNING;
             break;
 
         case TEXTSCROLLER_RUNNING:
-            if (!executeTextScroller()) {
-                payloadTextScrollerState = TEXTSCROLLER_SHUTDOWN;
-            }
+            payloadTextScrollerState = executeTextScroller(TEXTSCROLLER_RUNNING, TEXTSCROLLER_SHUTDOWN);
             break;
 
         case TEXTSCROLLER_SHUTDOWN:
@@ -130,29 +131,21 @@ void initTextScroller(void) {
                COLORMAP32_BYTE_SIZE(TEXTSCROLLER_BLOB_SPACE_COLORS));
     colortable1 = NULL;
 
-    // Copy Text into ViewPort
-    initTextScrollEngine("hi there", 70, 60, TEXTSCROLLER_BLOB_FONT_DEPTH,
-                         TEXTSCROLLER_VIEW_WIDTH);
-    // displayText("hi there", 70, 60);
-
     // Make View visible
     startView();
 }
 
-BOOL executeTextScroller(void) {
+UWORD executeTextScroller(UWORD currentTCState, UWORD nextTCState) {
     if (mouseClick()) {
         terminateTextScrollEngine();
-        return FALSE;
+        return TEXTSCROLLER_SHUTDOWN;
     } else if (textScrollIsFinished()) {
         terminateTextScrollEngine();
-        initTextScrollEngine("hi there", 70, 60, TEXTSCROLLER_BLOB_FONT_DEPTH,
-                             TEXTSCROLLER_VIEW_WIDTH);
-        return TRUE;
+        return nextTCState;
     } else {
-        // scroll in characters
         WaitTOF();
         executeTextScrollEngine();
-        return TRUE;
+        return currentTCState;
     }
 }
 

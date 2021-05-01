@@ -26,7 +26,7 @@
 
 WORD fsmTextScroller(void);
 void initTextScroller(void);
-BOOL executeTextScroller(void);
+UWORD executeTextScroller(UWORD, UWORD);
 void exitTextScroller(void);
 void createStars(struct BitMap *bitmap);
 
