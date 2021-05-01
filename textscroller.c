@@ -32,21 +32,21 @@ WORD fsmTextScroller(void) {
         case TEXTSCROLLER_INIT:
             initTextScroller();
             WaitTOF();
-            initTextScrollEngine("hi there", 70, 60, TEXTSCROLLER_BLOB_FONT_DEPTH,
+            initTextController("hi there", 70, 60, TEXTSCROLLER_BLOB_FONT_DEPTH,
                     TEXTSCROLLER_VIEW_WIDTH);
             payloadTextScrollerState = TEXTSCROLLER_MSG_1;
             break;
 
         case TEXTSCROLLER_MSG_1:
-            payloadTextScrollerState = executeTextScroller(TEXTSCROLLER_MSG_1, TEXTSCROLLER_MSG_2);
+            payloadTextScrollerState = waitForTextControlEngine(TEXTSCROLLER_MSG_1, TEXTSCROLLER_MSG_2);
             if(payloadTextScrollerState == TEXTSCROLLER_MSG_2){
-                initTextScrollEngine("belial here", 20, 60, TEXTSCROLLER_BLOB_FONT_DEPTH,
+                initTextController("belial here", 20, 60, TEXTSCROLLER_BLOB_FONT_DEPTH,
                     TEXTSCROLLER_VIEW_WIDTH);
             }
             break;
 
         case TEXTSCROLLER_MSG_2:
-            payloadTextScrollerState = executeTextScroller(TEXTSCROLLER_MSG_2, TEXTSCROLLER_SHUTDOWN);
+            payloadTextScrollerState = waitForTextControlEngine(TEXTSCROLLER_MSG_2, TEXTSCROLLER_SHUTDOWN);
             break;
 
         case TEXTSCROLLER_SHUTDOWN:
@@ -143,16 +143,16 @@ void initTextScroller(void) {
     startView();
 }
 
-UWORD executeTextScroller(UWORD currentTCState, UWORD nextTCState) {
+UWORD waitForTextControlEngine(UWORD currentTCState, UWORD nextTCState) {
     if (mouseClick()) {
-        terminateTextScrollEngine();
+        terminateTextController();
         return TEXTSCROLLER_SHUTDOWN;
     } else if (textScrollIsFinished()) {
-        terminateTextScrollEngine();
+        terminateTextController();
         return nextTCState;
     } else {
         WaitTOF();
-        executeTextScrollEngine();
+        executeTextController();
         return currentTCState;
     }
 }

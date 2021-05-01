@@ -18,12 +18,13 @@ struct CharBlob {
     struct BitMap *oldBackground;
 };
 
-void initTextScrollEngine(char *text, UWORD firstX, UWORD firstY,
+void initTextController(char *text, UWORD firstX, UWORD firstY,
                           UWORD depth, UWORD screenWidth);
-void executeTextScrollEngine(void);
+void executeTextController(void);
+void terminateTextController(void);
+
 void textScrollIn(void);
 void textScrollOut(void);
-void terminateTextScrollEngine(void);
 BOOL textScrollIsFinished(void);
 
 void getCharData(char letter, struct CharBlob *charBlob);

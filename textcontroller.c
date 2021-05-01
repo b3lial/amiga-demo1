@@ -31,6 +31,7 @@ UBYTE charIndex;
 UBYTE maxCharIndex;
 struct CharBlob characters[MAX_CHAR_PER_LINE];
 
+// Screen width
 UWORD scrollControlWidth = 0;
 
 /*
@@ -48,7 +49,7 @@ BOOL textScrollFinished = FALSE;
  * their stop position, allocate memory for background
  * save/restore buffer
  */
-void initTextScrollEngine(char *text, UWORD firstXPosDestination,
+void initTextController(char *text, UWORD firstXPosDestination,
                           UWORD firstYPosDestination, UWORD depth, UWORD screenWidth) {
     // Init engines global variables
     charIndex = 0;
@@ -79,7 +80,7 @@ void initTextScrollEngine(char *text, UWORD firstXPosDestination,
     textScrollFinished = FALSE;
 }
 
-void executeTextScrollEngine() {
+void executeTextController() {
     moveIn ? textScrollIn() : textScrollOut();
 }
 
@@ -211,7 +212,7 @@ void prepareForNextCharacter() {
               0xff, 0);
 }
 
-void terminateTextScrollEngine() {
+void terminateTextController() {
     UBYTE i = 0;
     for (; i < MAX_CHAR_PER_LINE; i++) {
         if (characters[i].oldBackground) {
