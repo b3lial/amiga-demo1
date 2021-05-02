@@ -10,7 +10,7 @@
 #include "starlight/starlight.h"
 
 struct BitMap *fontBlob;
-struct BitMap *textscrollerScreen;
+struct BitMap *textDestination;
 
 /*
  * Contains the text which is displayed and 
@@ -51,7 +51,7 @@ BOOL initTextController(struct BitMap *screen, UWORD depth, UWORD screenWidth)
 {
     charDepth = depth;
     scrollControlWidth = screenWidth;
-    textscrollerScreen = screen;
+    textDestination = screen;
 
     // Load font bitmap and its colors
     writeLog("Load font bitmap and colors\n");
@@ -104,7 +104,7 @@ void setStringTextController(char *text, UWORD firstXPosDestination,
 
     // save background at character starting position
     characters[charIndex].oldBackground = createBitMap(charDepth, 50, 50);
-    BltBitMap(textscrollerScreen, characters[charIndex].xPos,
+    BltBitMap(textDestination, characters[charIndex].xPos,
               characters[charIndex].yPos,
               characters[charIndex].oldBackground, 0, 0,
               characters[charIndex].xSize,
@@ -147,7 +147,7 @@ void textScrollIn()
 
     // restore previously saved background and character position
     BltBitMap(characters[charIndex].oldBackground, 0, 0,
-              textscrollerScreen, characters[charIndex].xPos,
+              textDestination, characters[charIndex].xPos,
               characters[charIndex].yPos,
               characters[charIndex].xSize,
               characters[charIndex].ySize, 0xC0, 0xff, 0);
@@ -160,7 +160,7 @@ void textScrollIn()
     }
 
     // save background there
-    BltBitMap(textscrollerScreen,
+    BltBitMap(textDestination,
               characters[charIndex].xPos,
               characters[charIndex].yPos,
               characters[charIndex].oldBackground, 0, 0,
@@ -199,7 +199,7 @@ void textScrollOut()
 
     // restore previously saved background and character position
     BltBitMap(characters[charIndex].oldBackground, 0, 0,
-              textscrollerScreen, characters[charIndex].xPos,
+              textDestination, characters[charIndex].xPos,
               characters[charIndex].yPos,
               characters[charIndex].xSize,
               characters[charIndex].ySize, 0xC0, 0xff, 0);
@@ -219,7 +219,7 @@ void textScrollOut()
     }
 
     // save background there
-    BltBitMap(textscrollerScreen,
+    BltBitMap(textDestination,
               characters[charIndex].xPos,
               characters[charIndex].yPos,
               characters[charIndex].oldBackground, 0, 0,
@@ -277,7 +277,7 @@ void prepareForNextCharacter()
     characters[charIndex].yPos = charYPosDestination;
 
     // save background at character starting position
-    BltBitMap(textscrollerScreen,
+    BltBitMap(textDestination,
               characters[charIndex].xPos,
               characters[charIndex].yPos,
               characters[charIndex].oldBackground, 0, 0,
@@ -315,7 +315,7 @@ UWORD displayCurrentCharacter(WORD xPos, WORD yPos)
     BltBitMap(fontBlob,
               characters[charIndex].xPosInFont,
               characters[charIndex].yPosInFont,
-              textscrollerScreen, xPos, yPos,
+              textDestination, xPos, yPos,
               characters[charIndex].xSize,
               characters[charIndex].ySize, 0xC0, 0xff, 0);
     return (UWORD)(xPos + characters[charIndex].xSize + 5);
