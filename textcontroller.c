@@ -154,6 +154,10 @@ void textScrollIn()
 
     // move character to next position
     characters[charIndex].xPos -= TEXT_MOVEMENT_SPEED;
+    if (characters[charIndex].xPos < charXPosDestination)
+    {
+        characters[charIndex].xPos = charXPosDestination;
+    }
 
     // save background there
     BltBitMap(textscrollerScreen,

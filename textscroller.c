@@ -62,7 +62,7 @@ WORD fsmTextScroller(void)
         {
             payloadTextScrollerState = TEXTSCROLLER_MSG_2;
             resetTextController();
-            setStringTextController("belial here", 20, 60);
+            setStringTextController("belial here", 33, 60);
         }
         break;
 
