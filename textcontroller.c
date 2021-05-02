@@ -45,25 +45,32 @@ BOOL moveIn = TRUE;
 BOOL textScrollFinished = FALSE;
 
 /**
+ * Load font and check whether depth matches 
+ */
+void initTextController(UWORD depth, UWORD screenWidth)
+{
+    charDepth = depth;
+    scrollControlWidth = screenWidth;
+}
+
+/**
  * Must be called first.
  * Store parameters in global variables, analyse first
  * character of input string, save background of first
  * blit destination. 
  * Afterwards, executeTextScroller() can be called.
  */
-void initTextController(char *text, UWORD firstXPosDestination,
-                        UWORD firstYPosDestination, UWORD depth, UWORD screenWidth)
+void setStringTextController(char *text, UWORD firstXPosDestination,
+                        UWORD firstYPosDestination)
 {
     // Init engines global variables
     charIndex = 0;
     memset(characters, 0, sizeof(characters));
-
     charXPosDestination = firstXPosDestination;
     charYPosDestination = firstYPosDestination;
-    scrollControlWidth = screenWidth;
     currentText = text;
     currentChar = 0;
-    charDepth = depth;
+    
 
     // analyse first character in text string
     getCharData(currentText[currentChar], &(characters[charIndex]));

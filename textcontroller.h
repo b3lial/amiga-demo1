@@ -19,8 +19,8 @@ struct CharBlob {
 };
 
 // external APIs
-void initTextController(char *text, UWORD firstX, UWORD firstY,
-                          UWORD depth, UWORD screenWidth);
+void setStringTextController(char *text, UWORD firstX, UWORD firstY);
+void initTextController(UWORD depth, UWORD screenWidth);
 void executeTextController(void);
 void terminateTextController(void);
 BOOL isFinishedTextController(void);

@@ -43,9 +43,10 @@ WORD fsmTextScroller(void)
     // create view, load star field, planet earth and font
     case TEXTSCROLLER_INIT:
         initTextScroller();
-        WaitTOF();
-        initTextController("hi there", 70, 60, TEXTSCROLLER_BLOB_FONT_DEPTH,
+        initTextController(TEXTSCROLLER_BLOB_FONT_DEPTH,
                            TEXTSCROLLER_VIEW_WIDTH);
+        WaitTOF();
+        setStringTextController("hi there", 70, 60);
         payloadTextScrollerState = TEXTSCROLLER_MSG_1;
         break;
 
@@ -57,8 +58,7 @@ WORD fsmTextScroller(void)
         {
             payloadTextScrollerState = TEXTSCROLLER_MSG_2;
             terminateTextController();
-            initTextController("belial here", 20, 60, TEXTSCROLLER_BLOB_FONT_DEPTH,
-                               TEXTSCROLLER_VIEW_WIDTH);
+            setStringTextController("belial here", 20, 60);
         }
         break;
 
