@@ -27,37 +27,43 @@ struct BitMap *spaceBlob = NULL;
 struct BitMap *textscrollerScreen = NULL;
 ULONG *colortable1 = NULL;
 
-WORD fsmTextScroller(void) {
-    switch (payloadTextScrollerState) {
-        case TEXTSCROLLER_INIT:
-            initTextScroller();
-            WaitTOF();
-            initTextController("hi there", 70, 60, TEXTSCROLLER_BLOB_FONT_DEPTH,
-                    TEXTSCROLLER_VIEW_WIDTH);
-            payloadTextScrollerState = TEXTSCROLLER_MSG_1;
-            break;
+WORD fsmTextScroller(void)
+{
+    switch (payloadTextScrollerState)
+    {
+    case TEXTSCROLLER_INIT:
+        initTextScroller();
+        WaitTOF();
+        initTextController("hi there", 70, 60, TEXTSCROLLER_BLOB_FONT_DEPTH,
+                           TEXTSCROLLER_VIEW_WIDTH);
+        payloadTextScrollerState = TEXTSCROLLER_MSG_1;
+        break;
 
-        case TEXTSCROLLER_MSG_1:
-            payloadTextScrollerState = waitForTextControlEngine(TEXTSCROLLER_MSG_1, TEXTSCROLLER_MSG_2);
-            if(payloadTextScrollerState == TEXTSCROLLER_MSG_2){
-                initTextController("belial here", 20, 60, TEXTSCROLLER_BLOB_FONT_DEPTH,
-                    TEXTSCROLLER_VIEW_WIDTH);
-            }
-            break;
+    case TEXTSCROLLER_MSG_1:
+        payloadTextScrollerState = waitForTextControlEngine(TEXTSCROLLER_MSG_1,
+                                                            TEXTSCROLLER_MSG_2);
+        if (payloadTextScrollerState == TEXTSCROLLER_MSG_2)
+        {
+            initTextController("belial here", 20, 60, TEXTSCROLLER_BLOB_FONT_DEPTH,
+                               TEXTSCROLLER_VIEW_WIDTH);
+        }
+        break;
 
-        case TEXTSCROLLER_MSG_2:
-            payloadTextScrollerState = waitForTextControlEngine(TEXTSCROLLER_MSG_2, TEXTSCROLLER_SHUTDOWN);
-            break;
+    case TEXTSCROLLER_MSG_2:
+        payloadTextScrollerState = waitForTextControlEngine(TEXTSCROLLER_MSG_2,
+                                                            TEXTSCROLLER_SHUTDOWN);
+        break;
 
-        case TEXTSCROLLER_SHUTDOWN:
-            exitTextScroller();
-            return MODULE_FINISHED;
+    case TEXTSCROLLER_SHUTDOWN:
+        exitTextScroller();
+        return MODULE_FINISHED;
     }
 
     return MODULE_CONTINUE;
 }
 
-void initTextScroller(void) {
+void initTextScroller(void)
+{
     UWORD colortable0[8];
     BYTE i = 0;
     writeLog("\n== initTextScroller() ==\n");
@@ -66,7 +72,8 @@ void initTextScroller(void) {
     writeLog("Load font bitmap and colors\n");
     fontBlob = loadBlob("img/charset_final.RAW", TEXTSCROLLER_BLOB_FONT_DEPTH,
                         TEXTSCROLLER_BLOB_FONT_WIDTH, TEXTSCROLLER_BLOB_FONT_HEIGHT);
-    if (fontBlob == NULL) {
+    if (fontBlob == NULL)
+    {
         writeLog("Error: Could not load font blob\n");
         exitTextScroller();
         exitSystem(RETURN_ERROR);
@@ -82,7 +89,8 @@ void initTextScroller(void) {
     writeLog("\nLoad space background bitmap and colors\n");
     spaceBlob = loadBlob("img/space4_320_125_8.RAW", TEXTSCROLLER_BLOB_SPACE_DEPTH,
                          TEXTSCROLLER_BLOB_SPACE_WIDTH, TEXTSCROLLER_BLOB_SPACE_HEIGHT);
-    if (spaceBlob == NULL) {
+    if (spaceBlob == NULL)
+    {
         writeLog("Error: Could not load space blob\n");
         exitTextScroller();
         exitSystem(RETURN_ERROR);
@@ -94,7 +102,8 @@ void initTextScroller(void) {
 
     // Load space background color table
     colortable1 = AllocVec(COLORMAP32_BYTE_SIZE(TEXTSCROLLER_BLOB_SPACE_COLORS), MEMF_ANY);
-    if (!colortable1) {
+    if (!colortable1)
+    {
         writeLog("Error: Could not allocate memory for space bitmap color table\n");
         exitTextScroller();
         exitSystem(RETURN_ERROR);
@@ -108,7 +117,8 @@ void initTextScroller(void) {
     textscrollerScreen = createBitMap(TEXTSCROLLER_BLOB_FONT_DEPTH,
                                       TEXTSCROLLER_VIEW_WIDTH,
                                       TEXTSCROLLER_VIEW_TEXTSECTION_HEIGHT);
-    for (i = 0; i < TEXTSCROLLER_BLOB_FONT_DEPTH; i++) {
+    for (i = 0; i < TEXTSCROLLER_BLOB_FONT_DEPTH; i++)
+    {
         BltClear(textscrollerScreen->Planes[i],
                  (textscrollerScreen->BytesPerRow) * (textscrollerScreen->Rows),
                  1);
@@ -143,24 +153,32 @@ void initTextScroller(void) {
     startView();
 }
 
-UWORD waitForTextControlEngine(UWORD currentTCState, UWORD nextTCState) {
-    if (mouseClick()) {
+UWORD waitForTextControlEngine(UWORD currentTCState, UWORD nextTCState)
+{
+    if (mouseClick())
+    {
         terminateTextController();
         return TEXTSCROLLER_SHUTDOWN;
-    } else if (textScrollIsFinished()) {
+    }
+    else if (textScrollIsFinished())
+    {
         terminateTextController();
         return nextTCState;
-    } else {
+    }
+    else
+    {
         WaitTOF();
         executeTextController();
         return currentTCState;
     }
 }
 
-void exitTextScroller(void) {
+void exitTextScroller(void)
+{
     writeLog("\n== exitTextScroller() ==\n");
 
-    if (colortable1) {
+    if (colortable1)
+    {
         FreeVec(colortable1);
         colortable1 = NULL;
         writeLogFS("Freeing %d bytes of space bitmap color table\n",
@@ -173,7 +191,8 @@ void exitTextScroller(void) {
     payloadTextScrollerState = TEXTSCROLLER_INIT;
 }
 
-void createStars(struct BitMap *bitmap) {
+void createStars(struct BitMap *bitmap)
+{
     BYTE i;
     UWORD x, y;
 
@@ -182,7 +201,8 @@ void createStars(struct BitMap *bitmap) {
     rastPort.BitMap = bitmap;
 
     SetAPen(&rastPort, 6);
-    for (i = 0; i < 50; i++) {
+    for (i = 0; i < 50; i++)
+    {
         x = RangeRand(TEXTSCROLLER_VIEW_WIDTH);
         y = RangeRand(TEXTSCROLLER_VIEW_TEXTSECTION_HEIGHT);
         writeLogFS("random value x %d, y %d\n", x, y);
