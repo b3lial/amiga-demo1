@@ -9,7 +9,7 @@
 
 #include "starlight/starlight.h"
 
-extern struct BitMap *fontBlob;
+struct BitMap *fontBlob;
 extern struct BitMap *textscrollerScreen;
 
 /*
@@ -45,12 +45,34 @@ BOOL moveIn = TRUE;
 BOOL textScrollFinished = FALSE;
 
 /**
- * Load font and check whether depth matches 
+ * Load font
  */
-void initTextController(UWORD depth, UWORD screenWidth)
+BOOL initTextController(UWORD depth, UWORD screenWidth)
 {
     charDepth = depth;
     scrollControlWidth = screenWidth;
+
+    // Load font bitmap and its colors
+    writeLog("Load font bitmap and colors\n");
+    fontBlob = loadBlob("img/charset_final.RAW", charDepth,
+                        TEXTSCROLLER_BLOB_FONT_WIDTH, TEXTSCROLLER_BLOB_FONT_HEIGHT);
+    if (fontBlob == NULL)
+    {
+        writeLog("Error: Could not load font blob\n");
+        return FALSE;
+    }
+    writeLogFS(
+        "Font BitMap: BytesPerRow: %d, Rows: %d, Flags: %d, pad: %d\n",
+        fontBlob->BytesPerRow, fontBlob->Rows, fontBlob->Flags,
+        fontBlob->pad);
+    return TRUE;
+}
+
+/**
+ * Free font 
+ */
+void exitTextController(void){
+    cleanBitMap(fontBlob);
 }
 
 /**
@@ -70,7 +92,6 @@ void setStringTextController(char *text, UWORD firstXPosDestination,
     charYPosDestination = firstYPosDestination;
     currentText = text;
     currentChar = 0;
-    
 
     // analyse first character in text string
     getCharData(currentText[currentChar], &(characters[charIndex]));
@@ -243,7 +264,7 @@ void prepareForNextCharacter()
 /**
  * Free the character background backup bitmaps 
  */
-void terminateTextController()
+void resetTextController()
 {
     UBYTE i = 0;
     for (; i < MAX_CHAR_PER_LINE; i++)

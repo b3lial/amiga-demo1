@@ -8,6 +8,9 @@
 #define TEXT_MOVEMENT_SPEED 3
 #define MAX_CHAR_PER_LINE 20
 
+#define TEXTSCROLLER_BLOB_FONT_WIDTH 288
+#define TEXTSCROLLER_BLOB_FONT_HEIGHT 160
+
 struct CharBlob {
     UWORD xSize;
     UWORD ySize;
@@ -20,9 +23,10 @@ struct CharBlob {
 
 // external APIs
 void setStringTextController(char *text, UWORD firstX, UWORD firstY);
-void initTextController(UWORD depth, UWORD screenWidth);
+BOOL initTextController(UWORD depth, UWORD screenWidth);
 void executeTextController(void);
-void terminateTextController(void);
+void resetTextController(void);
+void exitTextController(void);
 BOOL isFinishedTextController(void);
 
 // internal functions

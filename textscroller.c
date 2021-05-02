@@ -22,7 +22,6 @@
 #include "textcontroller.h"
 
 WORD payloadTextScrollerState = TEXTSCROLLER_INIT;
-struct BitMap *fontBlob = NULL;
 struct BitMap *spaceBlob = NULL;
 struct BitMap *textscrollerScreen = NULL;
 ULONG *colortable1 = NULL;
@@ -32,8 +31,8 @@ WORD fsmTextScroller(void)
     //terminate effect on mouse click
     if (mouseClick())
     {
-        terminateTextController();
-        return MODULE_FINISHED;
+        resetTextController();
+        payloadTextScrollerState = TEXTSCROLLER_SHUTDOWN;
     }
 
     // no mouse click -> execute state machine
@@ -43,8 +42,12 @@ WORD fsmTextScroller(void)
     // create view, load star field, planet earth and font
     case TEXTSCROLLER_INIT:
         initTextScroller();
-        initTextController(TEXTSCROLLER_BLOB_FONT_DEPTH,
-                           TEXTSCROLLER_VIEW_WIDTH);
+        if (!initTextController(TEXTSCROLLER_BLOB_FONT_DEPTH,
+                                TEXTSCROLLER_VIEW_WIDTH))
+        {
+            exitTextScroller();
+            exitSystem(RETURN_ERROR);
+        }
         WaitTOF();
         setStringTextController("hi there", 70, 60);
         payloadTextScrollerState = TEXTSCROLLER_MSG_1;
@@ -57,7 +60,7 @@ WORD fsmTextScroller(void)
         if (isFinishedTextController())
         {
             payloadTextScrollerState = TEXTSCROLLER_MSG_2;
-            terminateTextController();
+            resetTextController();
             setStringTextController("belial here", 20, 60);
         }
         break;
@@ -69,12 +72,13 @@ WORD fsmTextScroller(void)
         if (isFinishedTextController())
         {
             payloadTextScrollerState = TEXTSCROLLER_SHUTDOWN;
-            terminateTextController();
+            resetTextController();
         }
         break;
 
     // destroy view
     case TEXTSCROLLER_SHUTDOWN:
+        exitTextController();
         exitTextScroller();
         return MODULE_FINISHED;
     }
@@ -88,25 +92,8 @@ void initTextScroller(void)
     BYTE i = 0;
     writeLog("\n== initTextScroller() ==\n");
 
-    // Load font bitmap and its colors
-    writeLog("Load font bitmap and colors\n");
-    fontBlob = loadBlob("img/charset_final.RAW", TEXTSCROLLER_BLOB_FONT_DEPTH,
-                        TEXTSCROLLER_BLOB_FONT_WIDTH, TEXTSCROLLER_BLOB_FONT_HEIGHT);
-    if (fontBlob == NULL)
-    {
-        writeLog("Error: Could not load font blob\n");
-        exitTextScroller();
-        exitSystem(RETURN_ERROR);
-    }
-    writeLogFS(
-        "Font BitMap: BytesPerRow: %d, Rows: %d, Flags: %d, pad: %d\n",
-        fontBlob->BytesPerRow, fontBlob->Rows, fontBlob->Flags,
-        fontBlob->pad);
-    loadColorMap("img/charset_final.CMAP", colortable0,
-                 TEXTSCROLLER_BLOB_FONT_COLORS);
-
-    // Load space background bitmap and colors
     writeLog("\nLoad space background bitmap and colors\n");
+    // Load space background bitmap
     spaceBlob = loadBlob("img/space4_320_125_8.RAW", TEXTSCROLLER_BLOB_SPACE_DEPTH,
                          TEXTSCROLLER_BLOB_SPACE_WIDTH, TEXTSCROLLER_BLOB_SPACE_HEIGHT);
     if (spaceBlob == NULL)
@@ -148,6 +135,10 @@ void initTextScroller(void)
                textscrollerScreen->Flags, textscrollerScreen->pad);
     createStars(textscrollerScreen);
 
+    // Load Textscroller color table
+    loadColorMap("img/charset_final.CMAP", colortable0,
+                 TEXTSCROLLER_BLOB_FONT_COLORS);
+
     // Create View and ViewExtra memory structures
     writeLog("\nCreate view\n");
     initView();
@@ -186,7 +177,6 @@ void exitTextScroller(void)
     }
     stopView();
     cleanBitMap(textscrollerScreen);
-    cleanBitMap(fontBlob);
     cleanBitMap(spaceBlob);
     payloadTextScrollerState = TEXTSCROLLER_INIT;
 }
