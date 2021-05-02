@@ -6,6 +6,7 @@
 #include <exec/types.h>
 
 #define TEXT_MOVEMENT_SPEED 3
+#define TEXT_PAUSE_TIME 180
 #define MAX_CHAR_PER_LINE 20
 
 #define TEXTSCROLLER_BLOB_FONT_WIDTH 288
@@ -22,6 +23,14 @@ struct CharBlob
     struct BitMap *oldBackground;
 };
 
+enum TEXT_CONTROL_STATE
+{
+    TC_SCROLL_IN,
+    TC_SCROLL_PAUSE,
+    TC_SCROLL_OUT,
+    TC_SCROLL_FINISHED
+};
+
 // external APIs
 void setStringTextController(char *text, UWORD firstX, UWORD firstY);
 BOOL initTextController(struct BitMap *screen,
@@ -33,6 +42,7 @@ BOOL isFinishedTextController(void);
 
 // internal functions
 void textScrollIn(void);
+void textScrollPause(void);
 void textScrollOut(void);
 
 void getCharData(char letter, struct CharBlob *charBlob);

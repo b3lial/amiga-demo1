@@ -37,12 +37,12 @@ UWORD scrollControlWidth = 0;
 /*
  * When the effect starts, a sequence of characters is moved from
  * right to left on screen. When each char is at its position, they
- * scoll out from right to left.
+ * scoll out from right to left. In between, animation is paused
+ *  for short amount of time
  */
-BOOL moveIn = TRUE;
+enum TEXT_CONTROL_STATE currentState = TC_SCROLL_IN;
 
-// true if text has left the building
-BOOL textScrollFinished = FALSE;
+UWORD pauseCounter = 0;
 
 /**
  * Load font
@@ -87,6 +87,8 @@ void setStringTextController(char *text, UWORD firstXPosDestination,
                         UWORD firstYPosDestination)
 {
     // Init engines global variables
+    currentState = TC_SCROLL_IN;
+    pauseCounter = 0;
     charIndex = 0;
     memset(characters, 0, sizeof(characters));
     charXPosDestination = firstXPosDestination;
@@ -108,9 +110,6 @@ void setStringTextController(char *text, UWORD firstXPosDestination,
               characters[charIndex].xSize,
               characters[charIndex].ySize, 0xC0,
               0xff, 0);
-
-    moveIn = TRUE;
-    textScrollFinished = FALSE;
 }
 
 /**
@@ -119,7 +118,19 @@ void setStringTextController(char *text, UWORD firstXPosDestination,
  */
 void executeTextController()
 {
-    moveIn ? textScrollIn() : textScrollOut();
+    switch(currentState){
+        case TC_SCROLL_IN:
+            textScrollIn();
+            break;
+        case TC_SCROLL_PAUSE:
+            textScrollPause();
+            break;
+        case TC_SCROLL_OUT:
+            textScrollOut();
+            break;
+        case TC_SCROLL_FINISHED:
+            break;
+    }
 }
 
 void textScrollIn()
@@ -130,7 +141,7 @@ void textScrollIn()
         maxCharIndex = charIndex;
         charIndex = 0;
         charXPosDestination = 0;
-        moveIn = FALSE;
+        currentState = TC_SCROLL_PAUSE;
         return;
     }
 
@@ -164,12 +175,21 @@ void textScrollIn()
     }
 }
 
+void textScrollPause(void){
+    if(pauseCounter >= TEXT_PAUSE_TIME){
+        currentState = TC_SCROLL_OUT;
+        return;
+    }
+
+    pauseCounter++;
+}
+
 void textScrollOut()
 {
     // check whether every char was scrolled out and we are finished
     if (charIndex > maxCharIndex)
     {
-        textScrollFinished = TRUE;
+        currentState = TC_SCROLL_FINISHED;
         return;
     }
 
@@ -210,7 +230,7 @@ void textScrollOut()
 
 BOOL isFinishedTextController(void)
 {
-    return textScrollFinished;
+    return (currentState == TC_SCROLL_FINISHED);
 }
 
 /*
