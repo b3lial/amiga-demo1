@@ -18,14 +18,16 @@ struct CharBlob {
     struct BitMap *oldBackground;
 };
 
+// external APIs
 void initTextController(char *text, UWORD firstX, UWORD firstY,
                           UWORD depth, UWORD screenWidth);
 void executeTextController(void);
 void terminateTextController(void);
+BOOL isFinishedTextController(void);
 
+// internal functions
 void textScrollIn(void);
 void textScrollOut(void);
-BOOL textScrollIsFinished(void);
 
 void getCharData(char letter, struct CharBlob *charBlob);
 UWORD displayCurrentCharacter(WORD xPos, WORD yPos);

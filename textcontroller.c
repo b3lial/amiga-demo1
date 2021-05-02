@@ -44,10 +44,12 @@ BOOL moveIn = TRUE;
 // true if text has left the building
 BOOL textScrollFinished = FALSE;
 
-/*
- * Calculate start positions of characters, initialize
- * their stop position, allocate memory for background
- * save/restore buffer
+/**
+ * Must be called first.
+ * Store parameters in global variables, analyse first
+ * character of input string, save background of first
+ * blit destination. 
+ * Afterwards, executeTextScroller() can be called.
  */
 void initTextController(char *text, UWORD firstXPosDestination,
                         UWORD firstYPosDestination, UWORD depth, UWORD screenWidth)
@@ -82,6 +84,10 @@ void initTextController(char *text, UWORD firstXPosDestination,
     textScrollFinished = FALSE;
 }
 
+/**
+ * Execute text scroller engine. Should be called
+ * for each new frame.
+ */
 void executeTextController()
 {
     moveIn ? textScrollIn() : textScrollOut();
@@ -173,7 +179,7 @@ void textScrollOut()
                             characters[charIndex].yPos);
 }
 
-BOOL textScrollIsFinished(void)
+BOOL isFinishedTextController(void)
 {
     return textScrollFinished;
 }
@@ -227,6 +233,9 @@ void prepareForNextCharacter()
               0xff, 0);
 }
 
+/**
+ * Free the character background backup bitmaps 
+ */
 void terminateTextController()
 {
     UBYTE i = 0;

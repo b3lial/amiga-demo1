@@ -53,7 +53,7 @@ WORD fsmTextScroller(void)
     case TEXTSCROLLER_MSG_1:
         WaitTOF();
         executeTextController();
-        if (textScrollIsFinished())
+        if (isFinishedTextController())
         {
             payloadTextScrollerState = TEXTSCROLLER_MSG_2;
             terminateTextController();
@@ -66,7 +66,7 @@ WORD fsmTextScroller(void)
     case TEXTSCROLLER_MSG_2:
         WaitTOF();
         executeTextController();
-        if (textScrollIsFinished())
+        if (isFinishedTextController())
         {
             payloadTextScrollerState = TEXTSCROLLER_SHUTDOWN;
             terminateTextController();
