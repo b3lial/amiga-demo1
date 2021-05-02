@@ -63,6 +63,7 @@ void initTextController(char *text, UWORD firstXPosDestination,
     currentChar = 0;
     charDepth = depth;
 
+    // analyse first character in text string
     getCharData(currentText[currentChar], &(characters[charIndex]));
     characters[charIndex].xPos =
         scrollControlWidth - characters[charIndex].xSize;

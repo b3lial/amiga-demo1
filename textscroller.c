@@ -29,8 +29,18 @@ ULONG *colortable1 = NULL;
 
 WORD fsmTextScroller(void)
 {
+    //terminate effect on mouse click
+    if (mouseClick())
+    {
+        terminateTextController();
+        return MODULE_FINISHED;
+    }
+
+    // no mouse click -> execute state machine
     switch (payloadTextScrollerState)
     {
+
+    // create view, load star field, planet earth and font
     case TEXTSCROLLER_INIT:
         initTextScroller();
         WaitTOF();
@@ -39,21 +49,31 @@ WORD fsmTextScroller(void)
         payloadTextScrollerState = TEXTSCROLLER_MSG_1;
         break;
 
+    // display "hi there"
     case TEXTSCROLLER_MSG_1:
-        payloadTextScrollerState = waitForTextControlEngine(TEXTSCROLLER_MSG_1,
-                                                            TEXTSCROLLER_MSG_2);
-        if (payloadTextScrollerState == TEXTSCROLLER_MSG_2)
+        WaitTOF();
+        executeTextController();
+        if (textScrollIsFinished())
         {
+            payloadTextScrollerState = TEXTSCROLLER_MSG_2;
+            terminateTextController();
             initTextController("belial here", 20, 60, TEXTSCROLLER_BLOB_FONT_DEPTH,
                                TEXTSCROLLER_VIEW_WIDTH);
         }
         break;
 
+    // display "belial here"
     case TEXTSCROLLER_MSG_2:
-        payloadTextScrollerState = waitForTextControlEngine(TEXTSCROLLER_MSG_2,
-                                                            TEXTSCROLLER_SHUTDOWN);
+        WaitTOF();
+        executeTextController();
+        if (textScrollIsFinished())
+        {
+            payloadTextScrollerState = TEXTSCROLLER_SHUTDOWN;
+            terminateTextController();
+        }
         break;
 
+    // destroy view
     case TEXTSCROLLER_SHUTDOWN:
         exitTextScroller();
         return MODULE_FINISHED;
@@ -151,26 +171,6 @@ void initTextScroller(void)
 
     // Make View visible
     startView();
-}
-
-UWORD waitForTextControlEngine(UWORD currentTCState, UWORD nextTCState)
-{
-    if (mouseClick())
-    {
-        terminateTextController();
-        return TEXTSCROLLER_SHUTDOWN;
-    }
-    else if (textScrollIsFinished())
-    {
-        terminateTextController();
-        return nextTCState;
-    }
-    else
-    {
-        WaitTOF();
-        executeTextController();
-        return currentTCState;
-    }
 }
 
 void exitTextScroller(void)
