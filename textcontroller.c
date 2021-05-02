@@ -10,7 +10,7 @@
 #include "starlight/starlight.h"
 
 struct BitMap *fontBlob;
-extern struct BitMap *textscrollerScreen;
+struct BitMap *textscrollerScreen;
 
 /*
  * Contains the text which is displayed and 
@@ -47,10 +47,11 @@ BOOL textScrollFinished = FALSE;
 /**
  * Load font
  */
-BOOL initTextController(UWORD depth, UWORD screenWidth)
+BOOL initTextController(struct BitMap *screen, UWORD depth, UWORD screenWidth)
 {
     charDepth = depth;
     scrollControlWidth = screenWidth;
+    textscrollerScreen = screen;
 
     // Load font bitmap and its colors
     writeLog("Load font bitmap and colors\n");

@@ -42,7 +42,8 @@ WORD fsmTextScroller(void)
     // create view, load star field, planet earth and font
     case TEXTSCROLLER_INIT:
         initTextScroller();
-        if (!initTextController(TEXTSCROLLER_BLOB_FONT_DEPTH,
+        if (!initTextController(textscrollerScreen,
+                                TEXTSCROLLER_BLOB_FONT_DEPTH,
                                 TEXTSCROLLER_VIEW_WIDTH))
         {
             exitTextScroller();

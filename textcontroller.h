@@ -11,10 +11,11 @@
 #define TEXTSCROLLER_BLOB_FONT_WIDTH 288
 #define TEXTSCROLLER_BLOB_FONT_HEIGHT 160
 
-struct CharBlob {
+struct CharBlob
+{
     UWORD xSize;
     UWORD ySize;
-    WORD xPos;  // can become negative when scrolling out
+    WORD xPos; // can become negative when scrolling out
     UWORD yPos;
     UWORD xPosInFont;
     UWORD yPosInFont;
@@ -23,7 +24,8 @@ struct CharBlob {
 
 // external APIs
 void setStringTextController(char *text, UWORD firstX, UWORD firstY);
-BOOL initTextController(UWORD depth, UWORD screenWidth);
+BOOL initTextController(struct BitMap *screen,
+                        UWORD depth, UWORD screenWidth);
 void executeTextController(void);
 void resetTextController(void);
 void exitTextController(void);
@@ -37,4 +39,4 @@ void getCharData(char letter, struct CharBlob *charBlob);
 UWORD displayCurrentCharacter(WORD xPos, WORD yPos);
 void prepareForNextCharacter(void);
 
-#endif  // TEXTCONTROLLER_H_
+#endif // TEXTCONTROLLER_H_
