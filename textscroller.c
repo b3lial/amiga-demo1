@@ -26,6 +26,8 @@ struct BitMap *spaceBlob = NULL;
 struct BitMap *textscrollerScreen = NULL;
 ULONG *colortable1 = NULL;
 
+struct TextConfig text1;
+
 WORD fsmTextScroller(void)
 {
     //terminate effect on mouse click
@@ -42,6 +44,7 @@ WORD fsmTextScroller(void)
     // create view, load star field, planet earth and font
     case TEXTSCROLLER_INIT:
         initTextScroller();
+
         if (!initTextController(textscrollerScreen,
                                 TEXTSCROLLER_BLOB_FONT_DEPTH,
                                 TEXTSCROLLER_VIEW_WIDTH))
@@ -49,8 +52,12 @@ WORD fsmTextScroller(void)
             exitTextScroller();
             exitSystem(RETURN_ERROR);
         }
+
+        text1.currentText = "hi there";
+        text1.charXPosDestination = 70;
+        text1.charYPosDestination = 60;
         WaitTOF();
-        setStringTextController("hi there", 70, 60);
+        setStringTextController(&text1);
         payloadTextScrollerState = TEXTSCROLLER_MSG_1;
         break;
 
@@ -62,7 +69,10 @@ WORD fsmTextScroller(void)
         {
             payloadTextScrollerState = TEXTSCROLLER_MSG_2;
             resetTextController();
-            setStringTextController("belial here", 33, 60);
+            text1.currentText = "belial here";
+            text1.charXPosDestination = 33;
+            text1.charYPosDestination = 60;
+            setStringTextController(&text1);
         }
         break;
 

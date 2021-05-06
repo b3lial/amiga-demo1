@@ -11,36 +11,13 @@
 
 struct BitMap *fontBlob;
 struct BitMap *textDestination;
-
-/*
- * Contains the text which is displayed and 
- * an index to current char
- */
-char *currentText = NULL;
-UWORD currentChar = 0;
-
-// At which position do we want to move the current character
-UWORD charXPosDestination = 0;
-UWORD charYPosDestination = 0;
+struct TextConfig* textConfig;
 
 // Color depth of font blob
 UWORD charDepth = 0;
 
-// contains data of characters blitted on screen
-UBYTE charIndex;
-UBYTE maxCharIndex;
-struct CharBlob characters[MAX_CHAR_PER_LINE];
-
 // Screen width
 UWORD scrollControlWidth = 0;
-
-/*
- * When the effect starts, a sequence of characters is moved from
- * right to left on screen. When each char is at its position, they
- * scoll out from right to left. In between, animation is paused
- *  for short amount of time
- */
-enum TEXT_CONTROL_STATE currentState = TC_SCROLL_IN;
 
 UWORD pauseCounter = 0;
 
@@ -83,32 +60,30 @@ void exitTextController(void){
  * blit destination. 
  * Afterwards, executeTextScroller() can be called.
  */
-void setStringTextController(char *text, UWORD firstXPosDestination,
-                        UWORD firstYPosDestination)
+void setStringTextController(struct TextConfig* config)
 {
+    textConfig = config;
+
     // Init engines global variables
-    currentState = TC_SCROLL_IN;
+    textConfig->currentState = TC_SCROLL_IN;
     pauseCounter = 0;
-    charIndex = 0;
-    memset(characters, 0, sizeof(characters));
-    charXPosDestination = firstXPosDestination;
-    charYPosDestination = firstYPosDestination;
-    currentText = text;
-    currentChar = 0;
+    textConfig->charIndex = 0;
+    memset(textConfig->characters, 0, sizeof(textConfig->characters));
+    textConfig->currentChar = 0;
 
     // analyse first character in text string
-    getCharData(currentText[currentChar], &(characters[charIndex]));
-    characters[charIndex].xPos =
-        scrollControlWidth - characters[charIndex].xSize;
-    characters[charIndex].yPos = charYPosDestination;
+    getCharData(textConfig->currentText[textConfig->currentChar], &(textConfig->characters[textConfig->charIndex]));
+    textConfig->characters[textConfig->charIndex].xPos =
+        scrollControlWidth - textConfig->characters[textConfig->charIndex].xSize;
+    textConfig->characters[textConfig->charIndex].yPos = textConfig->charYPosDestination;
 
     // save background at character starting position
-    characters[charIndex].oldBackground = createBitMap(charDepth, 50, 50);
-    BltBitMap(textDestination, characters[charIndex].xPos,
-              characters[charIndex].yPos,
-              characters[charIndex].oldBackground, 0, 0,
-              characters[charIndex].xSize,
-              characters[charIndex].ySize, 0xC0,
+    textConfig->characters[textConfig->charIndex].oldBackground = createBitMap(charDepth, 50, 50);
+    BltBitMap(textDestination, textConfig->characters[textConfig->charIndex].xPos,
+              textConfig->characters[textConfig->charIndex].yPos,
+              textConfig->characters[textConfig->charIndex].oldBackground, 0, 0,
+              textConfig->characters[textConfig->charIndex].xSize,
+              textConfig->characters[textConfig->charIndex].ySize, 0xC0,
               0xff, 0);
 }
 
@@ -118,7 +93,7 @@ void setStringTextController(char *text, UWORD firstXPosDestination,
  */
 void executeTextController()
 {
-    switch(currentState){
+    switch(textConfig->currentState){
         case TC_SCROLL_IN:
             textScrollIn();
             break;
@@ -136,44 +111,44 @@ void executeTextController()
 void textScrollIn()
 {
     // check whether every char was moved at its position
-    if (currentText[currentChar] == 0)
+    if (textConfig->currentText[textConfig->currentChar] == 0)
     {
-        maxCharIndex = charIndex;
-        charIndex = 0;
-        charXPosDestination = 0;
-        currentState = TC_SCROLL_PAUSE;
+        textConfig->maxCharIndex = textConfig->charIndex;
+        textConfig->charIndex = 0;
+        textConfig->charXPosDestination = 0;
+        textConfig->currentState = TC_SCROLL_PAUSE;
         return;
     }
 
     // restore previously saved background and character position
-    BltBitMap(characters[charIndex].oldBackground, 0, 0,
-              textDestination, characters[charIndex].xPos,
-              characters[charIndex].yPos,
-              characters[charIndex].xSize,
-              characters[charIndex].ySize, 0xC0, 0xff, 0);
+    BltBitMap(textConfig->characters[textConfig->charIndex].oldBackground, 0, 0,
+              textDestination, textConfig->characters[textConfig->charIndex].xPos,
+              textConfig->characters[textConfig->charIndex].yPos,
+              textConfig->characters[textConfig->charIndex].xSize,
+              textConfig->characters[textConfig->charIndex].ySize, 0xC0, 0xff, 0);
 
     // move character to next position
-    characters[charIndex].xPos -= TEXT_MOVEMENT_SPEED;
-    if (characters[charIndex].xPos < charXPosDestination)
+    textConfig->characters[textConfig->charIndex].xPos -= TEXT_MOVEMENT_SPEED;
+    if (textConfig->characters[textConfig->charIndex].xPos < textConfig->charXPosDestination)
     {
-        characters[charIndex].xPos = charXPosDestination;
+        textConfig->characters[textConfig->charIndex].xPos = textConfig->charXPosDestination;
     }
 
     // save background there
     BltBitMap(textDestination,
-              characters[charIndex].xPos,
-              characters[charIndex].yPos,
-              characters[charIndex].oldBackground, 0, 0,
-              characters[charIndex].xSize,
-              characters[charIndex].ySize, 0xC0,
+              textConfig->characters[textConfig->charIndex].xPos,
+              textConfig->characters[textConfig->charIndex].yPos,
+              textConfig->characters[textConfig->charIndex].oldBackground, 0, 0,
+              textConfig->characters[textConfig->charIndex].xSize,
+              textConfig->characters[textConfig->charIndex].ySize, 0xC0,
               0xff, 0);
 
     // blit character on screen
-    displayCurrentCharacter(characters[charIndex].xPos,
-                            characters[charIndex].yPos);
+    displayCurrentCharacter(textConfig->characters[textConfig->charIndex].xPos,
+                            textConfig->characters[textConfig->charIndex].yPos);
 
     // finally, check whether we have to switch to next letter
-    if (characters[charIndex].xPos <= charXPosDestination)
+    if (textConfig->characters[textConfig->charIndex].xPos <= textConfig->charXPosDestination)
     {
         prepareForNextCharacter();
     }
@@ -181,7 +156,7 @@ void textScrollIn()
 
 void textScrollPause(void){
     if(pauseCounter >= TEXT_PAUSE_TIME){
-        currentState = TC_SCROLL_OUT;
+        textConfig->currentState = TC_SCROLL_OUT;
         return;
     }
 
@@ -191,50 +166,50 @@ void textScrollPause(void){
 void textScrollOut()
 {
     // check whether every char was scrolled out and we are finished
-    if (charIndex > maxCharIndex)
+    if (textConfig->charIndex > textConfig->maxCharIndex)
     {
-        currentState = TC_SCROLL_FINISHED;
+        textConfig->currentState = TC_SCROLL_FINISHED;
         return;
     }
 
     // restore previously saved background and character position
-    BltBitMap(characters[charIndex].oldBackground, 0, 0,
-              textDestination, characters[charIndex].xPos,
-              characters[charIndex].yPos,
-              characters[charIndex].xSize,
-              characters[charIndex].ySize, 0xC0, 0xff, 0);
+    BltBitMap(textConfig->characters[textConfig->charIndex].oldBackground, 0, 0,
+              textDestination, textConfig->characters[textConfig->charIndex].xPos,
+              textConfig->characters[textConfig->charIndex].yPos,
+              textConfig->characters[textConfig->charIndex].xSize,
+              textConfig->characters[textConfig->charIndex].ySize, 0xC0, 0xff, 0);
 
     // char reached left side, delete it and switch to next char
-    if (characters[charIndex].xPos == charXPosDestination)
+    if (textConfig->characters[textConfig->charIndex].xPos == textConfig->charXPosDestination)
     {
-        charIndex++;
+        textConfig->charIndex++;
         return;
     }
 
     // move character to next position
-    characters[charIndex].xPos -= TEXT_MOVEMENT_SPEED;
-    if (characters[charIndex].xPos < 0)
+    textConfig->characters[textConfig->charIndex].xPos -= TEXT_MOVEMENT_SPEED;
+    if (textConfig->characters[textConfig->charIndex].xPos < 0)
     {
-        characters[charIndex].xPos = 0;
+        textConfig->characters[textConfig->charIndex].xPos = 0;
     }
 
     // save background there
     BltBitMap(textDestination,
-              characters[charIndex].xPos,
-              characters[charIndex].yPos,
-              characters[charIndex].oldBackground, 0, 0,
-              characters[charIndex].xSize,
-              characters[charIndex].ySize, 0xC0,
+              textConfig->characters[textConfig->charIndex].xPos,
+              textConfig->characters[textConfig->charIndex].yPos,
+              textConfig->characters[textConfig->charIndex].oldBackground, 0, 0,
+              textConfig->characters[textConfig->charIndex].xSize,
+              textConfig->characters[textConfig->charIndex].ySize, 0xC0,
               0xff, 0);
 
     // blit character on screen
-    displayCurrentCharacter(characters[charIndex].xPos,
-                            characters[charIndex].yPos);
+    displayCurrentCharacter(textConfig->characters[textConfig->charIndex].xPos,
+                            textConfig->characters[textConfig->charIndex].yPos);
 }
 
 BOOL isFinishedTextController(void)
 {
-    return (currentState == TC_SCROLL_FINISHED);
+    return (textConfig->currentState == TC_SCROLL_FINISHED);
 }
 
 /*
@@ -244,11 +219,11 @@ BOOL isFinishedTextController(void)
 void prepareForNextCharacter()
 {
     char letter = 0;
-    charXPosDestination += (characters[charIndex].xSize + 5);
+    textConfig->charXPosDestination += (textConfig->characters[textConfig->charIndex].xSize + 5);
 
     // skip space
-    currentChar++;
-    letter = tolower(currentText[currentChar]);
+    textConfig->currentChar++;
+    letter = tolower(textConfig->currentText[textConfig->currentChar]);
     // reach end of string
     if (letter == 0)
     {
@@ -257,9 +232,9 @@ void prepareForNextCharacter()
 
     while (letter < 'a' || letter > 'z')
     {
-        charXPosDestination += 15;
-        currentChar++;
-        letter = tolower(currentText[currentChar]);
+        textConfig->charXPosDestination += 15;
+        textConfig->currentChar++;
+        letter = tolower(textConfig->currentText[textConfig->currentChar]);
 
         // reach end of string
         if (letter == 0)
@@ -269,20 +244,20 @@ void prepareForNextCharacter()
     }
 
     // found next character, prepare everything for his arrival
-    charIndex++;
-    getCharData(letter, &(characters[charIndex]));
-    characters[charIndex].oldBackground = createBitMap(charDepth, 50, 50);
-    characters[charIndex].xPos =
-        scrollControlWidth - characters[charIndex].xSize;
-    characters[charIndex].yPos = charYPosDestination;
+    textConfig->charIndex++;
+    getCharData(letter, &(textConfig->characters[textConfig->charIndex]));
+    textConfig->characters[textConfig->charIndex].oldBackground = createBitMap(charDepth, 50, 50);
+    textConfig->characters[textConfig->charIndex].xPos =
+        scrollControlWidth - textConfig->characters[textConfig->charIndex].xSize;
+    textConfig->characters[textConfig->charIndex].yPos = textConfig->charYPosDestination;
 
     // save background at character starting position
     BltBitMap(textDestination,
-              characters[charIndex].xPos,
-              characters[charIndex].yPos,
-              characters[charIndex].oldBackground, 0, 0,
-              characters[charIndex].xSize,
-              characters[charIndex].ySize, 0xC0,
+              textConfig->characters[textConfig->charIndex].xPos,
+              textConfig->characters[textConfig->charIndex].yPos,
+              textConfig->characters[textConfig->charIndex].oldBackground, 0, 0,
+              textConfig->characters[textConfig->charIndex].xSize,
+              textConfig->characters[textConfig->charIndex].ySize, 0xC0,
               0xff, 0);
 }
 
@@ -294,10 +269,10 @@ void resetTextController()
     UBYTE i = 0;
     for (; i < MAX_CHAR_PER_LINE; i++)
     {
-        if (characters[i].oldBackground)
+        if (textConfig->characters[i].oldBackground)
         {
-            cleanBitMap(characters[i].oldBackground);
-            characters[i].oldBackground = NULL;
+            cleanBitMap(textConfig->characters[i].oldBackground);
+            textConfig->characters[i].oldBackground = NULL;
         }
     }
 }
@@ -313,12 +288,12 @@ UWORD displayCurrentCharacter(WORD xPos, WORD yPos)
 	 * Therefore, we use minterm: BC+NBC+BNC -> 1110xxxx -> 0xE0
 	 */
     BltBitMap(fontBlob,
-              characters[charIndex].xPosInFont,
-              characters[charIndex].yPosInFont,
+              textConfig->characters[textConfig->charIndex].xPosInFont,
+              textConfig->characters[textConfig->charIndex].yPosInFont,
               textDestination, xPos, yPos,
-              characters[charIndex].xSize,
-              characters[charIndex].ySize, 0xC0, 0xff, 0);
-    return (UWORD)(xPos + characters[charIndex].xSize + 5);
+              textConfig->characters[textConfig->charIndex].xSize,
+              textConfig->characters[textConfig->charIndex].ySize, 0xC0, 0xff, 0);
+    return (UWORD)(xPos + textConfig->characters[textConfig->charIndex].xSize + 5);
 }
 
 /**

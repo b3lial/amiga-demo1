@@ -12,6 +12,14 @@
 #define TEXTSCROLLER_BLOB_FONT_WIDTH 288
 #define TEXTSCROLLER_BLOB_FONT_HEIGHT 160
 
+enum TEXT_CONTROL_STATE
+{
+    TC_SCROLL_IN,
+    TC_SCROLL_PAUSE,
+    TC_SCROLL_OUT,
+    TC_SCROLL_FINISHED
+};
+
 struct CharBlob
 {
     UWORD xSize;
@@ -23,16 +31,35 @@ struct CharBlob
     struct BitMap *oldBackground;
 };
 
-enum TEXT_CONTROL_STATE
+struct TextConfig
 {
-    TC_SCROLL_IN,
-    TC_SCROLL_PAUSE,
-    TC_SCROLL_OUT,
-    TC_SCROLL_FINISHED
+    /*
+    * Contains the text which is displayed and 
+    * an index to current char
+    */
+    char *currentText;
+    UWORD currentChar;
+
+    // At which position do we want to move the current character
+    UWORD charXPosDestination;
+    UWORD charYPosDestination;
+
+    // contains data of characters blitted on screen
+    UBYTE charIndex;
+    UBYTE maxCharIndex;
+    struct CharBlob characters[MAX_CHAR_PER_LINE];
+
+    /*
+    * When the effect starts, a sequence of characters is moved from
+    * right to left on screen. When each char is at its position, they
+    * scoll out from right to left. In between, animation is paused
+    *  for short amount of time
+    */
+    enum TEXT_CONTROL_STATE currentState;
 };
 
 // external APIs
-void setStringTextController(char *text, UWORD firstX, UWORD firstY);
+void setStringTextController(struct TextConfig* config);
 BOOL initTextController(struct BitMap *screen,
                         UWORD depth, UWORD screenWidth);
 void executeTextController(void);
