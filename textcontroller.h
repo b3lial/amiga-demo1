@@ -5,8 +5,8 @@
 
 #include <exec/types.h>
 
-#define TEXT_MOVEMENT_SPEED 7
-#define TEXT_PAUSE_TIME 150
+#define TEXT_MOVEMENT_SPEED 8
+#define TEXT_PAUSE_TIME 120
 #define MAX_CHAR_PER_LINE 20
 
 #define TEXTSCROLLER_BLOB_FONT_WIDTH 288
