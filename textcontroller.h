@@ -60,6 +60,7 @@ struct TextConfig
 
 // external APIs
 void setStringTextController(struct TextConfig* config);
+void setStringsTextController(struct TextConfig** configs);
 BOOL initTextController(struct BitMap *screen,
                         UWORD depth, UWORD screenWidth);
 void executeTextController(void);
@@ -68,9 +69,9 @@ void exitTextController(void);
 BOOL isFinishedTextController(void);
 
 // internal functions
-void textScrollIn(void);
-void textScrollPause(void);
-void textScrollOut(void);
+void textScrollIn(struct TextConfig* config));
+void textScrollPause(struct TextConfig* config));
+void textScrollOut(struct TextConfig* config));
 
 void getCharData(char letter, struct CharBlob *charBlob);
 UWORD displayCurrentCharacter(WORD xPos, WORD yPos);

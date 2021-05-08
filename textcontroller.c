@@ -11,7 +11,7 @@
 
 struct BitMap *fontBlob;
 struct BitMap *textDestination;
-struct TextConfig* textConfig;
+struct TextConfig** textConfigs;
 
 // Color depth of font blob
 UWORD charDepth = 0;
@@ -19,6 +19,7 @@ UWORD charDepth = 0;
 // Screen width
 UWORD scrollControlWidth = 0;
 
+// when complete text is on screen, pause for a short moment
 UWORD pauseCounter = 0;
 
 /**
@@ -54,36 +55,43 @@ void exitTextController(void){
 }
 
 /**
- * Must be called first.
- * Store parameters in global variables, analyse first
- * character of input string, save background of first
- * blit destination. 
+ * Must be called first to init the whole engine.
  * Afterwards, executeTextScroller() can be called.
  */
-void setStringTextController(struct TextConfig* config)
-{
-    textConfig = config;
+void setStringsTextController(struct TextConfig **configs){
+    UBYTE i = 0;
+    textConfigs = configs;
+    while(textConfigs[i]){
+        setStringTextController(textConfigs[i]);
+        i++;
+    }
+}
 
+/**
+ * Is called for each element in text list
+ */
+void setStringTextController(struct TextConfig* c)
+{
     // Init engines global variables
-    textConfig->currentState = TC_SCROLL_IN;
+    c->currentState = TC_SCROLL_IN;
     pauseCounter = 0;
-    textConfig->charIndex = 0;
-    memset(textConfig->characters, 0, sizeof(textConfig->characters));
-    textConfig->currentChar = 0;
+    c->charIndex = 0;
+    memset(c->characters, 0, sizeof(c->characters));
+    c->currentChar = 0;
 
     // analyse first character in text string
-    getCharData(textConfig->currentText[textConfig->currentChar], &(textConfig->characters[textConfig->charIndex]));
-    textConfig->characters[textConfig->charIndex].xPos =
-        scrollControlWidth - textConfig->characters[textConfig->charIndex].xSize;
-    textConfig->characters[textConfig->charIndex].yPos = textConfig->charYPosDestination;
+    getCharData(c->currentText[c->currentChar], &(c->characters[c->charIndex]));
+    c->characters[c->charIndex].xPos =
+        scrollControlWidth - c->characters[c->charIndex].xSize;
+    c->characters[c->charIndex].yPos = c->charYPosDestination;
 
     // save background at character starting position
-    textConfig->characters[textConfig->charIndex].oldBackground = createBitMap(charDepth, 50, 50);
-    BltBitMap(textDestination, textConfig->characters[textConfig->charIndex].xPos,
-              textConfig->characters[textConfig->charIndex].yPos,
-              textConfig->characters[textConfig->charIndex].oldBackground, 0, 0,
-              textConfig->characters[textConfig->charIndex].xSize,
-              textConfig->characters[textConfig->charIndex].ySize, 0xC0,
+    c->characters[c->charIndex].oldBackground = createBitMap(charDepth, 50, 50);
+    BltBitMap(textDestination, c->characters[c->charIndex].xPos,
+              c->characters[c->charIndex].yPos,
+              c->characters[c->charIndex].oldBackground, 0, 0,
+              c->characters[c->charIndex].xSize,
+              c->characters[c->charIndex].ySize, 0xC0,
               0xff, 0);
 }
 
@@ -93,22 +101,26 @@ void setStringTextController(struct TextConfig* config)
  */
 void executeTextController()
 {
-    switch(textConfig->currentState){
-        case TC_SCROLL_IN:
-            textScrollIn();
-            break;
-        case TC_SCROLL_PAUSE:
-            textScrollPause();
-            break;
-        case TC_SCROLL_OUT:
-            textScrollOut();
-            break;
-        case TC_SCROLL_FINISHED:
-            break;
+    UBYTE i = 0;
+    while(textConfigs[i]){
+        switch(textConfigs[i]->currentState){
+            case TC_SCROLL_IN:
+                textScrollIn(textConfigs[i]);
+                break;
+            case TC_SCROLL_PAUSE:
+                textScrollPause(textConfigs[i]);
+                break;
+            case TC_SCROLL_OUT:
+                textScrollOut(textConfigs[i]);
+                break;
+            case TC_SCROLL_FINISHED:
+                break;
+        }
+        i++;
     }
 }
 
-void textScrollIn()
+void textScrollIn(struct TextConfig* textConfig)
 {
     // check whether every char was moved at its position
     if (textConfig->currentText[textConfig->currentChar] == 0)
@@ -154,7 +166,7 @@ void textScrollIn()
     }
 }
 
-void textScrollPause(void){
+void textScrollPause(struct TextConfig* textConfig){
     if(pauseCounter >= TEXT_PAUSE_TIME){
         textConfig->currentState = TC_SCROLL_OUT;
         return;
@@ -163,7 +175,7 @@ void textScrollPause(void){
     pauseCounter++;
 }
 
-void textScrollOut()
+void textScrollOut(struct TextConfig* textConfig)
 {
     // check whether every char was scrolled out and we are finished
     if (textConfig->charIndex > textConfig->maxCharIndex)

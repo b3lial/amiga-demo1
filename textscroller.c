@@ -26,7 +26,9 @@ struct BitMap *spaceBlob = NULL;
 struct BitMap *textscrollerScreen = NULL;
 ULONG *colortable1 = NULL;
 
+struct TextConfig *textList[TEXT_LIST_SIZE];
 struct TextConfig text1;
+struct TextConfig text2;
 
 WORD fsmTextScroller(void)
 {
@@ -53,11 +55,14 @@ WORD fsmTextScroller(void)
             exitSystem(RETURN_ERROR);
         }
 
+        // configure text scroll engine
         text1.currentText = "hi there";
         text1.charXPosDestination = 70;
         text1.charYPosDestination = 60;
+        textList[0] = &text1;
+        textList[1] = NULL;
         WaitTOF();
-        setStringTextController(&text1);
+        setStringsTextController(textList);
         payloadTextScrollerState = TEXTSCROLLER_MSG_1;
         break;
 
@@ -67,12 +72,16 @@ WORD fsmTextScroller(void)
         executeTextController();
         if (isFinishedTextController())
         {
-            payloadTextScrollerState = TEXTSCROLLER_MSG_2;
+            // configure text scroll engine
             resetTextController();
             text1.currentText = "belial here";
             text1.charXPosDestination = 33;
             text1.charYPosDestination = 60;
-            setStringTextController(&text1);
+            textList[0] = &text1;
+            textList[1] = NULL;
+            WaitTOF();
+            setStringsTextController(textList);
+            payloadTextScrollerState = TEXTSCROLLER_MSG_2;
         }
         break;
 
@@ -102,6 +111,10 @@ void initTextScroller(void)
     UWORD colortable0[8];
     BYTE i = 0;
     writeLog("\n== initTextScroller() ==\n");
+
+    for(;i<TEXT_LIST_SIZE;i++){
+        textList[i] = NULL;
+    }
 
     writeLog("\nLoad space background bitmap and colors\n");
     // Load space background bitmap
