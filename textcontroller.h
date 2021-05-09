@@ -66,6 +66,7 @@ void executeTextController(void);
 void resetTextController(void);
 void exitTextController(void);
 BOOL isFinishedTextController(void);
+void pauseTimeTextController(UWORD);
 
 // internal functions
 void resetTextConfig(struct TextConfig *textConfig);

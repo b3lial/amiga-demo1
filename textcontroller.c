@@ -21,6 +21,7 @@ UWORD scrollControlWidth = 0;
 
 // when complete text is on screen, pause for a short moment
 UWORD pauseCounter = 0;
+UWORD pauseTime = 0;
 
 /**
  * Load font
@@ -30,6 +31,7 @@ BOOL initTextController(struct BitMap *screen, UWORD depth, UWORD screenWidth)
     charDepth = depth;
     scrollControlWidth = screenWidth;
     textDestination = screen;
+    pauseTime = TEXT_PAUSE_TIME;
 
     // Load font bitmap and its colors
     writeLog("Load font bitmap and colors\n");
@@ -165,8 +167,12 @@ void textScrollIn(struct TextConfig* textConfig)
     }
 }
 
+void pauseTimeTextController(UWORD newPauseTime){
+    pauseTime = newPauseTime;
+}
+
 void textScrollPause(struct TextConfig* textConfig){
-    if(pauseCounter >= TEXT_PAUSE_TIME){
+    if(pauseCounter >= pauseTime){
         textConfig->currentState = TC_SCROLL_OUT;
         return;
     }
@@ -279,6 +285,9 @@ void prepareForNextCharacter(struct TextConfig* textConfig)
               0xff, 0);
 }
 
+/**
+ * Free the character background backup bitmaps of all text configs
+ */
 void resetTextController(void){
     UBYTE i = 0;
     while(textConfigs[i]){
@@ -288,7 +297,7 @@ void resetTextController(void){
 }
 
 /**
- * Free the character background backup bitmaps 
+ * Free the character background backup bitmaps of text config
  */
 void resetTextConfig(struct TextConfig *textConfig)
 {

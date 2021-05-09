@@ -83,6 +83,7 @@ WORD fsmTextScroller(void)
             textList[0] = &text1;
             textList[1] = &text2;
             textList[2] = NULL;
+            pauseTimeTextController(180);
             WaitTOF();
             setStringsTextController(textList);
             payloadTextScrollerState = TEXTSCROLLER_MSG_2;
