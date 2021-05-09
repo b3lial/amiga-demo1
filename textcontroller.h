@@ -59,22 +59,23 @@ struct TextConfig
 };
 
 // external APIs
-void setStringTextController(struct TextConfig* config);
-void setStringsTextController(struct TextConfig** configs);
 BOOL initTextController(struct BitMap *screen,
                         UWORD depth, UWORD screenWidth);
+void setStringsTextController(struct TextConfig** configs);
 void executeTextController(void);
 void resetTextController(void);
 void exitTextController(void);
 BOOL isFinishedTextController(void);
 
 // internal functions
-void textScrollIn(struct TextConfig* config));
-void textScrollPause(struct TextConfig* config));
-void textScrollOut(struct TextConfig* config));
+void resetTextConfig(struct TextConfig *textConfig);
+void setStringTextController(struct TextConfig* config);
+void textScrollIn(struct TextConfig* config);
+void textScrollPause(struct TextConfig* config);
+void textScrollOut(struct TextConfig* config);
 
 void getCharData(char letter, struct CharBlob *charBlob);
-UWORD displayCurrentCharacter(WORD xPos, WORD yPos);
-void prepareForNextCharacter(void);
+UWORD displayCurrentCharacter(struct TextConfig* textConfig);
+void prepareForNextCharacter(struct TextConfig* textConfig);
 
 #endif // TEXTCONTROLLER_H_

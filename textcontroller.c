@@ -156,13 +156,12 @@ void textScrollIn(struct TextConfig* textConfig)
               0xff, 0);
 
     // blit character on screen
-    displayCurrentCharacter(textConfig->characters[textConfig->charIndex].xPos,
-                            textConfig->characters[textConfig->charIndex].yPos);
+    displayCurrentCharacter(textConfig);
 
     // finally, check whether we have to switch to next letter
     if (textConfig->characters[textConfig->charIndex].xPos <= textConfig->charXPosDestination)
     {
-        prepareForNextCharacter();
+        prepareForNextCharacter(textConfig);
     }
 }
 
@@ -215,20 +214,27 @@ void textScrollOut(struct TextConfig* textConfig)
               0xff, 0);
 
     // blit character on screen
-    displayCurrentCharacter(textConfig->characters[textConfig->charIndex].xPos,
-                            textConfig->characters[textConfig->charIndex].yPos);
+    displayCurrentCharacter(textConfig);
 }
 
 BOOL isFinishedTextController(void)
 {
-    return (textConfig->currentState == TC_SCROLL_FINISHED);
+    BOOL allFinished = TRUE;
+    UBYTE i = 0;
+    while(textConfigs[i]){
+        if(textConfigs[i]->currentState != TC_SCROLL_FINISHED){
+            allFinished = FALSE;
+        }
+        i++;
+    }
+    return allFinished;
 }
 
 /*
  * Search in text string for next non-whitespace
  * character and initialize its destination position
  */
-void prepareForNextCharacter()
+void prepareForNextCharacter(struct TextConfig* textConfig)
 {
     char letter = 0;
     textConfig->charXPosDestination += (textConfig->characters[textConfig->charIndex].xSize + 5);
@@ -273,10 +279,18 @@ void prepareForNextCharacter()
               0xff, 0);
 }
 
+void resetTextController(void){
+    UBYTE i = 0;
+    while(textConfigs[i]){
+        resetTextConfig(textConfigs[i]);
+        i++;
+    }
+}
+
 /**
  * Free the character background backup bitmaps 
  */
-void resetTextController()
+void resetTextConfig(struct TextConfig *textConfig)
 {
     UBYTE i = 0;
     for (; i < MAX_CHAR_PER_LINE; i++)
@@ -293,7 +307,7 @@ void resetTextController()
  * Print a character on screen. Return position of next
  * character
  */
-UWORD displayCurrentCharacter(WORD xPos, WORD yPos)
+UWORD displayCurrentCharacter(struct TextConfig* textConfig)
 {
     /*
 	 * Don't erase background if character rectangle (B) is blitted into destination (C,D)
@@ -302,10 +316,13 @@ UWORD displayCurrentCharacter(WORD xPos, WORD yPos)
     BltBitMap(fontBlob,
               textConfig->characters[textConfig->charIndex].xPosInFont,
               textConfig->characters[textConfig->charIndex].yPosInFont,
-              textDestination, xPos, yPos,
+              textDestination, 
+              textConfig->characters[textConfig->charIndex].xPos, 
+              textConfig->characters[textConfig->charIndex].yPos,
               textConfig->characters[textConfig->charIndex].xSize,
               textConfig->characters[textConfig->charIndex].ySize, 0xC0, 0xff, 0);
-    return (UWORD)(xPos + textConfig->characters[textConfig->charIndex].xSize + 5);
+    return (UWORD)(textConfig->characters[textConfig->charIndex].xPos
+                   + textConfig->characters[textConfig->charIndex].xSize + 5);
 }
 
 /**
