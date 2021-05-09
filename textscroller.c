@@ -74,11 +74,15 @@ WORD fsmTextScroller(void)
         {
             // configure text scroll engine
             resetTextController();
-            text1.currentText = "belial here";
-            text1.charXPosDestination = 33;
-            text1.charYPosDestination = 60;
+            text1.currentText = "belial";
+            text1.charXPosDestination = 80;
+            text1.charYPosDestination = 30;
+            text2.currentText = "here";
+            text2.charXPosDestination = 95;
+            text2.charYPosDestination = 70;
             textList[0] = &text1;
-            textList[1] = NULL;
+            textList[1] = &text2;
+            textList[2] = NULL;
             WaitTOF();
             setStringsTextController(textList);
             payloadTextScrollerState = TEXTSCROLLER_MSG_2;
