@@ -122,38 +122,38 @@ void executeTextController()
     }
 }
 
-void textScrollIn(struct TextConfig *textConfig)
+void textScrollIn(struct TextConfig *c)
 {
     // check whether every char was moved at its position
-    if (textConfig->currentText[textConfig->currentChar] == 0)
+    if (c->currentText[c->currentChar] == 0)
     {
-        textConfig->maxCharIndex = textConfig->charIndex;
-        textConfig->charIndex = 0;
-        textConfig->charXPosDestination = 0;
-        textConfig->currentState = TC_SCROLL_PAUSE;
+        c->maxCharIndex = c->charIndex;
+        c->charIndex = 0;
+        c->charXPosDestination = 0;
+        c->currentState = TC_SCROLL_PAUSE;
         return;
     }
 
     // restore previously saved background and character position
-    restorePreviousBackground(textConfig);
+    restorePreviousBackground(c);
 
     // move character to next position
-    textConfig->characters[textConfig->charIndex].xPos -= TEXT_MOVEMENT_SPEED;
-    if (textConfig->characters[textConfig->charIndex].xPos < textConfig->charXPosDestination)
+    c->characters[c->charIndex].xPos -= TEXT_MOVEMENT_SPEED;
+    if (c->characters[c->charIndex].xPos < c->charXPosDestination)
     {
-        textConfig->characters[textConfig->charIndex].xPos = textConfig->charXPosDestination;
+        c->characters[c->charIndex].xPos = c->charXPosDestination;
     }
 
     // save background there
-    saveCharacterBackground(textConfig);
+    saveCharacterBackground(c);
 
     // blit character on screen
-    displayCurrentCharacter(textConfig);
+    displayCurrentCharacter(c);
 
     // finally, check whether we have to switch to next letter
-    if (textConfig->characters[textConfig->charIndex].xPos <= textConfig->charXPosDestination)
+    if (c->characters[c->charIndex].xPos <= c->charXPosDestination)
     {
-        prepareForNextCharacter(textConfig);
+        prepareForNextCharacter(c);
     }
 }
 
@@ -173,39 +173,43 @@ void textScrollPause(struct TextConfig *textConfig)
     pauseCounter++;
 }
 
-void textScrollOut(struct TextConfig *textConfig)
+void textScrollOut(struct TextConfig *c)
 {
     // check whether every char was scrolled out and we are finished
-    if (textConfig->charIndex > textConfig->maxCharIndex)
+    if (c->charIndex > c->maxCharIndex)
     {
-        textConfig->currentState = TC_SCROLL_FINISHED;
+        c->currentState = TC_SCROLL_FINISHED;
         return;
     }
 
     // restore previously saved background and character position
-    restorePreviousBackground(textConfig);
+    restorePreviousBackground(c);
 
     // char reached left side, delete it and switch to next char
-    if (textConfig->characters[textConfig->charIndex].xPos == textConfig->charXPosDestination)
+    if (c->characters[c->charIndex].xPos == c->charXPosDestination)
     {
-        textConfig->charIndex++;
+        c->charIndex++;
         return;
     }
 
     // move character to next position
-    textConfig->characters[textConfig->charIndex].xPos -= TEXT_MOVEMENT_SPEED;
-    if (textConfig->characters[textConfig->charIndex].xPos < 0)
+    c->characters[c->charIndex].xPos -= TEXT_MOVEMENT_SPEED;
+    if (c->characters[c->charIndex].xPos < 0)
     {
-        textConfig->characters[textConfig->charIndex].xPos = 0;
+        c->characters[c->charIndex].xPos = 0;
     }
 
     // save background there
-    saveCharacterBackground(textConfig);
+    saveCharacterBackground(c);
 
     // blit character on screen
-    displayCurrentCharacter(textConfig);
+    displayCurrentCharacter(c);
 }
 
+/**
+ * Returns true if every string TextConfig 
+ * is in state TC_SCROLL_FINISHED
+ */
 BOOL isFinishedTextController(void)
 {
     BOOL allFinished = TRUE;
@@ -225,14 +229,14 @@ BOOL isFinishedTextController(void)
  * Search in text string for next non-whitespace
  * character and initialize its destination position
  */
-void prepareForNextCharacter(struct TextConfig *textConfig)
+void prepareForNextCharacter(struct TextConfig *c)
 {
     char letter = 0;
-    textConfig->charXPosDestination += (textConfig->characters[textConfig->charIndex].xSize + 5);
+    c->charXPosDestination += (c->characters[c->charIndex].xSize + 5);
 
     // skip space
-    textConfig->currentChar++;
-    letter = tolower(textConfig->currentText[textConfig->currentChar]);
+    c->currentChar++;
+    letter = tolower(c->currentText[c->currentChar]);
     // reach end of string
     if (letter == 0)
     {
@@ -241,9 +245,9 @@ void prepareForNextCharacter(struct TextConfig *textConfig)
 
     while (letter < 'a' || letter > 'z')
     {
-        textConfig->charXPosDestination += 15;
-        textConfig->currentChar++;
-        letter = tolower(textConfig->currentText[textConfig->currentChar]);
+        c->charXPosDestination += 15;
+        c->currentChar++;
+        letter = tolower(c->currentText[c->currentChar]);
 
         // reach end of string
         if (letter == 0)
@@ -253,15 +257,15 @@ void prepareForNextCharacter(struct TextConfig *textConfig)
     }
 
     // found next character, prepare everything for his arrival
-    textConfig->charIndex++;
-    getCharData(letter, &(textConfig->characters[textConfig->charIndex]));
-    textConfig->characters[textConfig->charIndex].oldBackground = createBitMap(charDepth, 50, 50);
-    textConfig->characters[textConfig->charIndex].xPos =
-        scrollControlWidth - textConfig->characters[textConfig->charIndex].xSize;
-    textConfig->characters[textConfig->charIndex].yPos = textConfig->charYPosDestination;
+    c->charIndex++;
+    getCharData(letter, &(c->characters[c->charIndex]));
+    c->characters[c->charIndex].oldBackground = createBitMap(charDepth, 50, 50);
+    c->characters[c->charIndex].xPos =
+        scrollControlWidth - c->characters[c->charIndex].xSize;
+    c->characters[c->charIndex].yPos = c->charYPosDestination;
 
     // save background at character starting position
-    saveCharacterBackground(textConfig);
+    saveCharacterBackground(c);
 }
 
 /**
