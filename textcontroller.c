@@ -11,7 +11,7 @@
 
 struct BitMap *fontBlob;
 struct BitMap *textDestination;
-struct TextConfig** textConfigs;
+struct TextConfig **textConfigs;
 
 // Color depth of font blob
 UWORD charDepth = 0;
@@ -52,7 +52,8 @@ BOOL initTextController(struct BitMap *screen, UWORD depth, UWORD screenWidth)
 /**
  * Free font 
  */
-void exitTextController(void){
+void exitTextController(void)
+{
     cleanBitMap(fontBlob);
 }
 
@@ -60,10 +61,12 @@ void exitTextController(void){
  * Must be called first to init the whole engine.
  * Afterwards, executeTextScroller() can be called.
  */
-void setStringsTextController(struct TextConfig **configs){
+void setStringsTextController(struct TextConfig **configs)
+{
     UBYTE i = 0;
     textConfigs = configs;
-    while(textConfigs[i]){
+    while (textConfigs[i])
+    {
         setStringTextController(textConfigs[i]);
         i++;
     }
@@ -72,7 +75,7 @@ void setStringsTextController(struct TextConfig **configs){
 /**
  * Is called for each element in text list
  */
-void setStringTextController(struct TextConfig* c)
+void setStringTextController(struct TextConfig *c)
 {
     // Init engines global variables
     c->currentState = TC_SCROLL_IN;
@@ -89,12 +92,7 @@ void setStringTextController(struct TextConfig* c)
 
     // save background at character starting position
     c->characters[c->charIndex].oldBackground = createBitMap(charDepth, 50, 50);
-    BltBitMap(textDestination, c->characters[c->charIndex].xPos,
-              c->characters[c->charIndex].yPos,
-              c->characters[c->charIndex].oldBackground, 0, 0,
-              c->characters[c->charIndex].xSize,
-              c->characters[c->charIndex].ySize, 0xC0,
-              0xff, 0);
+    saveCharacterBackground(c);
 }
 
 /**
@@ -104,25 +102,27 @@ void setStringTextController(struct TextConfig* c)
 void executeTextController()
 {
     UBYTE i = 0;
-    while(textConfigs[i]){
-        switch(textConfigs[i]->currentState){
-            case TC_SCROLL_IN:
-                textScrollIn(textConfigs[i]);
-                break;
-            case TC_SCROLL_PAUSE:
-                textScrollPause(textConfigs[i]);
-                break;
-            case TC_SCROLL_OUT:
-                textScrollOut(textConfigs[i]);
-                break;
-            case TC_SCROLL_FINISHED:
-                break;
+    while (textConfigs[i])
+    {
+        switch (textConfigs[i]->currentState)
+        {
+        case TC_SCROLL_IN:
+            textScrollIn(textConfigs[i]);
+            break;
+        case TC_SCROLL_PAUSE:
+            textScrollPause(textConfigs[i]);
+            break;
+        case TC_SCROLL_OUT:
+            textScrollOut(textConfigs[i]);
+            break;
+        case TC_SCROLL_FINISHED:
+            break;
         }
         i++;
     }
 }
 
-void textScrollIn(struct TextConfig* textConfig)
+void textScrollIn(struct TextConfig *textConfig)
 {
     // check whether every char was moved at its position
     if (textConfig->currentText[textConfig->currentChar] == 0)
@@ -149,13 +149,7 @@ void textScrollIn(struct TextConfig* textConfig)
     }
 
     // save background there
-    BltBitMap(textDestination,
-              textConfig->characters[textConfig->charIndex].xPos,
-              textConfig->characters[textConfig->charIndex].yPos,
-              textConfig->characters[textConfig->charIndex].oldBackground, 0, 0,
-              textConfig->characters[textConfig->charIndex].xSize,
-              textConfig->characters[textConfig->charIndex].ySize, 0xC0,
-              0xff, 0);
+    saveCharacterBackground(textConfig);
 
     // blit character on screen
     displayCurrentCharacter(textConfig);
@@ -167,12 +161,15 @@ void textScrollIn(struct TextConfig* textConfig)
     }
 }
 
-void pauseTimeTextController(UWORD newPauseTime){
+void pauseTimeTextController(UWORD newPauseTime)
+{
     pauseTime = newPauseTime;
 }
 
-void textScrollPause(struct TextConfig* textConfig){
-    if(pauseCounter >= pauseTime){
+void textScrollPause(struct TextConfig *textConfig)
+{
+    if (pauseCounter >= pauseTime)
+    {
         textConfig->currentState = TC_SCROLL_OUT;
         return;
     }
@@ -180,7 +177,7 @@ void textScrollPause(struct TextConfig* textConfig){
     pauseCounter++;
 }
 
-void textScrollOut(struct TextConfig* textConfig)
+void textScrollOut(struct TextConfig *textConfig)
 {
     // check whether every char was scrolled out and we are finished
     if (textConfig->charIndex > textConfig->maxCharIndex)
@@ -211,13 +208,7 @@ void textScrollOut(struct TextConfig* textConfig)
     }
 
     // save background there
-    BltBitMap(textDestination,
-              textConfig->characters[textConfig->charIndex].xPos,
-              textConfig->characters[textConfig->charIndex].yPos,
-              textConfig->characters[textConfig->charIndex].oldBackground, 0, 0,
-              textConfig->characters[textConfig->charIndex].xSize,
-              textConfig->characters[textConfig->charIndex].ySize, 0xC0,
-              0xff, 0);
+    saveCharacterBackground(textConfig);
 
     // blit character on screen
     displayCurrentCharacter(textConfig);
@@ -227,8 +218,10 @@ BOOL isFinishedTextController(void)
 {
     BOOL allFinished = TRUE;
     UBYTE i = 0;
-    while(textConfigs[i]){
-        if(textConfigs[i]->currentState != TC_SCROLL_FINISHED){
+    while (textConfigs[i])
+    {
+        if (textConfigs[i]->currentState != TC_SCROLL_FINISHED)
+        {
             allFinished = FALSE;
         }
         i++;
@@ -240,7 +233,7 @@ BOOL isFinishedTextController(void)
  * Search in text string for next non-whitespace
  * character and initialize its destination position
  */
-void prepareForNextCharacter(struct TextConfig* textConfig)
+void prepareForNextCharacter(struct TextConfig *textConfig)
 {
     char letter = 0;
     textConfig->charXPosDestination += (textConfig->characters[textConfig->charIndex].xSize + 5);
@@ -288,9 +281,11 @@ void prepareForNextCharacter(struct TextConfig* textConfig)
 /**
  * Free the character background backup bitmaps of all text configs
  */
-void resetTextController(void){
+void resetTextController(void)
+{
     UBYTE i = 0;
-    while(textConfigs[i]){
+    while (textConfigs[i])
+    {
         resetTextConfig(textConfigs[i]);
         i++;
     }
@@ -316,22 +311,36 @@ void resetTextConfig(struct TextConfig *textConfig)
  * Print a character on screen. Return position of next
  * character
  */
-UWORD displayCurrentCharacter(struct TextConfig* textConfig)
+UWORD displayCurrentCharacter(struct TextConfig *c)
 {
     /*
 	 * Don't erase background if character rectangle (B) is blitted into destination (C,D)
 	 * Therefore, we use minterm: BC+NBC+BNC -> 1110xxxx -> 0xE0
 	 */
     BltBitMap(fontBlob,
-              textConfig->characters[textConfig->charIndex].xPosInFont,
-              textConfig->characters[textConfig->charIndex].yPosInFont,
-              textDestination, 
-              textConfig->characters[textConfig->charIndex].xPos, 
-              textConfig->characters[textConfig->charIndex].yPos,
-              textConfig->characters[textConfig->charIndex].xSize,
-              textConfig->characters[textConfig->charIndex].ySize, 0xC0, 0xff, 0);
-    return (UWORD)(textConfig->characters[textConfig->charIndex].xPos
-                   + textConfig->characters[textConfig->charIndex].xSize + 5);
+              c->characters[c->charIndex].xPosInFont,
+              c->characters[c->charIndex].yPosInFont,
+              textDestination,
+              c->characters[c->charIndex].xPos,
+              c->characters[c->charIndex].yPos,
+              c->characters[c->charIndex].xSize,
+              c->characters[c->charIndex].ySize, 0xC0, 0xff, 0);
+    return (UWORD)(c->characters[c->charIndex].xPos 
+        + c->characters[c->charIndex].xSize + 5);
+}
+
+/**
+ * Backup a part of the background before blitting a character
+ * there to be able to restore it later 
+ */
+void saveCharacterBackground(struct TextConfig *c)
+{
+    BltBitMap(textDestination, c->characters[c->charIndex].xPos,
+              c->characters[c->charIndex].yPos,
+              c->characters[c->charIndex].oldBackground, 0, 0,
+              c->characters[c->charIndex].xSize,
+              c->characters[c->charIndex].ySize, 0xC0,
+              0xff, 0);
 }
 
 /**
