@@ -85,13 +85,12 @@ void setStringTextController(struct TextConfig *c)
     c->currentChar = 0;
 
     // analyse first character in text string
-    getCharData(c->currentText[c->currentChar], &(c->characters[c->charIndex]));
-    c->characters[c->charIndex].xPos =
-        scrollControlWidth - c->characters[c->charIndex].xSize;
-    c->characters[c->charIndex].yPos = c->charYPosDestination;
+    getCharData(c->currentText[c->currentChar], &CURRENT_CHAR(c));
+    CURRENT_CHAR(c).xPos = scrollControlWidth - CURRENT_CHAR(c).xSize;
+    CURRENT_CHAR(c).yPos = c->charYPosDestination;
 
     // save background at character starting position
-    c->characters[c->charIndex].oldBackground = createBitMap(charDepth, 50, 50);
+    CURRENT_CHAR(c).oldBackground = createBitMap(charDepth, 50, 50);
     saveCharacterBackground(c);
 }
 
