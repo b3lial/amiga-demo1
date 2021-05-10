@@ -78,6 +78,7 @@ void textScrollOut(struct TextConfig* config);
 void getCharData(char letter, struct CharBlob *charBlob);
 UWORD displayCurrentCharacter(struct TextConfig* textConfig);
 void saveCharacterBackground(struct TextConfig* textConfig);
+void restorePreviousBackground(struct TextConfig* textConfig);
 void prepareForNextCharacter(struct TextConfig* textConfig);
 
 #endif // TEXTCONTROLLER_H_

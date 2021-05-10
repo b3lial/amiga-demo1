@@ -135,11 +135,7 @@ void textScrollIn(struct TextConfig *textConfig)
     }
 
     // restore previously saved background and character position
-    BltBitMap(textConfig->characters[textConfig->charIndex].oldBackground, 0, 0,
-              textDestination, textConfig->characters[textConfig->charIndex].xPos,
-              textConfig->characters[textConfig->charIndex].yPos,
-              textConfig->characters[textConfig->charIndex].xSize,
-              textConfig->characters[textConfig->charIndex].ySize, 0xC0, 0xff, 0);
+    restorePreviousBackground(textConfig);
 
     // move character to next position
     textConfig->characters[textConfig->charIndex].xPos -= TEXT_MOVEMENT_SPEED;
@@ -187,11 +183,7 @@ void textScrollOut(struct TextConfig *textConfig)
     }
 
     // restore previously saved background and character position
-    BltBitMap(textConfig->characters[textConfig->charIndex].oldBackground, 0, 0,
-              textDestination, textConfig->characters[textConfig->charIndex].xPos,
-              textConfig->characters[textConfig->charIndex].yPos,
-              textConfig->characters[textConfig->charIndex].xSize,
-              textConfig->characters[textConfig->charIndex].ySize, 0xC0, 0xff, 0);
+    restorePreviousBackground(textConfig);
 
     // char reached left side, delete it and switch to next char
     if (textConfig->characters[textConfig->charIndex].xPos == textConfig->charXPosDestination)
@@ -269,13 +261,7 @@ void prepareForNextCharacter(struct TextConfig *textConfig)
     textConfig->characters[textConfig->charIndex].yPos = textConfig->charYPosDestination;
 
     // save background at character starting position
-    BltBitMap(textDestination,
-              textConfig->characters[textConfig->charIndex].xPos,
-              textConfig->characters[textConfig->charIndex].yPos,
-              textConfig->characters[textConfig->charIndex].oldBackground, 0, 0,
-              textConfig->characters[textConfig->charIndex].xSize,
-              textConfig->characters[textConfig->charIndex].ySize, 0xC0,
-              0xff, 0);
+    saveCharacterBackground(textConfig);
 }
 
 /**
@@ -327,6 +313,19 @@ UWORD displayCurrentCharacter(struct TextConfig *c)
               c->characters[c->charIndex].ySize, 0xC0, 0xff, 0);
     return (UWORD)(c->characters[c->charIndex].xPos 
         + c->characters[c->charIndex].xSize + 5);
+}
+
+/**
+ * Restore a piece which was previously stored in a TextConfig
+ * object
+ */
+void restorePreviousBackground(struct TextConfig* c)
+{
+    BltBitMap(c->characters[c->charIndex].oldBackground, 0, 0,
+              textDestination, c->characters[c->charIndex].xPos,
+              c->characters[c->charIndex].yPos,
+              c->characters[c->charIndex].xSize,
+              c->characters[c->charIndex].ySize, 0xC0, 0xff, 0);
 }
 
 /**
