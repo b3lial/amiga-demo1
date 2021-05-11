@@ -137,10 +137,11 @@ void textScrollIn(struct TextConfig *c)
     restorePreviousBackground(c);
 
     // move character to next position
-    c->characters[c->charIndex].xPos -= TEXT_MOVEMENT_SPEED;
-    if (c->characters[c->charIndex].xPos < c->charXPosDestination)
+    
+    CURRENT_CHAR(c).xPos -= TEXT_MOVEMENT_SPEED;
+    if (CURRENT_CHAR(c).xPos < c->charXPosDestination)
     {
-        c->characters[c->charIndex].xPos = c->charXPosDestination;
+        CURRENT_CHAR(c).xPos = c->charXPosDestination;
     }
 
     // save background there
@@ -150,7 +151,7 @@ void textScrollIn(struct TextConfig *c)
     displayCurrentCharacter(c);
 
     // finally, check whether we have to switch to next letter
-    if (c->characters[c->charIndex].xPos <= c->charXPosDestination)
+    if (CURRENT_CHAR(c).xPos <= c->charXPosDestination)
     {
         prepareForNextCharacter(c);
     }
@@ -185,17 +186,17 @@ void textScrollOut(struct TextConfig *c)
     restorePreviousBackground(c);
 
     // char reached left side, delete it and switch to next char
-    if (c->characters[c->charIndex].xPos == c->charXPosDestination)
+    if (CURRENT_CHAR(c).xPos == c->charXPosDestination)
     {
         c->charIndex++;
         return;
     }
 
     // move character to next position
-    c->characters[c->charIndex].xPos -= TEXT_MOVEMENT_SPEED;
-    if (c->characters[c->charIndex].xPos < 0)
+    CURRENT_CHAR(c).xPos -= TEXT_MOVEMENT_SPEED;
+    if (CURRENT_CHAR(c).xPos < 0)
     {
-        c->characters[c->charIndex].xPos = 0;
+        CURRENT_CHAR(c).xPos = 0;
     }
 
     // save background there
@@ -231,7 +232,7 @@ BOOL isFinishedTextController(void)
 void prepareForNextCharacter(struct TextConfig *c)
 {
     char letter = 0;
-    c->charXPosDestination += (c->characters[c->charIndex].xSize + 5);
+    c->charXPosDestination += (CURRENT_CHAR(c).xSize + 5);
 
     // skip space
     c->currentChar++;
@@ -257,11 +258,10 @@ void prepareForNextCharacter(struct TextConfig *c)
 
     // found next character, prepare everything for his arrival
     c->charIndex++;
-    getCharData(letter, &(c->characters[c->charIndex]));
-    c->characters[c->charIndex].oldBackground = createBitMap(charDepth, 50, 50);
-    c->characters[c->charIndex].xPos =
-        scrollControlWidth - c->characters[c->charIndex].xSize;
-    c->characters[c->charIndex].yPos = c->charYPosDestination;
+    getCharData(letter, &CURRENT_CHAR(c));
+    CURRENT_CHAR(c).oldBackground = createBitMap(charDepth, 50, 50);
+    CURRENT_CHAR(c).xPos = scrollControlWidth - CURRENT_CHAR(c).xSize;
+    CURRENT_CHAR(c).yPos = c->charYPosDestination;
 
     // save background at character starting position
     saveCharacterBackground(c);
@@ -307,13 +307,11 @@ UWORD displayCurrentCharacter(struct TextConfig *c)
 	 * Therefore, we use minterm: BC+NBC+BNC -> 1110xxxx -> 0xE0
 	 */
     BltBitMap(fontBlob,
-              c->characters[c->charIndex].xPosInFont,
-              c->characters[c->charIndex].yPosInFont,
+              CURRENT_CHAR(c).xPosInFont, CURRENT_CHAR(c).yPosInFont,
               textDestination,
-              c->characters[c->charIndex].xPos,
-              c->characters[c->charIndex].yPos,
-              c->characters[c->charIndex].xSize,
-              c->characters[c->charIndex].ySize, 0xC0, 0xff, 0);
+              CURRENT_CHAR(c).xPos, CURRENT_CHAR(c).yPos,
+              CURRENT_CHAR(c).xSize, CURRENT_CHAR(c).ySize, 
+              0xC0, 0xff, 0);
     return (UWORD)(c->characters[c->charIndex].xPos 
         + c->characters[c->charIndex].xSize + 5);
 }
@@ -324,11 +322,11 @@ UWORD displayCurrentCharacter(struct TextConfig *c)
  */
 void restorePreviousBackground(struct TextConfig* c)
 {
-    BltBitMap(c->characters[c->charIndex].oldBackground, 0, 0,
-              textDestination, c->characters[c->charIndex].xPos,
-              c->characters[c->charIndex].yPos,
-              c->characters[c->charIndex].xSize,
-              c->characters[c->charIndex].ySize, 0xC0, 0xff, 0);
+    BltBitMap(CURRENT_CHAR(c).oldBackground, 
+              0, 0, textDestination, 
+              CURRENT_CHAR(c).xPos, CURRENT_CHAR(c).yPos,
+              CURRENT_CHAR(c).xSize, CURRENT_CHAR(c).ySize, 
+              0xC0, 0xff, 0);
 }
 
 /**
@@ -337,11 +335,11 @@ void restorePreviousBackground(struct TextConfig* c)
  */
 void saveCharacterBackground(struct TextConfig *c)
 {
-    BltBitMap(textDestination, c->characters[c->charIndex].xPos,
-              c->characters[c->charIndex].yPos,
-              c->characters[c->charIndex].oldBackground, 0, 0,
-              c->characters[c->charIndex].xSize,
-              c->characters[c->charIndex].ySize, 0xC0,
+    BltBitMap(textDestination, CURRENT_CHAR(c).xPos,
+              CURRENT_CHAR(c).yPos,
+              CURRENT_CHAR(c).oldBackground, 0, 0,
+              CURRENT_CHAR(c).xSize,
+              CURRENT_CHAR(c).ySize, 0xC0,
               0xff, 0);
 }
 
