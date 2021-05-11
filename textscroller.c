@@ -76,7 +76,7 @@ WORD fsmTextScroller(void)
             resetTextController();
             text1.currentText = "belial";
             text1.charXPosDestination = 95;
-            text1.charYPosDestination = 30;
+            text1.charYPosDestination = 18;
             text2.currentText = "here";
             text2.charXPosDestination = 110;
             text2.charYPosDestination = 70;
