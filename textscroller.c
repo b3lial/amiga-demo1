@@ -17,9 +17,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "main.h"
+#include "demo1.h"
 #include "starlight/starlight.h"
-#include "textcontroller.h"
 
 WORD payloadTextScrollerState = TEXTSCROLLER_INIT;
 struct BitMap *spaceBlob = NULL;

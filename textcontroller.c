@@ -1,6 +1,6 @@
 // Copyright 2021 Christian Ammann
 
-#include "textcontroller.h"
+#include "demo1.h"
 
 #include <ctype.h>
 #include <graphics/gfxbase.h>
@@ -90,7 +90,8 @@ void setStringTextController(struct TextConfig *c)
     CURRENT_CHAR(c).yPos = c->charYPosDestination;
 
     // save background at character starting position
-    CURRENT_CHAR(c).oldBackground = createBitMap(charDepth, 50, 50);
+    CURRENT_CHAR(c).oldBackground = createBitMap(charDepth, 
+        MAX_CHAR_WIDTH, MAX_CHAR_HEIGHT);
     saveCharacterBackground(c);
 }
 

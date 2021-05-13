@@ -1,12 +1,11 @@
 // Copyright 2021 Christian Ammann
 
-#include "main.h"
+#include "demo1.h"
 
 #include <dos/dos.h>
 #include <exec/types.h>
 
 #include "starlight/starlight.h"
-#include "textscroller.h"
 
 WORD fsmCurrentState = FSM_START;
 WORD fsmNextState = -1;
