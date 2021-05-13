@@ -28,6 +28,7 @@ ULONG *colortable1 = NULL;
 struct TextConfig *textList[TEXT_LIST_SIZE];
 struct TextConfig text1;
 struct TextConfig text2;
+struct TextConfig text3;
 
 WORD fsmTextScroller(void)
 {
@@ -91,6 +92,34 @@ WORD fsmTextScroller(void)
 
     // display "belial here"
     case TEXTSCROLLER_MSG_2:
+        WaitTOF();
+        executeTextController();
+        if (isFinishedTextController())
+        {
+            // configure text scroll engine
+            resetTextController();
+            text1.currentText = "presenting";
+            text1.charXPosDestination = MAX_CHAR_WIDTH+37;
+            text1.charYPosDestination = 4;
+            text2.currentText = "my";
+            text2.charXPosDestination = MAX_CHAR_WIDTH+135;
+            text2.charYPosDestination = 44;
+            text3.currentText = "first";
+            text3.charXPosDestination = MAX_CHAR_WIDTH+105;
+            text3.charYPosDestination = 84;
+            textList[0] = &text1;
+            textList[1] = &text2;
+            textList[2] = &text3;
+            textList[3] = NULL;
+            pauseTimeTextController(660);
+            WaitTOF();
+            setStringsTextController(textList);
+            payloadTextScrollerState = TEXTSCROLLER_MSG_3;
+        }
+        break;
+
+    // display "presenting my first"
+    case TEXTSCROLLER_MSG_3:
         WaitTOF();
         executeTextController();
         if (isFinishedTextController())
