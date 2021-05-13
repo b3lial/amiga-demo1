@@ -69,7 +69,8 @@ void initView(void){
 
 void addViewPort(struct BitMap *bitMap, struct BitMap *doubleBuffer, 
         void *colortable, UWORD colortableSize, BOOL useColorMap32,
-		UWORD x, UWORD y, UWORD width, UWORD height){
+		UWORD x, UWORD y, UWORD width, UWORD height, UWORD rxOffset,
+        UWORD ryOffset){
     struct DimensionInfo querydims = { {0} };
     struct TagItem vcTags[] = {
         { VTAG_ATTACH_CM_SET, NULL },
@@ -118,8 +119,8 @@ void addViewPort(struct BitMap *bitMap, struct BitMap *doubleBuffer,
 
     //Init RasInfo and add Bitmap
     rasInfos[vpPointer]->BitMap = bitMap;
-    rasInfos[vpPointer]->RxOffset = 0;
-    rasInfos[vpPointer]->RyOffset = 0;
+    rasInfos[vpPointer]->RxOffset = rxOffset;
+    rasInfos[vpPointer]->RyOffset = ryOffset;
     rasInfos[vpPointer]->Next = NULL;
 
     //Init ViewPort, add RasInfo to ViewPort and add ViewPort to View

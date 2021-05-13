@@ -174,13 +174,13 @@ void initTextScroller(void)
 
     // Add previously created BitMap for text display to ViewPort so its shown on Screen
     addViewPort(textscrollerScreen, NULL, colortable0, TEXTSCROLLER_BLOB_FONT_COLORS, FALSE,
-                0, 0, TEXTSCROLLER_VIEW_WIDTH, TEXTSCROLLER_VIEW_TEXTSECTION_HEIGHT);
+                0, 0, TEXTSCROLLER_VIEW_WIDTH, TEXTSCROLLER_VIEW_TEXTSECTION_HEIGHT, 0, 0);
 
     // Add space background BitMap to ViewPort so its shown on Screen
     addViewPort(spaceBlob, NULL, colortable1,
                 COLORMAP32_LONG_SIZE(TEXTSCROLLER_BLOB_SPACE_COLORS), TRUE,
                 0, TEXTSCROLLER_VIEW_TEXTSECTION_HEIGHT + 2, TEXTSCROLLER_VIEW_WIDTH,
-                TEXTSCROLLER_VIEW_SPACESECTION_HEIGHT);
+                TEXTSCROLLER_VIEW_SPACESECTION_HEIGHT, 0, 0);
 
     // clean the allocated memory of colortable, we dont need it anymore because we
     // have a proper copperlist now
