@@ -102,10 +102,10 @@ WORD fsmTextScroller(void)
             text1.charXPosDestination = MAX_CHAR_WIDTH+37;
             text1.charYPosDestination = 4;
             text2.currentText = "my";
-            text2.charXPosDestination = MAX_CHAR_WIDTH+135;
+            text2.charXPosDestination = MAX_CHAR_WIDTH+133;
             text2.charYPosDestination = 44;
             text3.currentText = "first";
-            text3.charXPosDestination = MAX_CHAR_WIDTH+105;
+            text3.charXPosDestination = MAX_CHAR_WIDTH+103;
             text3.charYPosDestination = 84;
             textList[0] = &text1;
             textList[1] = &text2;
@@ -120,6 +120,30 @@ WORD fsmTextScroller(void)
 
     // display "presenting my first"
     case TEXTSCROLLER_MSG_3:
+        WaitTOF();
+        executeTextController();
+        if (isFinishedTextController())
+        {
+            // configure text scroll engine
+            resetTextController();
+            text1.currentText = "demo";
+            text1.charXPosDestination = MAX_CHAR_WIDTH+10;
+            text1.charYPosDestination = 18;
+            text2.currentText = "production";
+            text2.charXPosDestination = MAX_CHAR_WIDTH+45;
+            text2.charYPosDestination = 70;
+            textList[0] = &text1;
+            textList[1] = &text2;
+            textList[2] = NULL;
+            pauseTimeTextController(300);
+            WaitTOF();
+            setStringsTextController(textList);
+            payloadTextScrollerState = TEXTSCROLLER_MSG_4;
+        }
+        break;
+
+    // display "demo production"
+    case TEXTSCROLLER_MSG_4:
         WaitTOF();
         executeTextController();
         if (isFinishedTextController())
