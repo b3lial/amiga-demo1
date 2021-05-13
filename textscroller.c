@@ -57,7 +57,7 @@ WORD fsmTextScroller(void)
         // configure text scroll engine
         text1.currentText = "hi there";
         text1.charXPosDestination = MAX_CHAR_WIDTH+70;
-        text1.charYPosDestination = 60;
+        text1.charYPosDestination = 40;
         textList[0] = &text1;
         textList[1] = NULL;
         WaitTOF();
