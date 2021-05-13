@@ -48,7 +48,7 @@ WORD fsmTextScroller(void)
 
         if (!initTextController(textscrollerScreen,
                                 TEXTSCROLLER_BLOB_FONT_DEPTH,
-                                TEXTSCROLLER_VIEW_WIDTH))
+                                TEXTSCROLLER_VIEW_TEXTSECTION_WIDTH))
         {
             exitTextScroller();
             exitSystem(RETURN_ERROR);
@@ -56,7 +56,7 @@ WORD fsmTextScroller(void)
 
         // configure text scroll engine
         text1.currentText = "hi there";
-        text1.charXPosDestination = 70;
+        text1.charXPosDestination = MAX_CHAR_WIDTH+70;
         text1.charYPosDestination = 60;
         textList[0] = &text1;
         textList[1] = NULL;
@@ -74,10 +74,10 @@ WORD fsmTextScroller(void)
             // configure text scroll engine
             resetTextController();
             text1.currentText = "belial";
-            text1.charXPosDestination = 95;
+            text1.charXPosDestination = MAX_CHAR_WIDTH+95;
             text1.charYPosDestination = 18;
             text2.currentText = "here";
-            text2.charXPosDestination = 110;
+            text2.charXPosDestination = MAX_CHAR_WIDTH+110;
             text2.charYPosDestination = 70;
             textList[0] = &text1;
             textList[1] = &text2;
@@ -150,7 +150,7 @@ void initTextScroller(void)
     // Load Textscroller Screen Bitmap
     writeLog("\nLoad textscroller screen background bitmap\n");
     textscrollerScreen = createBitMap(TEXTSCROLLER_BLOB_FONT_DEPTH,
-                                      TEXTSCROLLER_VIEW_WIDTH,
+                                      TEXTSCROLLER_VIEW_TEXTSECTION_WIDTH,
                                       TEXTSCROLLER_VIEW_TEXTSECTION_HEIGHT);
     for (i = 0; i < TEXTSCROLLER_BLOB_FONT_DEPTH; i++)
     {
@@ -173,7 +173,8 @@ void initTextScroller(void)
 
     // Add previously created BitMap for text display to ViewPort so its shown on Screen
     addViewPort(textscrollerScreen, NULL, colortable0, TEXTSCROLLER_BLOB_FONT_COLORS, FALSE,
-                0, 0, TEXTSCROLLER_VIEW_WIDTH, TEXTSCROLLER_VIEW_TEXTSECTION_HEIGHT, 0, 0);
+                0, 0, TEXTSCROLLER_VIEW_WIDTH, TEXTSCROLLER_VIEW_TEXTSECTION_HEIGHT, 
+                MAX_CHAR_WIDTH, 0);
 
     // Add space background BitMap to ViewPort so its shown on Screen
     addViewPort(spaceBlob, NULL, colortable1,
@@ -221,7 +222,7 @@ void createStars(struct BitMap *bitmap)
     SetAPen(&rastPort, 6);
     for (i = 0; i < 50; i++)
     {
-        x = RangeRand(TEXTSCROLLER_VIEW_WIDTH);
+        x = RangeRand(TEXTSCROLLER_VIEW_TEXTSECTION_WIDTH);
         y = RangeRand(TEXTSCROLLER_VIEW_TEXTSECTION_HEIGHT);
         writeLogFS("random value x %d, y %d\n", x, y);
         WritePixel(&rastPort, x, y);
