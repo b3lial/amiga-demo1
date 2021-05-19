@@ -23,7 +23,11 @@
 WORD payloadTextScrollerState = TEXTSCROLLER_INIT;
 struct BitMap *spaceBlob = NULL;
 struct BitMap *textscrollerScreen = NULL;
+
+// necessary to manipulate colors during runtime
 ULONG *colortable1 = NULL;
+UWORD colortable0[TEXTSCROLLER_BLOB_FONT_COLORS];
+extern struct ViewPort *viewPorts[MAX_VIEW_PORTS];
 
 struct TextConfig *textList[TEXT_LIST_SIZE];
 struct TextConfig text1;
@@ -148,9 +152,15 @@ WORD fsmTextScroller(void)
         executeTextController();
         if (isFinishedTextController())
         {
-            payloadTextScrollerState = TEXTSCROLLER_SHUTDOWN;
+            payloadTextScrollerState = TEXTSCROLLER_FADE_WHITE;
             resetTextController();
         }
+        break;
+
+    // display "demo production"
+    case TEXTSCROLLER_FADE_WHITE:
+        WaitTOF();
+        fadeToWhite();
         break;
 
     // destroy view
@@ -165,7 +175,7 @@ WORD fsmTextScroller(void)
 
 void initTextScroller(void)
 {
-    UWORD colortable0[8];
+    
     BYTE i = 0;
     writeLog("\n== initTextScroller() ==\n");
 
@@ -235,13 +245,6 @@ void initTextScroller(void)
                 0, TEXTSCROLLER_VIEW_TEXTSECTION_HEIGHT + 2, TEXTSCROLLER_VIEW_WIDTH,
                 TEXTSCROLLER_VIEW_SPACESECTION_HEIGHT, 0, 0);
 
-    // clean the allocated memory of colortable, we dont need it anymore because we
-    // have a proper copperlist now
-    FreeVec(colortable1);
-    writeLogFS("Freeing %d bytes of space bitmap color table\n",
-               COLORMAP32_BYTE_SIZE(TEXTSCROLLER_BLOB_SPACE_COLORS));
-    colortable1 = NULL;
-
     // Make View visible
     startView();
 }
@@ -280,4 +283,25 @@ void createStars(struct BitMap *bitmap)
         writeLogFS("random value x %d, y %d\n", x, y);
         WritePixel(&rastPort, x, y);
     }
+}
+
+void fadeToWhite(void){
+    UBYTE i = 0;
+    UWORD incrementer = 0;
+
+    for(;i<TEXTSCROLLER_BLOB_FONT_COLORS;i++){
+        incrementer = 0;
+        if((colortable0[i] & 0x000f) != 0x000f){
+            incrementer |= 0x0001;
+        }
+        if((colortable0[i] & 0x00f0) != 0x00f0){
+            incrementer |= 0x0010;
+        }
+        if((colortable0[i] & 0x0f00) != 0x0f00){
+            incrementer |= 0x0100;
+        }
+        colortable0[i]+=incrementer;
+    }
+    
+    LoadRGB4(viewPorts[0], colortable0, TEXTSCROLLER_BLOB_FONT_COLORS);
 }

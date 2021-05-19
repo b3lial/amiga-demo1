@@ -13,9 +13,8 @@
 #define TEXTSCROLLER_MSG_2 2
 #define TEXTSCROLLER_MSG_3 3
 #define TEXTSCROLLER_MSG_4 4
-#define TEXTSCROLLER_MSG_5 5
-#define TEXTSCROLLER_MSG_6 6
-#define TEXTSCROLLER_SHUTDOWN 7
+#define TEXTSCROLLER_FADE_WHITE 5
+#define TEXTSCROLLER_SHUTDOWN 6
 
 #define TEXTSCROLLER_VIEW_WIDTH 320
 
@@ -38,5 +37,6 @@ WORD fsmTextScroller(void);
 void initTextScroller(void);
 void exitTextScroller(void);
 void createStars(struct BitMap *bitmap);
+void fadeToWhite();
 
 #endif  // TEXTSCROLLER_H__
