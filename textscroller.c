@@ -311,7 +311,12 @@ void fadeToWhite(void){
         if(currentColor == 0xff){
             continue;
         }
-        currentColor++;
+
+        currentColor+=17;
+        if(currentColor>0x000000ff){
+            currentColor = 0x000000ff;
+        }
+
         colortable1[i] = SPREAD(currentColor);
     }
 
