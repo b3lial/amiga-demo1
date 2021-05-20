@@ -286,9 +286,11 @@ void createStars(struct BitMap *bitmap)
 }
 
 void fadeToWhite(void){
-    UBYTE i = 0;
-    UWORD incrementer = 0;
+    UWORD i = 0;
+    UWORD incrementer;
+    ULONG currentColor; 
 
+    // fade of text scroll area (viewPort[0])
     for(;i<TEXTSCROLLER_BLOB_FONT_COLORS;i++){
         incrementer = 0;
         if((colortable0[i] & 0x000f) != 0x000f){
@@ -303,5 +305,17 @@ void fadeToWhite(void){
         colortable0[i]+=incrementer;
     }
     
+    // fade of space background area (viewPort[1])
+    for(i=1;i<COLORMAP32_LONG_SIZE(TEXTSCROLLER_BLOB_SPACE_COLORS)-1;i++){
+        currentColor = (colortable1[i] & 0x000000ff);
+        if(currentColor == 0xff){
+            continue;
+        }
+        currentColor++;
+        colortable1[i] = SPREAD(currentColor);
+    }
+
+    // calculated new color sets, now we can update copper and co
     LoadRGB4(viewPorts[0], colortable0, TEXTSCROLLER_BLOB_FONT_COLORS);
+    LoadRGB32(viewPorts[1], colortable1);
 }
