@@ -25,6 +25,15 @@ int main(void) {
                 if (moduleStatus == MODULE_CONTINUE) {
                     fsmNextState = FSM_TEXTSCROLLER;
                 } else {
+                    fsmNextState = FSM_SHOWLOGO;
+                }
+                break;
+
+            case FSM_SHOWLOGO:
+                moduleStatus = fsmShowLogo();
+                if (moduleStatus == MODULE_CONTINUE) {
+                    fsmNextState = FSM_SHOWLOGO;
+                } else {
                     fsmNextState = FSM_STOP;
                 }
                 break;

@@ -38,5 +38,6 @@ void initTextScroller(void);
 void exitTextScroller(void);
 void createStars(struct BitMap *bitmap);
 void fadeToWhite();
+BOOL hasFadeToWhiteFinished(void);
 
 #endif  // TEXTSCROLLER_H__

@@ -9,5 +9,6 @@
 #include "main.h"
 #include "textscroller.h"
 #include "textcontroller.h"
+#include "showlogo.h"
 
 #endif
