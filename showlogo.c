@@ -6,40 +6,44 @@
 
 WORD payloadShowLogoState = SHOWLOGO_INIT;
 UWORD colortable0[SHOWLOGO_BLOB_COLORS];
-struct BitMap* showLogoScreen;
+struct BitMap *showLogoScreen;
 
-WORD fsmShowLogo(void){    
+WORD fsmShowLogo(void)
+{
     if (mouseClick())
     {
         payloadShowLogoState = SHOWLOGO_SHUTDOWN;
     }
 
-    switch(payloadShowLogoState){
-        case SHOWLOGO_INIT:
-            initShowLogo();
-            payloadShowLogoState = SHOWLOGO_STATIC;
-            break;
-        case SHOWLOGO_STATIC:
-            WaitTOF();
-            break;
-        case SHOWLOGO_SHUTDOWN:
-            exitShowLogo();
-            return MODULE_FINISHED;
+    switch (payloadShowLogoState)
+    {
+    case SHOWLOGO_INIT:
+        initShowLogo();
+        payloadShowLogoState = SHOWLOGO_STATIC;
+        break;
+    case SHOWLOGO_STATIC:
+        WaitTOF();
+        break;
+    case SHOWLOGO_SHUTDOWN:
+        exitShowLogo();
+        return MODULE_FINISHED;
     }
 
     return MODULE_CONTINUE;
 }
 
-void initShowLogo(void){
+void initShowLogo(void)
+{
     UBYTE i = 0;
     writeLog("\n== initShowLogo() ==\n");
     memset(colortable0, 0xff, sizeof(colortable0));
 
     writeLog("\nLoad showlogo screen background bitmap\n");
     showLogoScreen = createBitMap(SHOWLOGO_BLOB_DEPTH,
-                                      SHOWLOGO_BLOB_WIDTH,
-                                      SHOWLOGO_BLOB_HEIGHT);
-    if(!showLogoScreen){
+                                  SHOWLOGO_BLOB_WIDTH,
+                                  SHOWLOGO_BLOB_HEIGHT);
+    if (!showLogoScreen)
+    {
         writeLog("Error: Could not allocate memory for showlogo screen bitmap\n");
         exitShowLogo();
         exitSystem(RETURN_ERROR);
@@ -50,10 +54,21 @@ void initShowLogo(void){
                  (showLogoScreen->BytesPerRow) * (showLogoScreen->Rows),
                  1);
     }
+
+    writeLog("\nCreate view\n");
+    initView();
+    addViewPort(showLogoScreen, NULL, colortable0, SHOWLOGO_BLOB_COLORS, FALSE,
+                0, 0, SHOWLOGO_BLOB_WIDTH, SHOWLOGO_BLOB_HEIGHT,
+                0, 0);
+    startView();
 }
 
-void exitShowLogo(void){
-    if(showLogoScreen){
+void exitShowLogo(void)
+{
+    stopView();
+    if (showLogoScreen)
+    {
         cleanBitMap(showLogoScreen);
+        showLogoScreen = NULL;
     }
 }
