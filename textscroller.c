@@ -40,7 +40,7 @@ WORD fsmTextScroller(void)
     if (mouseClick())
     {
         resetTextController();
-        payloadTextScrollerState = TEXTSCROLLER_SHUTDOWN;
+        payloadTextScrollerState = TEXTSCROLLER_FADE_WHITE;
     }
 
     // no mouse click -> execute state machine
