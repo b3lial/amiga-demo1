@@ -332,13 +332,13 @@ BOOL hasFadeToWhiteFinished(void){
     UWORD i = 0;
 
     for(;i<TEXTSCROLLER_BLOB_FONT_COLORS;i++){
-        if((colortable0[i] & 0x0fff) == 0x0fff){
+        if((colortable0[i] & 0x0fff) != 0x0fff){
             return FALSE;
         }
     }
 
     for(i=1;i<COLORMAP32_LONG_SIZE(TEXTSCROLLER_BLOB_SPACE_COLORS)-1;i++){
-        if((colortable1[i] & 0x000000ff) == 0xff){
+        if((colortable1[i] & 0x000000ff) != 0xff){
             return FALSE;
         }
     }
