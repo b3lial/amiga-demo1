@@ -7,6 +7,7 @@
 WORD payloadShowLogoState = SHOWLOGO_INIT;
 UWORD colortable0[SHOWLOGO_BLOB_COLORS];
 struct BitMap *showLogoScreen;
+extern struct ViewPort *viewPorts[MAX_VIEW_PORTS];
 
 WORD fsmShowLogo(void)
 {
@@ -22,7 +23,10 @@ WORD fsmShowLogo(void)
         payloadShowLogoState = SHOWLOGO_STATIC;
         break;
     case SHOWLOGO_STATIC:
-        WaitTOF();
+        fadeInFromWhite();
+        if(hasFadeInFromWhiteFinished()){
+            break;
+        }
         break;
     case SHOWLOGO_SHUTDOWN:
         exitShowLogo();
@@ -71,4 +75,31 @@ void exitShowLogo(void)
         cleanBitMap(showLogoScreen);
         showLogoScreen = NULL;
     }
+}
+
+void fadeInFromWhite(void){
+    UWORD i = 0;
+    UWORD decrementer;
+
+    // fade of text scroll area (viewPort[0])
+    for(;i<SHOWLOGO_BLOB_COLORS;i++){
+        decrementer = 0;
+        if((colortable0[i] & 0x000f) != 0x0000){
+            decrementer |= 0x0001;
+        }
+        if((colortable0[i] & 0x00f0) != 0x0000){
+            decrementer |= 0x0010;
+        }
+        if((colortable0[i] & 0x0f00) != 0x0000){
+            decrementer |= 0x0100;
+        }
+        colortable0[i]-=decrementer;
+    }
+
+    WaitTOF();
+    LoadRGB4(viewPorts[0], colortable0, SHOWLOGO_BLOB_COLORS);
+}
+
+BOOL hasFadeInFromWhiteFinished(void){
+    return TRUE;
 }

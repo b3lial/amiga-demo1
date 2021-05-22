@@ -15,5 +15,7 @@
 WORD fsmShowLogo(void);
 void initShowLogo(void);
 void exitShowLogo(void);
+void fadeInFromWhite(void);
+BOOL hasFadeInFromWhiteFinished(void);
 
 #endif
