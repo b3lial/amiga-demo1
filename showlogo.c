@@ -5,9 +5,7 @@
 
 WORD payloadShowLogoState = SHOWLOGO_INIT;
 
-WORD fsmShowLogo(void){
-    return MODULE_FINISHED;
-    
+WORD fsmShowLogo(void){    
     if (mouseClick())
     {
         payloadShowLogoState = SHOWLOGO_SHUTDOWN;
@@ -18,7 +16,7 @@ WORD fsmShowLogo(void){
             payloadShowLogoState = SHOWLOGO_STATIC;
             break;
         case SHOWLOGO_STATIC:
-            //WaitTOF();
+            WaitTOF();
             break;
         case SHOWLOGO_SHUTDOWN:
             return MODULE_FINISHED;
