@@ -27,7 +27,7 @@ struct BitMap *textscrollerScreen = NULL;
 // necessary to manipulate colors during runtime
 ULONG *colortable1 = NULL;
 UWORD colortable0[TEXTSCROLLER_BLOB_FONT_COLORS];
-extern struct ViewPort *viewPorts[MAX_VIEW_PORTS];
+extern struct ViewData vd;
 
 struct TextConfig *textList[TEXT_LIST_SIZE];
 struct TextConfig text1;
@@ -235,7 +235,7 @@ void initTextScroller(void)
 
     // Create View and ViewExtra memory structures
     writeLog("\nCreate view\n");
-    initView();
+    createNewView();
 
     // Add previously created BitMap for text display to ViewPort so its shown on Screen
     addViewPort(textscrollerScreen, NULL, colortable0, TEXTSCROLLER_BLOB_FONT_COLORS, FALSE,
@@ -263,7 +263,7 @@ void exitTextScroller(void)
         writeLogFS("Freeing %d bytes of space bitmap color table\n",
                    COLORMAP32_BYTE_SIZE(TEXTSCROLLER_BLOB_SPACE_COLORS));
     }
-    stopView();
+
     cleanBitMap(textscrollerScreen);
     cleanBitMap(spaceBlob);
     payloadTextScrollerState = TEXTSCROLLER_INIT;
@@ -324,8 +324,8 @@ void fadeToWhite(void){
     }
 
     // calculated new color sets, now we can update copper and co
-    LoadRGB4(viewPorts[0], colortable0, TEXTSCROLLER_BLOB_FONT_COLORS);
-    LoadRGB32(viewPorts[1], colortable1);
+    LoadRGB4(vd.viewPorts[0], colortable0, TEXTSCROLLER_BLOB_FONT_COLORS);
+    LoadRGB32(vd.viewPorts[1], colortable1);
 }
 
 BOOL hasFadeToWhiteFinished(void){

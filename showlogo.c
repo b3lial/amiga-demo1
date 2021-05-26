@@ -7,7 +7,7 @@
 WORD payloadShowLogoState = SHOWLOGO_INIT;
 UWORD colortable0[SHOWLOGO_BLOB_COLORS];
 struct BitMap *showLogoScreen;
-extern struct ViewPort *viewPorts[MAX_VIEW_PORTS];
+extern struct ViewData vd;
 
 WORD fsmShowLogo(void)
 {
@@ -23,10 +23,12 @@ WORD fsmShowLogo(void)
         payloadShowLogoState = SHOWLOGO_STATIC;
         break;
     case SHOWLOGO_STATIC:
+        /*
         fadeInFromWhite();
         if(hasFadeInFromWhiteFinished()){
             break;
         }
+        */
         break;
     case SHOWLOGO_SHUTDOWN:
         exitShowLogo();
@@ -60,7 +62,7 @@ void initShowLogo(void)
     }
 
     writeLog("\nCreate view\n");
-    initView();
+    createNewView();
     addViewPort(showLogoScreen, NULL, colortable0, SHOWLOGO_BLOB_COLORS, FALSE,
                 0, 0, SHOWLOGO_BLOB_WIDTH, SHOWLOGO_BLOB_HEIGHT,
                 0, 0);
@@ -69,7 +71,6 @@ void initShowLogo(void)
 
 void exitShowLogo(void)
 {
-    stopView();
     if (showLogoScreen)
     {
         cleanBitMap(showLogoScreen);
@@ -97,7 +98,7 @@ void fadeInFromWhite(void){
     }
 
     WaitTOF();
-    LoadRGB4(viewPorts[0], colortable0, SHOWLOGO_BLOB_COLORS);
+    LoadRGB4(vd.viewPorts[0], colortable0, SHOWLOGO_BLOB_COLORS);
 }
 
 BOOL hasFadeInFromWhiteFinished(void){
