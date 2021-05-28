@@ -163,15 +163,9 @@ WORD fsmTextScroller(void)
         WaitTOF();
         fadeToWhite();
         if(hasFadeToWhiteFinished()){
-            payloadTextScrollerState = TEXTSCROLLER_SHUTDOWN;
+            return MODULE_FINISHED;
         }
         break;
-
-    // destroy view
-    case TEXTSCROLLER_SHUTDOWN:
-        exitTextController();
-        exitTextScroller();
-        return MODULE_FINISHED;
     }
 
     return MODULE_CONTINUE;

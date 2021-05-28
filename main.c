@@ -25,8 +25,15 @@ int main(void) {
                 if (moduleStatus == MODULE_CONTINUE) {
                     fsmNextState = FSM_TEXTSCROLLER;
                 } else {
-                    fsmNextState = FSM_SHOWLOGO;
+                    fsmNextState = FSM_TEXTSCROLLER_FINISHED;
                 }
+                break;
+
+            case FSM_TEXTSCROLLER_FINISHED:
+                initShowLogo();
+                exitTextController();
+                exitTextScroller();
+                fsmNextState = FSM_SHOWLOGO;
                 break;
 
             case FSM_SHOWLOGO:
@@ -39,6 +46,8 @@ int main(void) {
                 break;
 
             case FSM_STOP:
+                exitStarlight();
+                exitShowLogo();
                 fsmNextState = FSM_QUIT;
                 break;
 
@@ -53,6 +62,5 @@ int main(void) {
         fsmCurrentState = fsmNextState;
     }
 
-    exitStarlight();
     exit(RETURN_OK);
 }

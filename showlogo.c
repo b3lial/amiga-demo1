@@ -19,7 +19,6 @@ WORD fsmShowLogo(void)
     switch (payloadShowLogoState)
     {
     case SHOWLOGO_INIT:
-        initShowLogo();
         payloadShowLogoState = SHOWLOGO_STATIC;
         break;
     case SHOWLOGO_STATIC:
@@ -31,7 +30,6 @@ WORD fsmShowLogo(void)
         */
         break;
     case SHOWLOGO_SHUTDOWN:
-        exitShowLogo();
         return MODULE_FINISHED;
     }
 
