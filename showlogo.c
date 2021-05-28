@@ -51,8 +51,9 @@ void initShowLogo(void)
     if (!showLogoScreen)
     {
         writeLog("Error: Could not allocate memory for showlogo screen bitmap\n");
+        exitStarlight();
         exitShowLogo();
-        exitSystem(RETURN_ERROR);
+        exit(RETURN_ERROR);
     }
     for (i = 0; i < SHOWLOGO_BLOB_DEPTH; i++)
     {

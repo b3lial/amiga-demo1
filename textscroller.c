@@ -54,9 +54,10 @@ WORD fsmTextScroller(void)
         if (!initTextController(textscrollerScreen,
                                 TEXTSCROLLER_BLOB_FONT_DEPTH,
                                 TEXTSCROLLER_VIEW_TEXTSECTION_WIDTH))
-        {
+        {  
+            exitStarlight();
             exitTextScroller();
-            exitSystem(RETURN_ERROR);
+            exit(RETURN_ERROR);
         }
 
         // configure text scroll engine
@@ -193,8 +194,9 @@ void initTextScroller(void)
     if (spaceBlob == NULL)
     {
         writeLog("Error: Could not load space blob\n");
+        exitStarlight();
         exitTextScroller();
-        exitSystem(RETURN_ERROR);
+        exit(RETURN_ERROR);
     }
     writeLogFS(
         "Space Bitmap: BytesPerRow: %d, Rows: %d, Flags: %d, pad: %d\n",
@@ -206,8 +208,9 @@ void initTextScroller(void)
     if (!colortable1)
     {
         writeLog("Error: Could not allocate memory for space bitmap color table\n");
+        exitStarlight();
         exitTextScroller();
-        exitSystem(RETURN_ERROR);
+        exit(RETURN_ERROR);
     }
     writeLogFS("Allocated %d  bytes for space bitmap color table\n",
                COLORMAP32_BYTE_SIZE(TEXTSCROLLER_BLOB_SPACE_COLORS));

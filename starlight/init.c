@@ -28,7 +28,11 @@ ULONG oldcopper;
 //remember init method chosen by user
 BOOL hasChosenSoftInit = FALSE;
 
-void initSystem(BOOL softInit){
+/**
+ * Disable Sprites, store old View, init logger.
+ * Has to be called before using starlight framework. 
+ */
+void initStarlight(BOOL softInit){
     hasChosenSoftInit = softInit;
     if(softInit){
         initSystemSoft();
@@ -38,12 +42,16 @@ void initSystem(BOOL softInit){
     }
 }
 
-void exitSystem(BYTE errorCode){
+/**
+ * Restores old View and frees memory. Must be called
+ * before exiting. 
+ */
+void exitStarlight(void){
     if(hasChosenSoftInit){
-        exitSystemSoft(errorCode);
+        exitSystemSoft();
     }
     else{
-        exitSystemRuthless(errorCode);
+        exitSystemRuthless();
     }
 
     // we switched back to the old view, so we can now delete
@@ -53,7 +61,6 @@ void exitSystem(BYTE errorCode){
     // final cleanup and we're gone
     CloseLibrary((struct Library*) GfxBase);
     CloseLibrary((struct Library*) DOSBase);
-    exit(errorCode);
 }
 
 /**
@@ -142,20 +149,33 @@ void initSystemRuthless(void){
 /**
  * Restore old view and exit program
  */
-void exitSystemSoft(BYTE errorCode){
+void exitSystemSoft(void){
+    // null view and double wait for dma before dma access
+    WaitTOF();
+    LoadView(NULL);
+    WaitTOF();
     WaitTOF();
     ON_SPRITE;
+
+    // sprite dma working, now we can restore the workbench
     LoadView((struct View*) oldview); 
     WaitTOF();
     
-    writeLogFS("Soft reset shutdown with return code %d\n", errorCode);
+    writeLogFS("Soft Starlight Shutdown successfully\n");
 }
 
 /**
  * Restore Interrupts, DMA configuration, Copper
  * and exit program.
  */
-void exitSystemRuthless(BYTE errorCode){
+void exitSystemRuthless(void){
+    // null view and double wait for dma before dma access
+    WaitTOF();
+    LoadView(NULL);
+    WaitTOF();
+    WaitTOF();
+
+    // activate dma and interrupts
     custom.dmacon = 0x7fff;
     custom.dmacon = olddmareq;
     custom.intena = 0x7fff;
@@ -164,16 +184,17 @@ void exitSystemRuthless(BYTE errorCode){
     custom.intreq = oldintreq;
     custom.adkcon = 0x7fff;
     custom.adkcon = oldadkcon;
-    
     custom.cop1lc = oldcopper;
     
-    WaitTOF();
-    LoadView((struct View*) oldview);
-    WaitTOF();
-    WaitTOF();
+    // free blitter
     WaitBlit();
     DisownBlitter();
     Permit();
 
-    writeLogFS("Ruthless reset shutdown with return code %d\n", errorCode);
+    // os is running again, we can restore workbench screen now
+    WaitTOF();
+    LoadView((struct View*) oldview);
+    WaitTOF();
+
+    writeLogFS("Ruthless Starlight Shutdown successfully\n");
 }
