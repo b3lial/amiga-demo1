@@ -22,12 +22,10 @@ WORD fsmShowLogo(void)
         payloadShowLogoState = SHOWLOGO_STATIC;
         break;
     case SHOWLOGO_STATIC:
-        /*
         fadeInFromWhite();
         if(hasFadeInFromWhiteFinished()){
             break;
         }
-        */
         break;
     case SHOWLOGO_SHUTDOWN:
         return MODULE_FINISHED;
