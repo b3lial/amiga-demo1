@@ -46,23 +46,10 @@ WORD fsmTextScroller(void)
     // no mouse click -> execute state machine
     switch (payloadTextScrollerState)
     {
-
-    // create view, load star field, planet earth and font
     case TEXTSCROLLER_INIT:
-        initTextScroller();
-
-        if (!initTextController(textscrollerScreen,
-                                TEXTSCROLLER_BLOB_FONT_DEPTH,
-                                TEXTSCROLLER_VIEW_TEXTSECTION_WIDTH))
-        {  
-            exitStarlight();
-            exitTextScroller();
-            exit(RETURN_ERROR);
-        }
-
         // configure text scroll engine
         text1.currentText = "hi there";
-        text1.charXPosDestination = MAX_CHAR_WIDTH+70;
+        text1.charXPosDestination = MAX_CHAR_WIDTH + 70;
         text1.charYPosDestination = 40;
         textList[0] = &text1;
         textList[1] = NULL;
@@ -80,10 +67,10 @@ WORD fsmTextScroller(void)
             // configure text scroll engine
             resetTextController();
             text1.currentText = "belial";
-            text1.charXPosDestination = MAX_CHAR_WIDTH+95;
+            text1.charXPosDestination = MAX_CHAR_WIDTH + 95;
             text1.charYPosDestination = 18;
             text2.currentText = "here";
-            text2.charXPosDestination = MAX_CHAR_WIDTH+110;
+            text2.charXPosDestination = MAX_CHAR_WIDTH + 110;
             text2.charYPosDestination = 70;
             textList[0] = &text1;
             textList[1] = &text2;
@@ -104,13 +91,13 @@ WORD fsmTextScroller(void)
             // configure text scroll engine
             resetTextController();
             text1.currentText = "presenting";
-            text1.charXPosDestination = MAX_CHAR_WIDTH+37;
+            text1.charXPosDestination = MAX_CHAR_WIDTH + 37;
             text1.charYPosDestination = 4;
             text2.currentText = "my";
-            text2.charXPosDestination = MAX_CHAR_WIDTH+133;
+            text2.charXPosDestination = MAX_CHAR_WIDTH + 133;
             text2.charYPosDestination = 44;
             text3.currentText = "first";
-            text3.charXPosDestination = MAX_CHAR_WIDTH+103;
+            text3.charXPosDestination = MAX_CHAR_WIDTH + 103;
             text3.charYPosDestination = 84;
             textList[0] = &text1;
             textList[1] = &text2;
@@ -132,10 +119,10 @@ WORD fsmTextScroller(void)
             // configure text scroll engine
             resetTextController();
             text1.currentText = "demo";
-            text1.charXPosDestination = MAX_CHAR_WIDTH+10;
+            text1.charXPosDestination = MAX_CHAR_WIDTH + 10;
             text1.charYPosDestination = 18;
             text2.currentText = "production";
-            text2.charXPosDestination = MAX_CHAR_WIDTH+45;
+            text2.charXPosDestination = MAX_CHAR_WIDTH + 45;
             text2.charYPosDestination = 70;
             textList[0] = &text1;
             textList[1] = &text2;
@@ -162,7 +149,8 @@ WORD fsmTextScroller(void)
     case TEXTSCROLLER_FADE_WHITE:
         WaitTOF();
         fadeToWhite();
-        if(hasFadeToWhiteFinished()){
+        if (hasFadeToWhiteFinished())
+        {
             return MODULE_FINISHED;
         }
         break;
@@ -173,11 +161,11 @@ WORD fsmTextScroller(void)
 
 void initTextScroller(void)
 {
-    
     BYTE i = 0;
     writeLog("\n== initTextScroller() ==\n");
 
-    for(;i<TEXT_LIST_SIZE;i++){
+    for (; i < TEXT_LIST_SIZE; i++)
+    {
         textList[i] = NULL;
     }
 
@@ -236,7 +224,7 @@ void initTextScroller(void)
 
     // Add previously created BitMap for text display to ViewPort so its shown on Screen
     addViewPort(textscrollerScreen, NULL, colortable0, TEXTSCROLLER_BLOB_FONT_COLORS, FALSE,
-                0, 0, TEXTSCROLLER_VIEW_WIDTH, TEXTSCROLLER_VIEW_TEXTSECTION_HEIGHT, 
+                0, 0, TEXTSCROLLER_VIEW_WIDTH, TEXTSCROLLER_VIEW_TEXTSECTION_HEIGHT,
                 MAX_CHAR_WIDTH, 0);
 
     // Add space background BitMap to ViewPort so its shown on Screen
@@ -247,11 +235,21 @@ void initTextScroller(void)
 
     // Make View visible
     startView();
+
+    if (!initTextController(textscrollerScreen,
+                            TEXTSCROLLER_BLOB_FONT_DEPTH,
+                            TEXTSCROLLER_VIEW_TEXTSECTION_WIDTH))
+    {
+        exitStarlight();
+        exitTextScroller();
+        exit(RETURN_ERROR);
+    }
 }
 
 void exitTextScroller(void)
 {
     writeLog("\n== exitTextScroller() ==\n");
+    exitTextController();
 
     if (colortable1)
     {
@@ -261,8 +259,18 @@ void exitTextScroller(void)
                    COLORMAP32_BYTE_SIZE(TEXTSCROLLER_BLOB_SPACE_COLORS));
     }
 
-    cleanBitMap(textscrollerScreen);
-    cleanBitMap(spaceBlob);
+    if (textscrollerScreen)
+    {
+        cleanBitMap(textscrollerScreen);
+        textscrollerScreen = NULL;
+    }
+
+    if (spaceBlob)
+    {
+        cleanBitMap(spaceBlob);
+        spaceBlob = NULL;
+    }
+
     payloadTextScrollerState = TEXTSCROLLER_INIT;
 }
 
@@ -285,35 +293,43 @@ void createStars(struct BitMap *bitmap)
     }
 }
 
-void fadeToWhite(void){
+void fadeToWhite(void)
+{
     UWORD i = 0;
     UWORD incrementer;
-    ULONG currentColor; 
+    ULONG currentColor;
 
     // fade of text scroll area (viewPort[0])
-    for(;i<TEXTSCROLLER_BLOB_FONT_COLORS;i++){
+    for (; i < TEXTSCROLLER_BLOB_FONT_COLORS; i++)
+    {
         incrementer = 0;
-        if((colortable0[i] & 0x000f) != 0x000f){
+        if ((colortable0[i] & 0x000f) != 0x000f)
+        {
             incrementer |= 0x0001;
         }
-        if((colortable0[i] & 0x00f0) != 0x00f0){
+        if ((colortable0[i] & 0x00f0) != 0x00f0)
+        {
             incrementer |= 0x0010;
         }
-        if((colortable0[i] & 0x0f00) != 0x0f00){
+        if ((colortable0[i] & 0x0f00) != 0x0f00)
+        {
             incrementer |= 0x0100;
         }
-        colortable0[i]+=incrementer;
+        colortable0[i] += incrementer;
     }
-    
+
     // fade of space background area (viewPort[1])
-    for(i=1;i<COLORMAP32_LONG_SIZE(TEXTSCROLLER_BLOB_SPACE_COLORS)-1;i++){
+    for (i = 1; i < COLORMAP32_LONG_SIZE(TEXTSCROLLER_BLOB_SPACE_COLORS) - 1; i++)
+    {
         currentColor = (colortable1[i] & 0x000000ff);
-        if(currentColor == 0xff){
+        if (currentColor == 0xff)
+        {
             continue;
         }
 
-        currentColor+=17;
-        if(currentColor>0x000000ff){
+        currentColor += 17;
+        if (currentColor > 0x000000ff)
+        {
             currentColor = 0x000000ff;
         }
 
@@ -325,17 +341,22 @@ void fadeToWhite(void){
     LoadRGB32(vd.viewPorts[1], colortable1);
 }
 
-BOOL hasFadeToWhiteFinished(void){
+BOOL hasFadeToWhiteFinished(void)
+{
     UWORD i = 0;
 
-    for(;i<TEXTSCROLLER_BLOB_FONT_COLORS;i++){
-        if((colortable0[i] & 0x0fff) != 0x0fff){
+    for (; i < TEXTSCROLLER_BLOB_FONT_COLORS; i++)
+    {
+        if ((colortable0[i] & 0x0fff) != 0x0fff)
+        {
             return FALSE;
         }
     }
 
-    for(i=1;i<COLORMAP32_LONG_SIZE(TEXTSCROLLER_BLOB_SPACE_COLORS)-1;i++){
-        if((colortable1[i] & 0x000000ff) != 0xff){
+    for (i = 1; i < COLORMAP32_LONG_SIZE(TEXTSCROLLER_BLOB_SPACE_COLORS) - 1; i++)
+    {
+        if ((colortable1[i] & 0x000000ff) != 0xff)
+        {
             return FALSE;
         }
     }

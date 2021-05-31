@@ -54,7 +54,10 @@ BOOL initTextController(struct BitMap *screen, UWORD depth, UWORD screenWidth)
  */
 void exitTextController(void)
 {
-    cleanBitMap(fontBlob);
+    if(fontBlob){
+        cleanBitMap(fontBlob);
+        fontBlob = NULL;
+    }
 }
 
 /**
