@@ -42,7 +42,6 @@ void initShowLogo(void)
 {
     UBYTE i = 0;
     writeLog("\n== initShowLogo() ==\n");
-    memset(colortable0, 0xff, sizeof(colortable0));
 
     // create the screen
     writeLog("\nLoad showlogo screen background bitmap\n");
@@ -89,14 +88,15 @@ void initShowLogo(void)
     BltBitMap(logo,
               0, 0,
               showLogoScreen,
-              0, 20,
-              SHOWLOGO_BLOB_WIDTH, SHOWLOGO_BLOB_HEIGHT,
+              0, 0,
+              SHOWLOGO_BLOB_WIDTH, SHOWLOGO_LOGO_HEIGHT,
               0xC0, 0xff, 0);
 
     // everything loaded, now show it!
     writeLog("\nCreate view\n");
     createNewView();
-    addViewPort(showLogoScreen, NULL, colortable0, SHOWLOGO_BLOB_COLORS, TRUE,
+    addViewPort(showLogoScreen, NULL, colortable0, 
+                COLORMAP32_LONG_SIZE(SHOWLOGO_BLOB_COLORS), TRUE,
                 0, 0, SHOWLOGO_BLOB_WIDTH, SHOWLOGO_BLOB_HEIGHT,
                 0, 0);
     startView();
