@@ -18,6 +18,7 @@ UWORD vpPointer = 0;
 const ULONG modeID = PAL_MONITOR_ID | LORES_KEY;
 struct ViewData vd;
 struct ViewData oldVd;
+struct DimensionInfo querydims = {{0}};
 
 /**
  * Create a new PAL View and backup the old View structure
@@ -82,7 +83,6 @@ void addViewPort(struct BitMap *bitMap, struct BitMap *doubleBuffer,
                  UWORD x, UWORD y, UWORD width, UWORD height, UWORD rxOffset,
                  UWORD ryOffset)
 {
-    struct DimensionInfo querydims = {{0}};
     struct TagItem vcTags[] = {
         {VTAG_ATTACH_CM_SET, NULL},
         {VTAG_VIEWPORTEXTRA_SET, NULL},

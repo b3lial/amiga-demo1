@@ -35,7 +35,7 @@ void initStarlight(void){
         exit(RETURN_ERROR);
     }
    
-    GfxBase = (struct GfxBase*) OpenLibrary(GRAPHICSNAME, 0);
+    GfxBase = (struct GfxBase*) OpenLibrary(GRAPHICSNAME, 33L);
     if(GfxBase==0){
         printf("could not load %s\n", GRAPHICSNAME);
         exit(RETURN_ERROR);
