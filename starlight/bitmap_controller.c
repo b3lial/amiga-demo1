@@ -44,6 +44,26 @@ struct BitMap* createBitMap(UBYTE depth, UWORD width, UWORD height){
     return newBitMap;
 }
 
+void initBitMap(struct BitMap *newBitMap, UBYTE depth, UWORD width, UWORD height){
+    BYTE i,j = 0;
+    memset(newBitMap, 0, sizeof(struct BitMap));
+    InitBitMap(newBitMap, depth, width, height);
+
+    for(i=0; i<depth; i++){
+        newBitMap->Planes[i] = (PLANEPTR) AllocRaster(
+                (newBitMap->BytesPerRow) * 8, newBitMap->Rows);
+        if(newBitMap->Planes[i] == NULL){
+            //error, free previously allocated memory
+            writeLogFS("Error: Could not allocate Bitplane %d memory\n", i);
+            for(j=i-1; j>=0; j--){
+                FreeRaster(newBitMap->Planes[j], (newBitMap->BytesPerRow) * 8, 
+                    newBitMap->Rows);
+            }
+            return;
+        }
+    }
+}
+
 /**
  * Free BitMMap memory and its BitPlanes
  */

@@ -17,8 +17,8 @@ int main(void) {
         switch (fsmCurrentState) {
             case FSM_START:
                 initStarlight();
-                initTextScroller();
-                fsmNextState = FSM_TEXTSCROLLER;
+                //initTextScroller();
+                fsmNextState = FSM_TEXTSCROLLER_FINISHED;
                 break;
 
             case FSM_TEXTSCROLLER:
@@ -32,7 +32,7 @@ int main(void) {
 
             case FSM_TEXTSCROLLER_FINISHED:
                 initShowLogo();
-                exitTextScroller();
+                //exitTextScroller();
                 fsmNextState = FSM_SHOWLOGO;
                 break;
 

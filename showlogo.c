@@ -8,7 +8,7 @@
 
 WORD payloadShowLogoState = SHOWLOGO_INIT;
 ULONG colortable0[COLORMAP32_LONG_SIZE(SHOWLOGO_BLOB_COLORS)];
-struct BitMap *showLogoScreen = NULL;
+struct BitMap showLogoScreen;
 struct BitMap *logo = NULL;
 extern struct ViewData vd;
 
@@ -45,20 +45,13 @@ void initShowLogo(void)
 
     // create the screen
     writeLog("\nLoad showlogo screen background bitmap\n");
-    showLogoScreen = createBitMap(SHOWLOGO_BLOB_DEPTH,
+    initBitMap(&showLogoScreen, SHOWLOGO_BLOB_DEPTH,
                                   SHOWLOGO_BLOB_WIDTH,
                                   SHOWLOGO_BLOB_HEIGHT);
-    if (!showLogoScreen)
-    {
-        writeLog("Error: Could not allocate memory for showlogo screen bitmap\n");
-        exitStarlight();
-        exitShowLogo();
-        exit(RETURN_ERROR);
-    }
     for (i = 0; i < SHOWLOGO_BLOB_DEPTH; i++)
     {
-        BltClear(showLogoScreen->Planes[i],
-                 (showLogoScreen->BytesPerRow) * (showLogoScreen->Rows),
+        BltClear(showLogoScreen.Planes[i],
+                 (showLogoScreen.BytesPerRow) * (showLogoScreen.Rows),
                  1);
     }
 
@@ -79,7 +72,7 @@ void initShowLogo(void)
     // blit logo into screen
     BltBitMap(logo,
               0, 0,
-              showLogoScreen,
+              &showLogoScreen,
               0, 0,
               SHOWLOGO_BLOB_WIDTH, SHOWLOGO_LOGO_HEIGHT,
               0xC0, 0xff, 0);
@@ -87,7 +80,7 @@ void initShowLogo(void)
     // everything loaded, now show it!
     writeLog("\nCreate view\n");
     createNewView();
-    addViewPort(showLogoScreen, NULL, &colortable0, 
+    addViewPort(&showLogoScreen, NULL, &colortable0, 
                 SHOWLOGO_BLOB_COLORS, TRUE,
                 0, 0, SHOWLOGO_BLOB_WIDTH, SHOWLOGO_BLOB_HEIGHT,
                 0, 0);
@@ -96,11 +89,13 @@ void initShowLogo(void)
 
 void exitShowLogo(void)
 {
+    /*
     if (showLogoScreen)
     {
         cleanBitMap(showLogoScreen);
         showLogoScreen = NULL;
     }
+    */
     if (logo)
     {
         cleanBitMap(logo);
