@@ -43,9 +43,6 @@ void initStarlight(void){
     
     oldview = (ULONG) GfxBase->ActiView;
     WaitTOF();
-    LoadView(NULL);
-    WaitTOF();
-    WaitTOF();
     OFF_SPRITE;
     initLog();
 }
@@ -55,10 +52,6 @@ void initStarlight(void){
  * before exiting. 
  */
 void exitStarlight(void){
-    // null view and double wait for dma before dma access
-    WaitTOF();
-    LoadView(NULL);
-    WaitTOF();
     WaitTOF();
     ON_SPRITE;
 

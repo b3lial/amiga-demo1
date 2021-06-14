@@ -7,7 +7,7 @@
 #include <proto/exec.h>
 
 WORD payloadShowLogoState = SHOWLOGO_INIT;
-ULONG *colortable0 = NULL;
+ULONG colortable0[COLORMAP32_LONG_SIZE(SHOWLOGO_BLOB_COLORS)];
 struct BitMap *showLogoScreen = NULL;
 struct BitMap *logo = NULL;
 extern struct ViewData vd;
@@ -63,14 +63,6 @@ void initShowLogo(void)
     }
 
     // load colors of screen
-    colortable0 = AllocVec(COLORMAP32_BYTE_SIZE(SHOWLOGO_BLOB_COLORS), MEMF_ANY);
-    if (!colortable0)
-    {
-        writeLog("Error: Could not allocate memory for showlogo colortable bitmap\n");
-        exitStarlight();
-        exitShowLogo();
-        exit(RETURN_ERROR);
-    }
     loadColorMap32("img/dawn_320_200_8.CMAP", colortable0, SHOWLOGO_BLOB_COLORS);
 
     // load logo from file we want to display
@@ -95,8 +87,8 @@ void initShowLogo(void)
     // everything loaded, now show it!
     writeLog("\nCreate view\n");
     createNewView();
-    addViewPort(showLogoScreen, NULL, colortable0, 
-                COLORMAP32_LONG_SIZE(SHOWLOGO_BLOB_COLORS), TRUE,
+    addViewPort(showLogoScreen, NULL, &colortable0, 
+                SHOWLOGO_BLOB_COLORS, TRUE,
                 0, 0, SHOWLOGO_BLOB_WIDTH, SHOWLOGO_BLOB_HEIGHT,
                 0, 0);
     startView();
@@ -113,13 +105,6 @@ void exitShowLogo(void)
     {
         cleanBitMap(logo);
         logo = NULL;
-    }
-    if (colortable0)
-    {
-        FreeVec(colortable0);
-        colortable0 = NULL;
-        writeLogFS("Freeing %d bytes of space bitmap color table\n",
-                   COLORMAP32_BYTE_SIZE(SHOWLOGO_BLOB_COLORS));
     }
 }
 

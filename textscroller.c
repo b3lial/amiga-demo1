@@ -25,7 +25,7 @@ struct BitMap *spaceBlob = NULL;
 struct BitMap *textscrollerScreen = NULL;
 
 // necessary to manipulate colors during runtime
-ULONG *colortable1 = NULL;
+ULONG colortable1[COLORMAP32_LONG_SIZE(TEXTSCROLLER_BLOB_SPACE_COLORS)];
 UWORD colortable0[TEXTSCROLLER_BLOB_FONT_COLORS];
 extern struct ViewData vd;
 
@@ -186,16 +186,6 @@ void initTextScroller(void)
         spaceBlob->pad);
 
     // Load space background color table
-    colortable1 = AllocVec(COLORMAP32_BYTE_SIZE(TEXTSCROLLER_BLOB_SPACE_COLORS), MEMF_ANY);
-    if (!colortable1)
-    {
-        writeLog("Error: Could not allocate memory for space bitmap color table\n");
-        exitStarlight();
-        exitTextScroller();
-        exit(RETURN_ERROR);
-    }
-    writeLogFS("Allocated %d  bytes for space bitmap color table\n",
-               COLORMAP32_BYTE_SIZE(TEXTSCROLLER_BLOB_SPACE_COLORS));
     loadColorMap32("img/space3_320_148_8.CMAP", colortable1, TEXTSCROLLER_BLOB_SPACE_COLORS);
 
     // Load Textscroller Screen Bitmap
@@ -250,14 +240,6 @@ void exitTextScroller(void)
 {
     writeLog("\n== exitTextScroller() ==\n");
     exitTextController();
-
-    if (colortable1)
-    {
-        FreeVec(colortable1);
-        colortable1 = NULL;
-        writeLogFS("Freeing %d bytes of space bitmap color table\n",
-                   COLORMAP32_BYTE_SIZE(TEXTSCROLLER_BLOB_SPACE_COLORS));
-    }
 
     if (textscrollerScreen)
     {
@@ -337,8 +319,8 @@ void fadeToWhite(void)
     }
 
     // calculated new color sets, now we can update copper and co
-    LoadRGB4(vd.viewPorts[0], colortable0, TEXTSCROLLER_BLOB_FONT_COLORS);
-    LoadRGB32(vd.viewPorts[1], colortable1);
+    LoadRGB4(&vd.viewPorts[0], colortable0, TEXTSCROLLER_BLOB_FONT_COLORS);
+    LoadRGB32(&vd.viewPorts[1], colortable1);
 }
 
 BOOL hasFadeToWhiteFinished(void)
