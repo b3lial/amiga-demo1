@@ -84,7 +84,7 @@ void initShowLogo(void)
                 SHOWLOGO_BLOB_COLORS, TRUE,
                 0, 0, SHOWLOGO_BLOB_WIDTH, SHOWLOGO_BLOB_HEIGHT,
                 0, 0);
-    startView();
+    //startView();
 }
 
 void exitShowLogo(void)

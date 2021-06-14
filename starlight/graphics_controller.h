@@ -31,7 +31,6 @@ struct ViewData{
     struct DoubleBufferControl dbControl;
     struct ViewPort viewPorts[MAX_VIEW_PORTS];
     struct ViewPortExtra *viewPortExtras[MAX_VIEW_PORTS];
-    struct RasInfo rasInfos[MAX_VIEW_PORTS];
     struct ColorMap *colormaps[MAX_VIEW_PORTS];
 };
 

@@ -83,6 +83,7 @@ void addViewPort(struct BitMap *bitMap, struct BitMap *doubleBuffer,
                  UWORD x, UWORD y, UWORD width, UWORD height, UWORD rxOffset,
                  UWORD ryOffset)
 {
+    struct RasInfo rasInfo;
     struct TagItem vcTags[] = {
         {VTAG_ATTACH_CM_SET, NULL},
         {VTAG_VIEWPORTEXTRA_SET, NULL},
@@ -122,14 +123,14 @@ void addViewPort(struct BitMap *bitMap, struct BitMap *doubleBuffer,
     }
 
     //Init RasInfo and add Bitmap
-    vd.rasInfos[vpPointer].BitMap = bitMap;
-    vd.rasInfos[vpPointer].RxOffset = rxOffset;
-    vd.rasInfos[vpPointer].RyOffset = ryOffset;
-    vd.rasInfos[vpPointer].Next = NULL;
+    rasInfo.BitMap = bitMap;
+    rasInfo.RxOffset = rxOffset;
+    rasInfo.RyOffset = ryOffset;
+    rasInfo.Next = NULL;
 
     //Init ViewPort, add RasInfo to ViewPort and add ViewPort to View
     InitVPort(&vd.viewPorts[vpPointer]);
-    vd.viewPorts[vpPointer].RasInfo = &vd.rasInfos[vpPointer];
+    vd.viewPorts[vpPointer].RasInfo = &rasInfo;
     vd.viewPorts[vpPointer].DWidth = width;
     vd.viewPorts[vpPointer].DHeight = height;
     vd.viewPorts[vpPointer].DxOffset = x;
@@ -218,10 +219,15 @@ void addViewPort(struct BitMap *bitMap, struct BitMap *doubleBuffer,
     }
     else
     {
-        LoadRGB32(&vd.viewPorts[vpPointer], (ULONG *)colortable);
+        LoadRGB32(&vd.viewPorts[vpPointer], colortable);
     }
 
     vpPointer++;
+
+    MakeVPort(&vd.view, &vd.viewPorts[vpPointer-1]);
+    MrgCop(&vd.view);
+    LoadView(&vd.view);
+
 }
 
 void startView(void)
@@ -244,7 +250,7 @@ void startView(void)
         //create and store copper lists for bm1
         vd.view.LOFCprList = NULL;
         vd.view.SHFCprList = NULL;
-        vd.rasInfos[vd.dbControl.index].BitMap = vd.dbControl.bm1;
+        //vd.rasInfos[vd.dbControl.index].BitMap = vd.dbControl.bm1;
         MakeVPort(&vd.view, &vd.viewPorts[vd.dbControl.index]);
         MrgCop(&vd.view);
         vd.dbControl.LOFCprList1 = vd.view.LOFCprList;
@@ -254,9 +260,7 @@ void startView(void)
         vd.view.SHFCprList = vd.dbControl.SHFCprList0;
     }
 
-    WaitTOF();
     LoadView(&vd.view);
-    WaitTOF();
 
     // we switched to the new view, so the old view can now be
     // savely deleted
