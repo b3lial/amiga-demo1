@@ -40,6 +40,7 @@ void createNewView(void)
     oldVd = vd;
     memset(&vd, 0, sizeof(struct ViewData));
 
+    printf("view %p\n", &vd.view);
     InitView(&vd.view);
 
     //reset double buffer if previously used
@@ -51,6 +52,7 @@ void createNewView(void)
         vd.vextra = GfxNew(VIEW_EXTRA_TYPE);
         if (vd.vextra)
         {
+            printf("vextra %p\n", vd.vextra);
             GfxAssociate(&vd.view, vd.vextra);
             vd.view.Modes |= EXTEND_VSTRUCT;
 
@@ -66,6 +68,7 @@ void createNewView(void)
                 exitStarlight();
                 exit(RETURN_ERROR);
             }
+            printf("monspec %p\n", vd.monspec);
         }
         else
         {
@@ -89,6 +92,8 @@ void addViewPort(struct BitMap *bitMap, struct BitMap *doubleBuffer,
         {VTAG_VIEWPORTEXTRA_SET, NULL},
         {VTAG_NORMAL_DISP_SET, NULL},
         {VTAG_END_CM, NULL}};
+
+    printf("bitmap %p\n", bitMap);
 
     if (useColorMap32 && GfxBase->LibNode.lib_Version < 39)
     {
@@ -127,14 +132,17 @@ void addViewPort(struct BitMap *bitMap, struct BitMap *doubleBuffer,
     rasInfo.RxOffset = rxOffset;
     rasInfo.RyOffset = ryOffset;
     rasInfo.Next = NULL;
+    printf("rasInfo %p\n", &rasInfo);
 
     //Init ViewPort, add RasInfo to ViewPort and add ViewPort to View
     InitVPort(&vd.viewPorts[vpPointer]);
     vd.viewPorts[vpPointer].RasInfo = &rasInfo;
     vd.viewPorts[vpPointer].DWidth = width;
     vd.viewPorts[vpPointer].DHeight = height;
-    vd.viewPorts[vpPointer].DxOffset = x;
-    vd.viewPorts[vpPointer].DyOffset = y;
+    //vd.viewPorts[vpPointer].DxOffset = x;
+    //vd.viewPorts[vpPointer].DyOffset = y;
+    printf("viewPort %p\n", &vd.viewPorts[vpPointer]);
+
     if (vpPointer == 0)
     {
         vd.view.ViewPort = &vd.viewPorts[vpPointer];
@@ -151,6 +159,7 @@ void addViewPort(struct BitMap *bitMap, struct BitMap *doubleBuffer,
         if (vd.viewPortExtras[vpPointer])
         {
             vcTags[1].ti_Data = (ULONG)vd.viewPortExtras[vpPointer];
+            printf("vpextra %p\n", vd.viewPortExtras[vpPointer]);
 
             if (GetDisplayInfoData(NULL, (UBYTE *)&querydims,
                                    sizeof(struct DimensionInfo), DTAG_DIMS, modeID))
@@ -159,6 +168,7 @@ void addViewPort(struct BitMap *bitMap, struct BitMap *doubleBuffer,
                            querydims.Nominal.MinX, querydims.Nominal.MinY,
                            querydims.Nominal.MaxX, querydims.Nominal.MaxY);
                 vd.viewPortExtras[vpPointer]->DisplayClip = querydims.Nominal;
+                printf("dimquery %p\n", &querydims);
 
                 /* Make a DisplayInfo and get ready to attach it */
                 if (!(vcTags[2].ti_Data = (ULONG)FindDisplayInfo(modeID)))
@@ -189,6 +199,8 @@ void addViewPort(struct BitMap *bitMap, struct BitMap *doubleBuffer,
 
     //Create ColorMap
     vd.colormaps[vpPointer] = GetColorMap(colortableSize);
+    printf("cm %p\n", vd.colormaps[vpPointer]);
+
     if (!vd.colormaps[vpPointer])
     {
         writeLog("Could not get ColorMap\n");
@@ -221,6 +233,7 @@ void addViewPort(struct BitMap *bitMap, struct BitMap *doubleBuffer,
     {
         LoadRGB32(&vd.viewPorts[vpPointer], colortable);
     }
+    printf("colorTable %p\n", colortable);
 
     vpPointer++;
 

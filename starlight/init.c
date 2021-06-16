@@ -43,7 +43,7 @@ void initStarlight(void){
     
     oldview = (ULONG) GfxBase->ActiView;
     WaitTOF();
-    OFF_SPRITE;
+    //OFF_SPRITE;
     initLog();
 }
 
@@ -53,7 +53,7 @@ void initStarlight(void){
  */
 void exitStarlight(void){
     WaitTOF();
-    ON_SPRITE;
+    //ON_SPRITE;
 
     // sprite dma working, now we can restore the workbench
     LoadView((struct View*) oldview); 
