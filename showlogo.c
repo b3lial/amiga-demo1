@@ -70,6 +70,9 @@ void initShowLogo(void)
 
     // load colors of screen
     loadColorMap32("img/dawn_320_200_8.CMAP", colortable0, SHOWLOGO_BLOB_COLORS);
+    colortable0[1] = SPREAD(0x55);
+    colortable0[2] = SPREAD(0x55);
+    colortable0[3] = SPREAD(0x55);
 
     // load logo from file we want to display
     logo = loadBlob("img/dawn_320_200_8.RAW", SHOWLOGO_BLOB_DEPTH,
