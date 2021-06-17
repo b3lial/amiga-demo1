@@ -1,16 +1,20 @@
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
+#include <clib/dos_protos.h>
+#include <clib/exec_protos.h>
+#include <clib/graphics_protos.h>
 #include <exec/types.h>
-#include <exec/memory.h>
-#include <dos/dos.h>
-
-#include <proto/graphics.h>
-#include <proto/exec.h>
-
+#include <graphics/copper.h>
 #include <graphics/displayinfo.h>
+#include <graphics/gfx.h>
 #include <graphics/gfxbase.h>
+#include <graphics/gfxmacros.h>
+#include <graphics/gfxnodes.h>
 #include <graphics/videocontrol.h>
+#include <graphics/view.h>
+#include <libraries/dos.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <utility/tagitem.h>
 
 #include "starlight/starlight.h"
 
@@ -19,6 +23,7 @@ const ULONG modeID = PAL_MONITOR_ID | LORES_KEY;
 struct ViewData vd;
 struct ViewData oldVd;
 struct DimensionInfo querydims = {{0}};
+extern struct GfxBase* GFXBase;
 
 /**
  * Create a new PAL View and backup the old View structure
@@ -47,7 +52,7 @@ void createNewView(void)
     vd.dbControl.active = FALSE;
 
     //Attach ViewExtra and MonitorSpec to View if possible
-    if (GfxBase->LibNode.lib_Version >= 36)
+    if (GFXBase->LibNode.lib_Version >= 36)
     {
         vd.vextra = GfxNew(VIEW_EXTRA_TYPE);
         if (vd.vextra)
@@ -95,10 +100,10 @@ void addViewPort(struct BitMap *bitMap, struct BitMap *doubleBuffer,
 
     printf("bitmap %p\n", bitMap);
 
-    if (useColorMap32 && GfxBase->LibNode.lib_Version < 39)
+    if (useColorMap32 && GFXBase->LibNode.lib_Version < 39)
     {
         writeLogFS("Error: Requesting 24 bit color depth but Kickstart Gfx version is %d\n",
-                   GfxBase->LibNode.lib_Version);
+                   GFXBase->LibNode.lib_Version);
         exitStarlight();
         exit(RETURN_ERROR);
     }
@@ -153,7 +158,7 @@ void addViewPort(struct BitMap *bitMap, struct BitMap *doubleBuffer,
     }
 
     //Init ViewPortExtra and attach it to ViewPort
-    if (GfxBase->LibNode.lib_Version >= 36)
+    if (GFXBase->LibNode.lib_Version >= 36)
     {
         vd.viewPortExtras[vpPointer] = GfxNew(VIEWPORT_EXTRA_TYPE);
         if (vd.viewPortExtras[vpPointer])
@@ -209,7 +214,7 @@ void addViewPort(struct BitMap *bitMap, struct BitMap *doubleBuffer,
     }
     writeLogFS("Created a ColorMap with type %d\n", vd.colormaps[vpPointer]->Type);
 
-    if (GfxBase->LibNode.lib_Version >= 36)
+    if (GFXBase->LibNode.lib_Version >= 36)
     {
         vcTags[0].ti_Data = (ULONG) &vd.viewPorts[vpPointer];
         if (VideoControl(vd.colormaps[vpPointer], vcTags))

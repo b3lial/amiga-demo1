@@ -1,10 +1,21 @@
+#include <clib/dos_protos.h>
+#include <clib/exec_protos.h>
+#include <clib/graphics_protos.h>
+#include <exec/types.h>
+#include <graphics/copper.h>
+#include <graphics/displayinfo.h>
+#include <graphics/gfx.h>
+#include <graphics/gfxbase.h>
+#include <graphics/gfxmacros.h>
+#include <graphics/gfxnodes.h>
+#include <graphics/videocontrol.h>
+#include <graphics/view.h>
+#include <libraries/dos.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <stdarg.h>
 #include <string.h>
-#include <stdio.h>
-
-#include <exec/types.h>
-#include <dos/dos.h>
-#include <proto/dos.h>
+#include <utility/tagitem.h>
 #include <hardware/cia.h>
 
 #include "starlight/starlight.h"

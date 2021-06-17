@@ -1,18 +1,20 @@
-#include <stdio.h>
-#include <stdlib.h>
-
-#include <dos/dos.h>
+#include <clib/dos_protos.h>
+#include <clib/exec_protos.h>
+#include <clib/graphics_protos.h>
+#include <exec/types.h>
+#include <graphics/copper.h>
+#include <graphics/displayinfo.h>
+#include <graphics/gfx.h>
 #include <graphics/gfxbase.h>
 #include <graphics/gfxmacros.h>
-#include <exec/types.h>
-
-#include <hardware/custom.h>
-#include <hardware/dmabits.h>
-#include <hardware/intbits.h>
-
-#include <proto/dos.h>
-#include <proto/graphics.h>
-#include <proto/exec.h>
+#include <graphics/gfxnodes.h>
+#include <graphics/videocontrol.h>
+#include <graphics/view.h>
+#include <libraries/dos.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <utility/tagitem.h>
 
 #include "starlight/starlight.h"
 
@@ -25,23 +27,25 @@ UWORD oldadkcon;
 ULONG oldview;
 ULONG oldcopper;
 
+struct DosBase* DOSBase;
+struct GfxBase* GFXBase;
 /**
  * Disable Sprites, store old View, init logger.
  * Has to be called before using starlight framework. 
  */
 void initStarlight(void){
-    DOSBase = (struct DosLibrary*) OpenLibrary(DOSNAME, 0);
+    DOSBase = (struct DosBase*) OpenLibrary(DOSNAME, 0);
     if(DOSBase==0){
         exit(RETURN_ERROR);
     }
    
-    GfxBase = (struct GfxBase*) OpenLibrary(GRAPHICSNAME, 33L);
-    if(GfxBase==0){
+    GFXBase = (struct GfxBase*) OpenLibrary(GRAPHICSNAME, 33L);
+    if(GFXBase==0){
         printf("could not load %s\n", GRAPHICSNAME);
         exit(RETURN_ERROR);
     }
     
-    oldview = (ULONG) GfxBase->ActiView;
+    oldview = (ULONG) GFXBase->ActiView;
     WaitTOF();
     //OFF_SPRITE;
     initLog();
@@ -66,6 +70,6 @@ void exitStarlight(void){
     deleteAllViews();
 
     // final cleanup and we're gone
-    CloseLibrary((struct Library*) GfxBase);
+    CloseLibrary((struct Library*) GFXBase);
     CloseLibrary((struct Library*) DOSBase);
 }

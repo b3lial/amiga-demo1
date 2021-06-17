@@ -3,19 +3,23 @@
 #include "textscroller.h"
 
 #include <clib/alib_protos.h>
-#include <ctype.h>
-#include <dos/dos.h>
-#include <exec/memory.h>
+#include <clib/dos_protos.h>
+#include <clib/exec_protos.h>
+#include <clib/graphics_protos.h>
 #include <exec/types.h>
+#include <graphics/copper.h>
 #include <graphics/displayinfo.h>
+#include <graphics/gfx.h>
 #include <graphics/gfxbase.h>
-#include <graphics/rastport.h>
+#include <graphics/gfxmacros.h>
+#include <graphics/gfxnodes.h>
 #include <graphics/videocontrol.h>
-#include <proto/exec.h>
-#include <proto/graphics.h>
+#include <graphics/view.h>
+#include <libraries/dos.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <utility/tagitem.h>
 
 #include "demo1.h"
 #include "starlight/starlight.h"

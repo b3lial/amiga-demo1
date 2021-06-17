@@ -2,10 +2,24 @@
 
 #include "demo1.h"
 
-#include <ctype.h>
+#include <clib/dos_protos.h>
+#include <clib/exec_protos.h>
+#include <clib/graphics_protos.h>
+#include <exec/types.h>
+#include <graphics/copper.h>
+#include <graphics/displayinfo.h>
+#include <graphics/gfx.h>
 #include <graphics/gfxbase.h>
+#include <graphics/gfxmacros.h>
+#include <graphics/gfxnodes.h>
+#include <graphics/videocontrol.h>
+#include <graphics/view.h>
+#include <libraries/dos.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+#include <utility/tagitem.h>
+#include <ctype.h>
 
 #include "starlight/starlight.h"
 
