@@ -7,8 +7,6 @@
 #include <proto/exec.h>
 
 WORD payloadShowLogoState = SHOWLOGO_INIT;
-struct BitMap *border = NULL;
-struct BitMap *border2 = NULL;
 struct BitMap *logo = NULL;
 
 UWORD dawnPaletteRGB4[256] =
@@ -47,9 +45,6 @@ UWORD dawnPaletteRGB4[256] =
 	0x068A,0x0357,0x069A,0x07BE,0x06AE,0x089A,0x0356,0x0BDE
 };
 
-UWORD borderPalette[2] = {0x000F, 0x000F};
-UWORD borderPalette2[2] = {0x00F0, 0x00F0};
-
 WORD fsmShowLogo(void)
 {
     if (mouseClick())
@@ -78,50 +73,11 @@ WORD fsmShowLogo(void)
 
 void initShowLogo(void)
 {
-    UBYTE i = 0;
     writeLog("\n== initShowLogo() ==\n");
 
-    // create upper border
-    writeLog("\nLoad showlogo screen upper border bitmap\n");
-    border = createBitMap(SHOWLOGO_BORDER_DEPTH,
-                                  SHOWLOGO_BORDER_WIDTH,
-                                  SHOWLOGO_BORDER_HEIGHT);
-    if (!border)
-    {
-        writeLog("Error: Could not allocate memory for showlogo border bitmap\n");
-        exitStarlight();
-        exitShowLogo();
-        exit(RETURN_ERROR);
-    }
-    for (i = 0; i < SHOWLOGO_BORDER_DEPTH; i++)
-    {
-        BltClear(border->Planes[i],
-                 (border->BytesPerRow) * (border->Rows),
-                 1);
-    }
-
-    // creater lower border
-    writeLog("\nLoad showlogo screen lower border bitmap\n");
-    border2 = createBitMap(SHOWLOGO_BORDER_DEPTH,
-                                  SHOWLOGO_BORDER_WIDTH,
-                                  SHOWLOGO_BORDER_HEIGHT);
-    if (!border2)
-    {
-        writeLog("Error: Could not allocate memory for showlogo border bitmap\n");
-        exitStarlight();
-        exitShowLogo();
-        exit(RETURN_ERROR);
-    }
-    for (i = 0; i < SHOWLOGO_BORDER_DEPTH; i++)
-    {
-        BltClear(border2->Planes[i],
-                 (border2->BytesPerRow) * (border2->Rows),
-                 1);
-    }
-
     // load logo from file we want to display
-    logo = loadBlob("img/dawn_320_200_8.RAW", SHOWLOGO_BLOB_DEPTH,
-                    SHOWLOGO_BLOB_WIDTH, SHOWLOGO_LOGO_HEIGHT);
+    logo = loadBlob("img/dawn_320_256_8.RAW", SHOWLOGO_BLOB_DEPTH,
+                    SHOWLOGO_BLOB_WIDTH, SHOWLOGO_BLOB_HEIGHT);
     if (!logo)
     {
         writeLog("Error: Could not allocate memory for logo bitmap\n");
@@ -133,34 +89,16 @@ void initShowLogo(void)
     // everything loaded, now show it!
     writeLog("\nCreate view\n");
     createNewView();
-    addViewPort(border, NULL, borderPalette, 
-                SHOWLOGO_BORDER_COLORS, FALSE,
-                0, 0, SHOWLOGO_BORDER_WIDTH, SHOWLOGO_BORDER_HEIGHT,
-                0, 0);
     addViewPort(logo, NULL, dawnPaletteRGB4, 
                 SHOWLOGO_BLOB_COLORS, FALSE,
-                0, SHOWLOGO_BORDER_HEIGHT+6, SHOWLOGO_BLOB_WIDTH, SHOWLOGO_LOGO_HEIGHT,
-                0, 0);
-    addViewPort(border2, NULL, borderPalette2, 
-                SHOWLOGO_BORDER_COLORS, FALSE,
-                0, SHOWLOGO_BORDER_HEIGHT + 6 + SHOWLOGO_LOGO_HEIGHT + 6, 
-                SHOWLOGO_BORDER_WIDTH, SHOWLOGO_BORDER_HEIGHT,
+                0, 0, SHOWLOGO_BLOB_WIDTH, 
+                SHOWLOGO_BLOB_HEIGHT,
                 0, 0);
     startView();
 }
 
 void exitShowLogo(void)
 {
-    if (border)
-    {
-        cleanBitMap(border);
-        border = NULL;
-    }
-    if (border2)
-    {
-        cleanBitMap(border2);
-        border2 = NULL;
-    }
     if (logo)
     {
         cleanBitMap(logo);
@@ -170,9 +108,9 @@ void exitShowLogo(void)
 
 void fadeInFromWhite(void)
 {
-    UWORD i = 0;
     UWORD decrementer;
     UWORD* colortable0 = NULL;
+    UBYTE i=0;
 
     // fade of text scroll area (viewPort[0])
     for (; i < SHOWLOGO_BLOB_COLORS; i++)
