@@ -44,6 +44,7 @@ UWORD dawnPaletteRGB4[256] =
 	0x0269,0x059C,0x09CC,0x0DFF,0x08AB,0x07AD,0x04AF,0x0023,
 	0x068A,0x0357,0x069A,0x07BE,0x06AE,0x089A,0x0356,0x0BDE
 };
+UWORD *color0 = NULL;
 
 WORD fsmShowLogo(void)
 {
@@ -86,10 +87,20 @@ void initShowLogo(void)
         exit(RETURN_ERROR);
     }
 
+    // this color table will fade from white to logo
+    color0 = AllocVec(sizeof(dawnPaletteRGB4), NULL);
+    if(!color0){
+        writeLog("Error: Could not allocate memory for logo color table\n");
+        exitStarlight();
+        exitShowLogo();
+        exit(RETURN_ERROR);
+    }
+    memset(color0, 0xff, sizeof(dawnPaletteRGB4));
+
     // everything loaded, now show it!
     writeLog("\nCreate view\n");
     createNewView();
-    addViewPort(logo, NULL, dawnPaletteRGB4, 
+    addViewPort(logo, NULL, color0, 
                 SHOWLOGO_BLOB_COLORS, FALSE,
                 0, 0, SHOWLOGO_BLOB_WIDTH, 
                 SHOWLOGO_BLOB_HEIGHT,
@@ -103,6 +114,10 @@ void exitShowLogo(void)
     {
         cleanBitMap(logo);
         logo = NULL;
+    }
+    if(color0){
+        FreeVec(color0);
+        color0 = NULL;
     }
 }
 
