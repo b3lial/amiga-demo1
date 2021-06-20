@@ -45,6 +45,7 @@ UWORD dawnPaletteRGB4[256] =
 	0x068A,0x0357,0x069A,0x07BE,0x06AE,0x089A,0x0356,0x0BDE
 };
 UWORD *color0 = NULL;
+extern struct ViewData vd;
 
 WORD fsmShowLogo(void)
 {
@@ -59,11 +60,7 @@ WORD fsmShowLogo(void)
         payloadShowLogoState = SHOWLOGO_STATIC;
         break;
     case SHOWLOGO_STATIC:
-        //fadeInFromWhite();
-        //if (hasFadeInFromWhiteFinished())
-        //{
-        //    break;
-        //}
+        fadeInFromWhite();
         break;
     case SHOWLOGO_SHUTDOWN:
         return MODULE_FINISHED;
@@ -74,6 +71,7 @@ WORD fsmShowLogo(void)
 
 void initShowLogo(void)
 {
+    UWORD i=0;
     writeLog("\n== initShowLogo() ==\n");
 
     // load logo from file we want to display
@@ -95,7 +93,9 @@ void initShowLogo(void)
         exitShowLogo();
         exit(RETURN_ERROR);
     }
-    memset(color0, 0xff, sizeof(dawnPaletteRGB4));
+    for(;i<SHOWLOGO_BLOB_COLORS;i++){
+        color0[i] = 0x0fff;
+    }
 
     // everything loaded, now show it!
     writeLog("\nCreate view\n");
@@ -124,33 +124,27 @@ void exitShowLogo(void)
 void fadeInFromWhite(void)
 {
     UWORD decrementer;
-    UWORD* colortable0 = NULL;
-    UBYTE i=0;
+    UWORD i=0;
 
     // fade of text scroll area (viewPort[0])
     for (; i < SHOWLOGO_BLOB_COLORS; i++)
     {
         decrementer = 0;
-        if ((colortable0[i] & 0x000f) != 0x0000)
+        if ((color0[i] & 0x000f) != (dawnPaletteRGB4[i] & 0x000f))
         {
             decrementer |= 0x0001;
         }
-        if ((colortable0[i] & 0x00f0) != 0x0000)
+        if ((color0[i] & 0x00f0) != (dawnPaletteRGB4[i] & 0x00f0))
         {
             decrementer |= 0x0010;
         }
-        if ((colortable0[i] & 0x0f00) != 0x0000)
+        if ((color0[i] & 0x0f00) != (dawnPaletteRGB4[i] & 0x0f00))
         {
             decrementer |= 0x0100;
         }
-        colortable0[i] -= decrementer;
+        color0[i] -= decrementer;
     }
 
     WaitTOF();
-    //LoadRGB4(vd.viewPorts[0], colortable0, SHOWLOGO_BLOB_COLORS);
-}
-
-BOOL hasFadeInFromWhiteFinished(void)
-{
-    return TRUE;
+    LoadRGB4(vd.viewPorts[0], color0, SHOWLOGO_BLOB_COLORS);
 }
