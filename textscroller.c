@@ -229,7 +229,7 @@ void initTextScroller(void)
 
     // Add space background BitMap to ViewPort so its shown on Screen
     addViewPort(spaceBlob, NULL, colortable1,
-                COLORMAP32_LONG_SIZE(TEXTSCROLLER_BLOB_SPACE_COLORS), TRUE,
+                TEXTSCROLLER_BLOB_SPACE_COLORS, TRUE,
                 0, TEXTSCROLLER_VIEW_TEXTSECTION_HEIGHT + 6, TEXTSCROLLER_VIEW_WIDTH,
                 TEXTSCROLLER_VIEW_SPACESECTION_HEIGHT, 0, 0);
 

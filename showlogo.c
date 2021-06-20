@@ -7,7 +7,7 @@
 #include <proto/exec.h>
 
 WORD payloadShowLogoState = SHOWLOGO_INIT;
-struct BitMap *showLogoScreen = NULL;
+struct BitMap *border = NULL;
 struct BitMap *logo = NULL;
 
 UWORD dawnPaletteRGB4[256] =
@@ -46,6 +46,8 @@ UWORD dawnPaletteRGB4[256] =
 	0x068A,0x0357,0x069A,0x07BE,0x06AE,0x089A,0x0356,0x0BDE
 };
 
+UWORD borderPalette[2] = {0x0011, 0x0011};
+
 WORD fsmShowLogo(void)
 {
     if (mouseClick())
@@ -79,20 +81,20 @@ void initShowLogo(void)
 
     // create the screen
     writeLog("\nLoad showlogo screen background bitmap\n");
-    showLogoScreen = createBitMap(SHOWLOGO_BLOB_DEPTH,
-                                  SHOWLOGO_BLOB_WIDTH,
-                                  SHOWLOGO_BLOB_HEIGHT);
-    if (!showLogoScreen)
+    border = createBitMap(SHOWLOGO_BORDER_DEPTH,
+                                  SHOWLOGO_BORDER_WIDTH,
+                                  SHOWLOGO_BORDER_HEIGHT);
+    if (!border)
     {
-        writeLog("Error: Could not allocate memory for showlogo screen bitmap\n");
+        writeLog("Error: Could not allocate memory for showlogo border bitmap\n");
         exitStarlight();
         exitShowLogo();
         exit(RETURN_ERROR);
     }
-    for (i = 0; i < SHOWLOGO_BLOB_DEPTH; i++)
+    for (i = 0; i < SHOWLOGO_BORDER_DEPTH; i++)
     {
-        BltClear(showLogoScreen->Planes[i],
-                 (showLogoScreen->BytesPerRow) * (showLogoScreen->Rows),
+        BltClear(border->Planes[i],
+                 (border->BytesPerRow) * (border->Rows),
                  1);
     }
 
@@ -107,30 +109,31 @@ void initShowLogo(void)
         exit(RETURN_ERROR);
     }
 
-    // blit logo into screen
-    BltBitMap(logo,
-              0, 0,
-              showLogoScreen,
-              0, 0,
-              SHOWLOGO_BLOB_WIDTH, SHOWLOGO_LOGO_HEIGHT,
-              0xC0, 0xff, 0);
-
     // everything loaded, now show it!
     writeLog("\nCreate view\n");
     createNewView();
-    addViewPort(showLogoScreen, NULL, dawnPaletteRGB4, 
+    addViewPort(border, NULL, borderPalette, 
+                SHOWLOGO_BORDER_COLORS, FALSE,
+                0, 0, SHOWLOGO_BORDER_WIDTH, SHOWLOGO_BORDER_HEIGHT,
+                0, 0);
+    addViewPort(logo, NULL, dawnPaletteRGB4, 
                 SHOWLOGO_BLOB_COLORS, FALSE,
-                0, 0, SHOWLOGO_BLOB_WIDTH, SHOWLOGO_BLOB_HEIGHT,
+                0, SHOWLOGO_BORDER_HEIGHT+6, SHOWLOGO_BLOB_WIDTH, SHOWLOGO_LOGO_HEIGHT,
+                0, 0);
+    addViewPort(border, NULL, borderPalette, 
+                SHOWLOGO_BORDER_COLORS, FALSE,
+                0, SHOWLOGO_BORDER_HEIGHT + 6 + SHOWLOGO_BLOB_HEIGHT + 6, 
+                SHOWLOGO_BORDER_WIDTH, SHOWLOGO_BORDER_HEIGHT,
                 0, 0);
     startView();
 }
 
 void exitShowLogo(void)
 {
-    if (showLogoScreen)
+    if (border)
     {
-        cleanBitMap(showLogoScreen);
-        showLogoScreen = NULL;
+        cleanBitMap(border);
+        border = NULL;
     }
     if (logo)
     {

@@ -13,6 +13,11 @@
 #define SHOWLOGO_BLOB_HEIGHT 256
 #define SHOWLOGO_LOGO_HEIGHT 200
 
+#define SHOWLOGO_BORDER_DEPTH 1
+#define SHOWLOGO_BORDER_COLORS 2
+#define SHOWLOGO_BORDER_WIDTH 320
+#define SHOWLOGO_BORDER_HEIGHT 22
+
 WORD fsmShowLogo(void);
 void initShowLogo(void);
 void exitShowLogo(void);
