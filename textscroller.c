@@ -361,8 +361,8 @@ void fadeToWhite(void)
     }
 
     // calculated new color sets, now we can update copper and co
-    LoadRGB4(vd.viewPorts[0], colortable0, TEXTSCROLLER_BLOB_FONT_COLORS);
-    LoadRGB32(vd.viewPorts[1], colortable1);
+    LoadRGB4(&screen1->ViewPort, colortable0, TEXTSCROLLER_BLOB_FONT_COLORS);
+    LoadRGB32(&screen2->ViewPort, colortable1);
 }
 
 BOOL hasFadeToWhiteFinished(void)
