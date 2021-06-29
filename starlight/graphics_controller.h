@@ -35,6 +35,8 @@ struct ViewData{
     struct ColorMap *colormaps[MAX_VIEW_PORTS];
 };
 
+struct Screen* createScreen(struct BitMap* b, BOOL hidden, 
+        UWORD y, UWORD height, UWORD depth);
 void createNewView(void);
 void addViewPort(struct BitMap *bitMap, struct BitMap *doubleBuffer, 
         void *colortable, UWORD colortableSize, BOOL useColorMap32,

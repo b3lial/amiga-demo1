@@ -5,8 +5,9 @@
 #include <exec/memory.h>
 #include <dos/dos.h>
 
-#include <proto/graphics.h>
-#include <proto/exec.h>
+#include <clib/intuition_protos.h>
+#include <clib/graphics_protos.h>
+#include <clib/exec_protos.h>
 
 #include <graphics/displayinfo.h>
 #include <graphics/gfxbase.h>
@@ -18,6 +19,34 @@ UWORD vpPointer = 0;
 const ULONG modeID=PAL_MONITOR_ID | LORES_KEY;
 struct ViewData vd;
 struct ViewData oldVd;
+
+struct Screen* createScreen(struct BitMap* b, BOOL hidden, 
+        UWORD y, UWORD height, UWORD depth){
+    struct TagItem screentags[10] = {
+        {SA_BitMap, NULL},
+        {SA_Left, 0}, 
+        {SA_Top, 0}, 
+        {SA_Width, 320}, 
+        {SA_Height, 0}, 
+        {SA_Depth, 0}, 
+        {SA_Type, CUSTOMSCREEN}, 
+        {SA_Quiet, TRUE},
+        {TAG_DONE, NULL},
+        {NULL, NULL}
+    };
+
+    screentags[0].ti_Data = (ULONG) b;
+    screentags[2].ti_Data = y;
+    screentags[4].ti_Data = height;
+    screentags[5].ti_Data = depth;
+    if(hidden){
+        screentags[8].ti_Tag = SA_Behind;
+        screentags[8].ti_Data = TRUE;
+        screentags[9].ti_Tag = TAG_DONE;
+    }
+
+    return OpenScreenTagList(NULL, screentags);
+}
 
 /**
  * Create a new PAL View and backup the old View structure

@@ -3,6 +3,10 @@
 #include "textscroller.h"
 
 #include <clib/alib_protos.h>
+#include <clib/exec_protos.h>
+#include <clib/graphics_protos.h>
+#include <clib/intuition_protos.h>
+
 #include <ctype.h>
 #include <dos/dos.h>
 #include <exec/memory.h>
@@ -11,14 +15,17 @@
 #include <graphics/gfxbase.h>
 #include <graphics/rastport.h>
 #include <graphics/videocontrol.h>
-#include <proto/exec.h>
-#include <proto/graphics.h>
+#include <graphics/gfxmacros.h>
+#include <hardware/custom.h>
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "demo1.h"
 #include "starlight/starlight.h"
+
+__far extern struct Custom custom;
 
 WORD payloadTextScrollerState = TEXTSCROLLER_INIT;
 struct BitMap *spaceBlob = NULL;
@@ -33,6 +40,9 @@ struct TextConfig *textList[TEXT_LIST_SIZE];
 struct TextConfig text1;
 struct TextConfig text2;
 struct TextConfig text3;
+
+struct Screen* screen1;
+struct Screen* screen2;
 
 WORD fsmTextScroller(void)
 {
@@ -219,22 +229,23 @@ void initTextScroller(void)
                  TEXTSCROLLER_BLOB_FONT_COLORS);
 
     // Create View and ViewExtra memory structures
-    writeLog("\nCreate view\n");
-    createNewView();
+    writeLog("\nCreate screen\n");
 
     // Add previously created BitMap for text display to ViewPort so its shown on Screen
-    addViewPort(textscrollerScreen, NULL, colortable0, TEXTSCROLLER_BLOB_FONT_COLORS, FALSE,
-                0, 0, TEXTSCROLLER_VIEW_WIDTH, TEXTSCROLLER_VIEW_TEXTSECTION_HEIGHT,
-                MAX_CHAR_WIDTH, 0);
+    screen1 = createScreen(textscrollerScreen, TRUE, 0, TEXTSCROLLER_VIEW_TEXTSECTION_HEIGHT,
+        TEXTSCROLLER_BLOB_FONT_DEPTH);
+    LoadRGB4(&screen1->ViewPort, colortable0, TEXTSCROLLER_BLOB_FONT_COLORS);
 
     // Add space background BitMap to ViewPort so its shown on Screen
-    addViewPort(spaceBlob, NULL, colortable1,
-                TEXTSCROLLER_BLOB_SPACE_COLORS, TRUE,
-                0, TEXTSCROLLER_VIEW_TEXTSECTION_HEIGHT + 6, TEXTSCROLLER_VIEW_WIDTH,
-                TEXTSCROLLER_VIEW_SPACESECTION_HEIGHT, 0, 0);
+    screen2 = createScreen(spaceBlob, TRUE, TEXTSCROLLER_VIEW_TEXTSECTION_HEIGHT + 6,
+        TEXTSCROLLER_VIEW_SPACESECTION_HEIGHT, TEXTSCROLLER_BLOB_SPACE_DEPTH);
+    LoadRGB32(&screen2->ViewPort, colortable1);
 
-    // Make View visible
-    startView();
+    // Make Screens visible
+    WaitTOF();
+    ScreenToFront(screen1);
+    ScreenToFront(screen2);
+    OFF_SPRITE;
 
     if (!initTextController(textscrollerScreen,
                             TEXTSCROLLER_BLOB_FONT_DEPTH,
@@ -251,6 +262,19 @@ void exitTextScroller(void)
     writeLog("\n== exitTextScroller() ==\n");
     exitTextController();
 
+    // restore old screen
+    if (screen1){
+        CloseScreen(screen1);
+        screen1 = NULL;
+    } 
+    if (screen2){
+        CloseScreen(screen2);
+        screen2 = NULL;
+    }
+    WaitTOF();
+    ON_SPRITE;
+
+    // restore screen elements
     if (colortable1)
     {
         FreeVec(colortable1);

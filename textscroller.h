@@ -4,7 +4,7 @@
 #define TEXTSCROLLER_H__
 
 #include <exec/types.h>
-#include <proto/graphics.h>
+#include <clib/graphics_protos.h>
 
 #define TEXT_LIST_SIZE 4
 
