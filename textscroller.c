@@ -233,16 +233,19 @@ void initTextScroller(void)
     writeLog("\nCreate screen\n");
 
     // Add previously created BitMap for text display to ViewPort so its shown on Screen
-    starsClip.MinX = -MAX_CHAR_WIDTH*2;
+    starsClip.MinX = MAX_CHAR_WIDTH;
     starsClip.MinY = 0;
-    starsClip.MaxX = TEXTSCROLLER_VIEW_WIDTH;
+    starsClip.MaxX = TEXTSCROLLER_VIEW_WIDTH + MAX_CHAR_WIDTH;
     starsClip.MaxY = TEXTSCROLLER_VIEW_TEXTSECTION_HEIGHT;
-    screen1 = createScreen(textscrollerScreen, TRUE, 0, TEXTSCROLLER_VIEW_TEXTSECTION_HEIGHT,
+    screen1 = createScreen(textscrollerScreen, TRUE, 0, 
+        TEXTSCROLLER_VIEW_TEXTSECTION_WIDTH, 
+        TEXTSCROLLER_VIEW_TEXTSECTION_HEIGHT,
         TEXTSCROLLER_BLOB_FONT_DEPTH, &starsClip);
     LoadRGB4(&screen1->ViewPort, colortable0, TEXTSCROLLER_BLOB_FONT_COLORS);
 
     // Add space background BitMap to ViewPort so its shown on Screen
-    screen2 = createScreen(spaceBlob, TRUE, TEXTSCROLLER_VIEW_TEXTSECTION_HEIGHT + 6,
+    screen2 = createScreen(spaceBlob, TRUE,  
+        TEXTSCROLLER_VIEW_TEXTSECTION_HEIGHT + 6, TEXTSCROLLER_VIEW_WIDTH,
         TEXTSCROLLER_VIEW_SPACESECTION_HEIGHT, TEXTSCROLLER_BLOB_SPACE_DEPTH, NULL);
     LoadRGB32(&screen2->ViewPort, colortable1);
 
