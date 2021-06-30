@@ -36,7 +36,7 @@ struct ViewData{
 };
 
 struct Screen* createScreen(struct BitMap* b, BOOL hidden, 
-        UWORD y, UWORD height, UWORD depth);
+        UWORD y, UWORD height, UWORD depth, struct Rectangle* clip);
 void createNewView(void);
 void addViewPort(struct BitMap *bitMap, struct BitMap *doubleBuffer, 
         void *colortable, UWORD colortableSize, BOOL useColorMap32,

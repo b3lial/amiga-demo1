@@ -12,6 +12,7 @@
 #include <graphics/displayinfo.h>
 #include <graphics/gfxbase.h>
 #include <graphics/videocontrol.h>
+#include <graphics/gfx.h>
 
 #include "starlight/starlight.h"
 
@@ -21,8 +22,9 @@ struct ViewData vd;
 struct ViewData oldVd;
 
 struct Screen* createScreen(struct BitMap* b, BOOL hidden, 
-        UWORD y, UWORD height, UWORD depth){
-    struct TagItem screentags[10] = {
+        UWORD y, UWORD height, UWORD depth, struct Rectangle* clip){
+    UBYTE endOfLineClub = 8;
+    struct TagItem screentags[11] = {
         {SA_BitMap, NULL},
         {SA_Left, 0}, 
         {SA_Top, 0}, 
@@ -32,6 +34,7 @@ struct Screen* createScreen(struct BitMap* b, BOOL hidden,
         {SA_Type, CUSTOMSCREEN}, 
         {SA_Quiet, TRUE},
         {TAG_DONE, NULL},
+        {NULL, NULL},
         {NULL, NULL}
     };
 
@@ -39,10 +42,21 @@ struct Screen* createScreen(struct BitMap* b, BOOL hidden,
     screentags[2].ti_Data = y;
     screentags[4].ti_Data = height;
     screentags[5].ti_Data = depth;
+
     if(hidden){
-        screentags[8].ti_Tag = SA_Behind;
-        screentags[8].ti_Data = TRUE;
-        screentags[9].ti_Tag = TAG_DONE;
+        screentags[endOfLineClub].ti_Tag = SA_Behind;
+        screentags[endOfLineClub].ti_Data = TRUE;
+        endOfLineClub++;
+        screentags[endOfLineClub].ti_Tag = TAG_DONE;
+        screentags[endOfLineClub].ti_Data = NULL;
+    }
+
+    if(clip){
+        screentags[endOfLineClub].ti_Tag = SA_DClip;
+        screentags[endOfLineClub].ti_Data = (ULONG) clip;
+        endOfLineClub++;
+        screentags[endOfLineClub].ti_Tag = TAG_DONE;
+        screentags[endOfLineClub].ti_Data = NULL;
     }
 
     return OpenScreenTagList(NULL, screentags);
