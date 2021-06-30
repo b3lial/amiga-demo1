@@ -22,7 +22,7 @@ struct ViewData vd;
 struct ViewData oldVd;
 
 struct Screen* createScreen(struct BitMap* b, BOOL hidden, 
-        UWORD y, UWORD width, UWORD height, UWORD depth, 
+        WORD x, WORD y, UWORD width, UWORD height, UWORD depth, 
         struct Rectangle* clip){
     UBYTE endOfLineClub = 8;
     struct TagItem screentags[11] = {
@@ -40,6 +40,7 @@ struct Screen* createScreen(struct BitMap* b, BOOL hidden,
     };
 
     screentags[0].ti_Data = (ULONG) b;
+    screentags[1].ti_Data = x;
     screentags[2].ti_Data = y;
     screentags[3].ti_Data = width;
     screentags[4].ti_Data = height;
