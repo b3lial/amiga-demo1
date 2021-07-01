@@ -4,10 +4,15 @@
 #include <exec/types.h>
 #include <exec/memory.h>
 #include <dos/dos.h>
-#include <proto/exec.h>
+#include <clib/exec_protos.h>
+#include <clib/intuition_protos.h>
+
+#include <graphics/gfxmacros.h>
+#include <hardware/custom.h>
 
 WORD payloadShowLogoState = SHOWLOGO_INIT;
 struct BitMap *logo = NULL;
+struct Screen *screen0 = NULL;
 
 UWORD dawnPaletteRGB4[256] =
     {
@@ -45,6 +50,8 @@ UWORD dawnPaletteRGB4[256] =
         0x068A, 0x0357, 0x069A, 0x07BE, 0x06AE, 0x089A, 0x0356, 0x0BDE};
 UWORD *color0 = NULL;
 extern struct ViewData vd;
+
+__far extern struct Custom custom;
 
 WORD fsmShowLogo(void)
 {
@@ -99,18 +106,28 @@ void initShowLogo(void)
     }
 
     // everything loaded, now show it!
-    writeLog("\nCreate view\n");
-    createNewView();
-    addViewPort(logo, NULL, color0,
-                SHOWLOGO_BLOB_COLORS, FALSE,
-                0, 0, SHOWLOGO_BLOB_WIDTH,
-                SHOWLOGO_BLOB_HEIGHT,
-                0, 0);
-    startView();
+    writeLog("\nCreate screen\n");
+    
+    screen0 = createScreen(logo, TRUE, 0, 0,
+        SHOWLOGO_BLOB_WIDTH, SHOWLOGO_BLOB_HEIGHT,
+        SHOWLOGO_BLOB_DEPTH, NULL);
+    LoadRGB4(&screen0->ViewPort, dawnPaletteRGB4, SHOWLOGO_BLOB_COLORS);
+
+    // Make Screens visible
+    WaitTOF();
+    ScreenToFront(screen0);
+    OFF_SPRITE;
 }
 
 void exitShowLogo(void)
 {
+    if (screen0){
+        CloseScreen(screen0);
+        screen0 = NULL;
+    } 
+    WaitTOF();
+    ON_SPRITE;
+
     if (logo)
     {
         cleanBitMap(logo);
