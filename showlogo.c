@@ -13,7 +13,6 @@
 WORD payloadShowLogoState = SHOWLOGO_INIT;
 struct BitMap *logo = NULL;
 struct Screen *screen0 = NULL;
-
 UWORD dawnPaletteRGB4[256] =
     {
         0x0011, 0x0489, 0x0147, 0x0024, 0x0344, 0x0456, 0x0556, 0x0666,
@@ -49,7 +48,6 @@ UWORD dawnPaletteRGB4[256] =
         0x0269, 0x059C, 0x09CC, 0x0DFF, 0x08AB, 0x07AD, 0x04AF, 0x0023,
         0x068A, 0x0357, 0x069A, 0x07BE, 0x06AE, 0x089A, 0x0356, 0x0BDE};
 UWORD *color0 = NULL;
-extern struct ViewData vd;
 
 __far extern struct Custom custom;
 
@@ -111,7 +109,7 @@ void initShowLogo(void)
     screen0 = createScreen(logo, TRUE, 0, 0,
         SHOWLOGO_BLOB_WIDTH, SHOWLOGO_BLOB_HEIGHT,
         SHOWLOGO_BLOB_DEPTH, NULL);
-    LoadRGB4(&screen0->ViewPort, dawnPaletteRGB4, SHOWLOGO_BLOB_COLORS);
+    LoadRGB4(&screen0->ViewPort, color0, SHOWLOGO_BLOB_COLORS);
 
     // Make Screens visible
     WaitTOF();
@@ -164,15 +162,7 @@ void fadeInFromWhite(void)
         color0[i] -= decrementer;
     }
 
-    for (i = 0; i < SHOWLOGO_BLOB_COLORS; i+=2)
-    {
-        SetRGB4(vd.viewPorts[0], i, (color0[i] & 0x0f00) >> 8,
-                (color0[i] & 0x00f0) >> 4, (color0[i] & 0x000f));
-    }
     WaitTOF();
-    for (i = 1; i < SHOWLOGO_BLOB_COLORS; i+=2)
-    {
-        SetRGB4(vd.viewPorts[0], i, (color0[i] & 0x0f00) >> 8,
-                (color0[i] & 0x00f0) >> 4, (color0[i] & 0x000f));
-    }
+    LoadRGB4(&screen0->ViewPort, color0, SHOWLOGO_BLOB_COLORS);
+    OFF_SPRITE;
 }
