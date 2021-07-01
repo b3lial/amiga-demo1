@@ -13,6 +13,7 @@
 WORD payloadShowLogoState = SHOWLOGO_INIT;
 struct BitMap *logo = NULL;
 struct Screen *screen0 = NULL;
+struct Screen *screen1 = NULL;
 UWORD dawnPaletteRGB4[256] =
     {
         0x0011, 0x0489, 0x0147, 0x0024, 0x0344, 0x0456, 0x0556, 0x0666,
@@ -48,6 +49,7 @@ UWORD dawnPaletteRGB4[256] =
         0x0269, 0x059C, 0x09CC, 0x0DFF, 0x08AB, 0x07AD, 0x04AF, 0x0023,
         0x068A, 0x0357, 0x069A, 0x07BE, 0x06AE, 0x089A, 0x0356, 0x0BDE};
 UWORD *color0 = NULL;
+BOOL bufferSelect = TRUE;
 
 __far extern struct Custom custom;
 
@@ -103,13 +105,17 @@ void initShowLogo(void)
         color0[i] = 0x0fff;
     }
 
-    // everything loaded, now show it!
     writeLog("\nCreate screen\n");
     
+    // we create two doublebuffer screens for flicker free color dim operations
     screen0 = createScreen(logo, TRUE, 0, 0,
         SHOWLOGO_BLOB_WIDTH, SHOWLOGO_BLOB_HEIGHT,
         SHOWLOGO_BLOB_DEPTH, NULL);
+    screen1 = createScreen(logo, TRUE, 0, 0,
+        SHOWLOGO_BLOB_WIDTH, SHOWLOGO_BLOB_HEIGHT,
+        SHOWLOGO_BLOB_DEPTH, NULL);
     LoadRGB4(&screen0->ViewPort, color0, SHOWLOGO_BLOB_COLORS);
+    LoadRGB4(&screen1->ViewPort, color0, SHOWLOGO_BLOB_COLORS);
 
     // Make Screens visible
     WaitTOF();
@@ -122,6 +128,10 @@ void exitShowLogo(void)
     if (screen0){
         CloseScreen(screen0);
         screen0 = NULL;
+    } 
+    if (screen1){
+        CloseScreen(screen1);
+        screen1 = NULL;
     } 
     WaitTOF();
     ON_SPRITE;
@@ -143,7 +153,7 @@ void fadeInFromWhite(void)
     UWORD decrementer;
     UWORD i = 0;
 
-    // fade of text scroll area (viewPort[0])
+    // fade effect on color table
     for (; i < SHOWLOGO_BLOB_COLORS; i++)
     {
         decrementer = 0;
@@ -162,7 +172,16 @@ void fadeInFromWhite(void)
         color0[i] -= decrementer;
     }
 
+    // show result of fade in one of the screen buffers and show it
     WaitTOF();
-    LoadRGB4(&screen0->ViewPort, color0, SHOWLOGO_BLOB_COLORS);
+    if(bufferSelect){
+        LoadRGB4(&screen1->ViewPort, color0, SHOWLOGO_BLOB_COLORS);
+        ScreenToFront(screen1);
+    }
+    else{
+        LoadRGB4(&screen0->ViewPort, color0, SHOWLOGO_BLOB_COLORS);
+        ScreenToFront(screen0);
+    }
     OFF_SPRITE;
+    bufferSelect = bufferSelect ? FALSE : TRUE;
 }
