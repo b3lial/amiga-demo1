@@ -41,8 +41,11 @@ struct TextConfig text1;
 struct TextConfig text2;
 struct TextConfig text3;
 
-struct Screen* screen1;
-struct Screen* screen2;
+BOOL textScrollScreenFlag = TRUE;
+struct Screen* textScrollerScreen0;
+struct Screen* textScrollerScreen0_;
+struct Screen* textScrollerscreen1;
+struct Screen* textScrollerscreen1_;
 
 WORD fsmTextScroller(void)
 {
@@ -232,30 +235,42 @@ void initTextScroller(void)
     // Create View and ViewExtra memory structures
     writeLog("\nCreate screen\n");
 
-    // Add previously created BitMap for text display to ViewPort so its shown on Screen
+    // Create double buffer screen which displays the previously created bitmaps
     starsClip.MinX = 0;
     starsClip.MinY = 0;
     starsClip.MaxX = TEXTSCROLLER_VIEW_WIDTH;
     starsClip.MaxY = TEXTSCROLLER_VIEW_TEXTSECTION_HEIGHT;
-    screen1 = createScreen(textscrollerScreen, TRUE, 
+
+    textScrollerScreen0 = createScreen(textscrollerScreen, TRUE, 
         -MAX_CHAR_WIDTH, 0, 
         TEXTSCROLLER_VIEW_TEXTSECTION_WIDTH, 
         TEXTSCROLLER_VIEW_TEXTSECTION_HEIGHT,
         TEXTSCROLLER_BLOB_FONT_DEPTH, &starsClip);
-    LoadRGB4(&screen1->ViewPort, colortable0, TEXTSCROLLER_BLOB_FONT_COLORS);
+    textScrollerScreen0_ = createScreen(textscrollerScreen, TRUE, 
+        -MAX_CHAR_WIDTH, 0, 
+        TEXTSCROLLER_VIEW_TEXTSECTION_WIDTH, 
+        TEXTSCROLLER_VIEW_TEXTSECTION_HEIGHT,
+        TEXTSCROLLER_BLOB_FONT_DEPTH, &starsClip);
+    LoadRGB4(&textScrollerScreen0->ViewPort, colortable0, TEXTSCROLLER_BLOB_FONT_COLORS);
+    LoadRGB4(&textScrollerScreen0_->ViewPort, colortable0, TEXTSCROLLER_BLOB_FONT_COLORS);
 
-    // Add space background BitMap to ViewPort so its shown on Screen
-    screen2 = createScreen(spaceBlob, TRUE, 
+    textScrollerscreen1 = createScreen(spaceBlob, TRUE, 
         0, TEXTSCROLLER_VIEW_TEXTSECTION_HEIGHT + 6, 
         TEXTSCROLLER_VIEW_WIDTH,
         TEXTSCROLLER_VIEW_SPACESECTION_HEIGHT, 
         TEXTSCROLLER_BLOB_SPACE_DEPTH, NULL);
-    LoadRGB32(&screen2->ViewPort, colortable1);
+    textScrollerscreen1_ = createScreen(spaceBlob, TRUE, 
+        0, TEXTSCROLLER_VIEW_TEXTSECTION_HEIGHT + 6, 
+        TEXTSCROLLER_VIEW_WIDTH,
+        TEXTSCROLLER_VIEW_SPACESECTION_HEIGHT, 
+        TEXTSCROLLER_BLOB_SPACE_DEPTH, NULL);
+    LoadRGB32(&textScrollerscreen1->ViewPort, colortable1);
+    LoadRGB32(&textScrollerscreen1_->ViewPort, colortable1);
 
     // Make Screens visible
     WaitTOF();
-    ScreenToFront(screen1);
-    ScreenToFront(screen2);
+    ScreenToFront(textScrollerScreen0);
+    ScreenToFront(textScrollerscreen1);
     OFF_SPRITE;
 
     if (!initTextController(textscrollerScreen,
@@ -274,13 +289,21 @@ void exitTextScroller(void)
     exitTextController();
 
     // restore old screen
-    if (screen1){
-        CloseScreen(screen1);
-        screen1 = NULL;
+    if (textScrollerScreen0){
+        CloseScreen(textScrollerScreen0);
+        textScrollerScreen0 = NULL;
     } 
-    if (screen2){
-        CloseScreen(screen2);
-        screen2 = NULL;
+    if (textScrollerScreen0_){
+        CloseScreen(textScrollerScreen0_);
+        textScrollerScreen0_ = NULL;
+    } 
+    if (textScrollerscreen1){
+        CloseScreen(textScrollerscreen1);
+        textScrollerscreen1 = NULL;
+    }
+    if (textScrollerscreen1_){
+        CloseScreen(textScrollerscreen1_);
+        textScrollerscreen1_ = NULL;
     }
     WaitTOF();
     ON_SPRITE;
@@ -372,8 +395,21 @@ void fadeToWhite(void)
     }
 
     // calculated new color sets, now we can update copper and co
-    LoadRGB4(&screen1->ViewPort, colortable0, TEXTSCROLLER_BLOB_FONT_COLORS);
-    LoadRGB32(&screen2->ViewPort, colortable1);
+    WaitTOF();
+    if(textScrollScreenFlag){
+        //LoadRGB4(&textScrollerScreen0_->ViewPort, colortable0, TEXTSCROLLER_BLOB_FONT_COLORS);
+        //LoadRGB32(&textScrollerscreen1_->ViewPort, colortable1);
+        ScreenToFront(textScrollerScreen0_);
+        ScreenToFront(textScrollerscreen1_);
+    }
+    else{
+        //LoadRGB4(&textScrollerScreen0->ViewPort, colortable0, TEXTSCROLLER_BLOB_FONT_COLORS);
+        //LoadRGB32(&textScrollerscreen1->ViewPort, colortable1);
+        ScreenToFront(textScrollerScreen0);
+        ScreenToFront(textScrollerscreen1);
+    }
+    OFF_SPRITE;
+    textScrollScreenFlag = textScrollScreenFlag ? FALSE : TRUE;
 }
 
 BOOL hasFadeToWhiteFinished(void)
