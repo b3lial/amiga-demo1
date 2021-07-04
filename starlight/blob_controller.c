@@ -1,9 +1,8 @@
 #include <proto/dos.h>
-#include <proto/graphics.h>
+#include <clib/graphics_protos.h>
+#include <clib/exec_protos.h>
 #include <exec/memory.h>
-#include <proto/exec.h>
 #include <string.h>
-
 #include "starlight/starlight.h"
 
 /**

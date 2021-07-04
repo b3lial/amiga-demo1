@@ -11,6 +11,8 @@ WORD fsmCurrentState = FSM_START;
 WORD fsmNextState = -1;
 
 int main(void) {
+    initLog();
+    
     while (fsmCurrentState != FSM_QUIT) {
         UWORD moduleStatus = NULL;
 

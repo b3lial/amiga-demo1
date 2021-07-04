@@ -4,7 +4,7 @@
 
 #include <exec/types.h>
 #include <dos/dos.h>
-#include <proto/dos.h>
+#include <clib/dos_protos.h>
 #include <hardware/cia.h>
 
 #include "starlight/starlight.h"

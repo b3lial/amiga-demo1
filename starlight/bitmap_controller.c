@@ -1,11 +1,11 @@
 #include <stdio.h>
 #include <string.h>
+
+#include <clib/graphics_protos.h>
+#include <clib/exec_protos.h>
 #include <exec/types.h>
 #include <exec/memory.h>
 #include <dos/dos.h>
-
-#include <proto/graphics.h>
-#include <proto/exec.h>
 
 #include "starlight/starlight.h"
 

@@ -84,7 +84,6 @@ void initShowLogo(void)
     if (!logo)
     {
         writeLog("Error: Could not allocate memory for logo bitmap\n");
-        exitStarlight();
         exitShowLogo();
         exit(RETURN_ERROR);
     }
@@ -94,7 +93,6 @@ void initShowLogo(void)
     if (!color0)
     {
         writeLog("Error: Could not allocate memory for logo color table\n");
-        exitStarlight();
         exitShowLogo();
         exit(RETURN_ERROR);
     }

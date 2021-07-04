@@ -186,7 +186,6 @@ void initTextScroller(void)
     if (spaceBlob == NULL)
     {
         writeLog("Error: Could not load space blob\n");
-        exitStarlight();
         exitTextScroller();
         exit(RETURN_ERROR);
     }
@@ -200,7 +199,6 @@ void initTextScroller(void)
     if (!colortable1)
     {
         writeLog("Error: Could not allocate memory for space bitmap color table\n");
-        exitStarlight();
         exitTextScroller();
         exit(RETURN_ERROR);
     }
@@ -260,7 +258,6 @@ void initTextScroller(void)
                             TEXTSCROLLER_BLOB_FONT_DEPTH,
                             TEXTSCROLLER_VIEW_TEXTSECTION_WIDTH))
     {
-        exitStarlight();
         exitTextScroller();
         exit(RETURN_ERROR);
     }
