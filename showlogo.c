@@ -118,7 +118,6 @@ void initShowLogo(void)
     LoadRGB4(&logoscreen1->ViewPort, color0, SHOWLOGO_BLOB_COLORS);
 
     // Make Screens visible
-    WaitTOF();
     ScreenToFront(logoscreen0);
     OFF_SPRITE;
 }
@@ -174,14 +173,11 @@ void fadeInFromWhite(void)
 
     // show result of fade in one of the screen buffers and show it
     WaitTOF();
-    if(bufferSelect){
-        LoadRGB4(&logoscreen1->ViewPort, color0, SHOWLOGO_BLOB_COLORS);
-        ScreenToFront(logoscreen1);
+    while(TRUE){
+        if(VBeamPos() > 256){
+            break;
+        }
     }
-    else{
-        LoadRGB4(&logoscreen0->ViewPort, color0, SHOWLOGO_BLOB_COLORS);
-        ScreenToFront(logoscreen0);
-    }
+    LoadRGB4(&logoscreen0->ViewPort, color0, SHOWLOGO_BLOB_COLORS);
     OFF_SPRITE;
-    bufferSelect = bufferSelect ? FALSE : TRUE;
 }

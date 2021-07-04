@@ -396,20 +396,12 @@ void fadeToWhite(void)
 
     // calculated new color sets, now we can update copper and co
     WaitTOF();
-    if(textScrollScreenFlag){
-        //LoadRGB4(&textScrollerScreen0_->ViewPort, colortable0, TEXTSCROLLER_BLOB_FONT_COLORS);
-        //LoadRGB32(&textScrollerscreen1_->ViewPort, colortable1);
-        ScreenToFront(textScrollerScreen0_);
-        ScreenToFront(textScrollerscreen1_);
-    }
-    else{
-        //LoadRGB4(&textScrollerScreen0->ViewPort, colortable0, TEXTSCROLLER_BLOB_FONT_COLORS);
-        //LoadRGB32(&textScrollerscreen1->ViewPort, colortable1);
-        ScreenToFront(textScrollerScreen0);
-        ScreenToFront(textScrollerscreen1);
-    }
+    WaitBOVP(&textScrollerscreen1->ViewPort);
+    LoadRGB4(&textScrollerScreen0->ViewPort, colortable0, TEXTSCROLLER_BLOB_FONT_COLORS);
     OFF_SPRITE;
-    textScrollScreenFlag = textScrollScreenFlag ? FALSE : TRUE;
+    WaitBOVP(&textScrollerScreen0->ViewPort);
+    LoadRGB32(&textScrollerscreen1->ViewPort, colortable1);
+    OFF_SPRITE;
 }
 
 BOOL hasFadeToWhiteFinished(void)
