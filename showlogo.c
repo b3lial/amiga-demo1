@@ -147,15 +147,11 @@ void fadeInFromWhite(void)
         color0[i] -= decrementer;
     }
 
-    for (i = 0; i < SHOWLOGO_BLOB_COLORS; i+=2)
-    {
-        SetRGB4(vd.viewPorts[0], i, (color0[i] & 0x0f00) >> 8,
-                (color0[i] & 0x00f0) >> 4, (color0[i] & 0x000f));
-    }
     WaitTOF();
-    for (i = 1; i < SHOWLOGO_BLOB_COLORS; i+=2)
-    {
-        SetRGB4(vd.viewPorts[0], i, (color0[i] & 0x0f00) >> 8,
-                (color0[i] & 0x00f0) >> 4, (color0[i] & 0x000f));
+    while(TRUE){
+        if(VBeamPos() > 256){
+            break;
+        }
     }
+    LoadRGB4(vd.viewPorts[0], color0, SHOWLOGO_BLOB_COLORS);
 }
