@@ -97,7 +97,9 @@ void initShowLogo(void)
     logoscreen0 = createScreen(logo, TRUE, 0, 0,
         SHOWLOGO_BLOB_WIDTH, SHOWLOGO_BLOB_HEIGHT,
         SHOWLOGO_BLOB_DEPTH, NULL);
+    OFF_SPRITE;
     LoadRGB4(&logoscreen0->ViewPort, color0, SHOWLOGO_BLOB_COLORS);
+    OFF_SPRITE;
 
     // Make Screens visible
     ScreenToFront(logoscreen0);

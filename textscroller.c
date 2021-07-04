@@ -250,10 +250,12 @@ void exitTextScroller(void)
         CloseScreen(textScrollerScreen0);
         textScrollerScreen0 = NULL;
     } 
+    OFF_SPRITE;
     if (textScrollerscreen1){
         CloseScreen(textScrollerscreen1);
         textScrollerscreen1 = NULL;
     }
+    OFF_SPRITE;
 
     // restore screen elements
     if (colortable1)
