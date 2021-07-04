@@ -13,7 +13,6 @@
 WORD payloadShowLogoState = SHOWLOGO_INIT;
 struct BitMap *logo = NULL;
 struct Screen *logoscreen0 = NULL;
-struct Screen *logoscreen1 = NULL;
 UWORD dawnPaletteRGB4[256] =
     {
         0x0011, 0x0489, 0x0147, 0x0024, 0x0344, 0x0456, 0x0556, 0x0666,
@@ -49,7 +48,6 @@ UWORD dawnPaletteRGB4[256] =
         0x0269, 0x059C, 0x09CC, 0x0DFF, 0x08AB, 0x07AD, 0x04AF, 0x0023,
         0x068A, 0x0357, 0x069A, 0x07BE, 0x06AE, 0x089A, 0x0356, 0x0BDE};
 UWORD *color0 = NULL;
-BOOL bufferSelect = TRUE;
 
 __far extern struct Custom custom;
 
@@ -111,11 +109,7 @@ void initShowLogo(void)
     logoscreen0 = createScreen(logo, TRUE, 0, 0,
         SHOWLOGO_BLOB_WIDTH, SHOWLOGO_BLOB_HEIGHT,
         SHOWLOGO_BLOB_DEPTH, NULL);
-    logoscreen1 = createScreen(logo, TRUE, 0, 0,
-        SHOWLOGO_BLOB_WIDTH, SHOWLOGO_BLOB_HEIGHT,
-        SHOWLOGO_BLOB_DEPTH, NULL);
     LoadRGB4(&logoscreen0->ViewPort, color0, SHOWLOGO_BLOB_COLORS);
-    LoadRGB4(&logoscreen1->ViewPort, color0, SHOWLOGO_BLOB_COLORS);
 
     // Make Screens visible
     ScreenToFront(logoscreen0);
@@ -127,11 +121,7 @@ void exitShowLogo(void)
     if (logoscreen0){
         CloseScreen(logoscreen0);
         logoscreen0 = NULL;
-    } 
-    if (logoscreen1){
-        CloseScreen(logoscreen1);
-        logoscreen1 = NULL;
-    } 
+    }
     WaitTOF();
     ON_SPRITE;
 

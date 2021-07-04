@@ -28,24 +28,20 @@
 __far extern struct Custom custom;
 
 WORD payloadTextScrollerState = TEXTSCROLLER_INIT;
+
 struct BitMap *spaceBlob = NULL;
 struct BitMap *textscrollerScreen = NULL;
 
-// necessary to manipulate colors during runtime
 ULONG *colortable1 = NULL;
 UWORD colortable0[TEXTSCROLLER_BLOB_FONT_COLORS];
-extern struct ViewData vd;
 
 struct TextConfig *textList[TEXT_LIST_SIZE];
 struct TextConfig text1;
 struct TextConfig text2;
 struct TextConfig text3;
 
-BOOL textScrollScreenFlag = TRUE;
 struct Screen* textScrollerScreen0;
-struct Screen* textScrollerScreen0_;
 struct Screen* textScrollerscreen1;
-struct Screen* textScrollerscreen1_;
 
 WORD fsmTextScroller(void)
 {
@@ -246,29 +242,16 @@ void initTextScroller(void)
         TEXTSCROLLER_VIEW_TEXTSECTION_WIDTH, 
         TEXTSCROLLER_VIEW_TEXTSECTION_HEIGHT,
         TEXTSCROLLER_BLOB_FONT_DEPTH, &starsClip);
-    textScrollerScreen0_ = createScreen(textscrollerScreen, TRUE, 
-        -MAX_CHAR_WIDTH, 0, 
-        TEXTSCROLLER_VIEW_TEXTSECTION_WIDTH, 
-        TEXTSCROLLER_VIEW_TEXTSECTION_HEIGHT,
-        TEXTSCROLLER_BLOB_FONT_DEPTH, &starsClip);
     LoadRGB4(&textScrollerScreen0->ViewPort, colortable0, TEXTSCROLLER_BLOB_FONT_COLORS);
-    LoadRGB4(&textScrollerScreen0_->ViewPort, colortable0, TEXTSCROLLER_BLOB_FONT_COLORS);
 
     textScrollerscreen1 = createScreen(spaceBlob, TRUE, 
         0, TEXTSCROLLER_VIEW_TEXTSECTION_HEIGHT + 6, 
         TEXTSCROLLER_VIEW_WIDTH,
         TEXTSCROLLER_VIEW_SPACESECTION_HEIGHT, 
         TEXTSCROLLER_BLOB_SPACE_DEPTH, NULL);
-    textScrollerscreen1_ = createScreen(spaceBlob, TRUE, 
-        0, TEXTSCROLLER_VIEW_TEXTSECTION_HEIGHT + 6, 
-        TEXTSCROLLER_VIEW_WIDTH,
-        TEXTSCROLLER_VIEW_SPACESECTION_HEIGHT, 
-        TEXTSCROLLER_BLOB_SPACE_DEPTH, NULL);
     LoadRGB32(&textScrollerscreen1->ViewPort, colortable1);
-    LoadRGB32(&textScrollerscreen1_->ViewPort, colortable1);
 
     // Make Screens visible
-    WaitTOF();
     ScreenToFront(textScrollerScreen0);
     ScreenToFront(textScrollerscreen1);
     OFF_SPRITE;
@@ -293,20 +276,10 @@ void exitTextScroller(void)
         CloseScreen(textScrollerScreen0);
         textScrollerScreen0 = NULL;
     } 
-    if (textScrollerScreen0_){
-        CloseScreen(textScrollerScreen0_);
-        textScrollerScreen0_ = NULL;
-    } 
     if (textScrollerscreen1){
         CloseScreen(textScrollerscreen1);
         textScrollerscreen1 = NULL;
     }
-    if (textScrollerscreen1_){
-        CloseScreen(textScrollerscreen1_);
-        textScrollerscreen1_ = NULL;
-    }
-    WaitTOF();
-    ON_SPRITE;
 
     // restore screen elements
     if (colortable1)
