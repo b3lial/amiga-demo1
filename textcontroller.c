@@ -2,13 +2,6 @@
 
 #include "demo1.h"
 
-#include <ctype.h>
-#include <graphics/gfxbase.h>
-#include <stdio.h>
-#include <string.h>
-
-#include "starlight/starlight.h"
-
 struct BitMap *fontBlob;
 struct BitMap *textDestination;
 struct TextConfig **textConfigs;

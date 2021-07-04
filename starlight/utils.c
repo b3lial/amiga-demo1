@@ -1,13 +1,4 @@
-#include <stdarg.h>
-#include <string.h>
-#include <stdio.h>
-
-#include <exec/types.h>
-#include <dos/dos.h>
-#include <clib/dos_protos.h>
-#include <hardware/cia.h>
-
-#include "starlight/starlight.h"
+#include "demo1.h"
 
 BOOL mousePressed = FALSE;
 char* logMessage = "Starlight Demo Logfile\n";

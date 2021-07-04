@@ -3,9 +3,6 @@
 #ifndef TEXTSCROLLER_H__
 #define TEXTSCROLLER_H__
 
-#include <exec/types.h>
-#include <clib/graphics_protos.h>
-
 #define TEXT_LIST_SIZE 4
 
 #define TEXTSCROLLER_INIT 0

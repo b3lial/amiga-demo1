@@ -1,7 +1,4 @@
-#include <clib/intuition_protos.h>
-#include <clib/exec_protos.h>
-
-#include "starlight/starlight.h"
+#include "demo1.h"
 
 struct Screen* createScreen(struct BitMap* b, BOOL hidden, 
         WORD x, WORD y, UWORD width, UWORD height, UWORD depth, 

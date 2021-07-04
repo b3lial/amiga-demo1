@@ -1,14 +1,4 @@
 #include "demo1.h"
-#include "starlight/starlight.h"
-
-#include <exec/types.h>
-#include <exec/memory.h>
-#include <dos/dos.h>
-#include <clib/exec_protos.h>
-#include <clib/intuition_protos.h>
-
-#include <graphics/gfxmacros.h>
-#include <hardware/custom.h>
 
 WORD payloadShowLogoState = SHOWLOGO_INIT;
 struct BitMap *logo = NULL;

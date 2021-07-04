@@ -2,17 +2,12 @@
 
 #include "demo1.h"
 
-#include <dos/dos.h>
-#include <exec/types.h>
-
-#include "starlight/starlight.h"
-
 WORD fsmCurrentState = FSM_START;
 WORD fsmNextState = -1;
 
 int main(void) {
     initLog();
-    
+
     while (fsmCurrentState != FSM_QUIT) {
         UWORD moduleStatus = NULL;
 

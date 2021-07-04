@@ -1,9 +1,4 @@
-#include <proto/dos.h>
-#include <clib/graphics_protos.h>
-#include <clib/exec_protos.h>
-#include <exec/memory.h>
-#include <string.h>
-#include "starlight/starlight.h"
+#include "demo1.h"
 
 /**
  * Loads a set of unsigned words from file and copies them into
