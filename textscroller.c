@@ -184,16 +184,9 @@ void initTextScroller(void)
     loadColorMap32("img/space3_320_148_8.CMAP", colortable1, TEXTSCROLLER_BLOB_SPACE_COLORS);
 
     // Load Textscroller Screen Bitmap
-    writeLog("\nLoad textscroller screen background bitmap\n");
-    textscrollerScreen = createBitMap(TEXTSCROLLER_BLOB_FONT_DEPTH,
-                                      TEXTSCROLLER_VIEW_TEXTSECTION_WIDTH,
-                                      TEXTSCROLLER_VIEW_TEXTSECTION_HEIGHT);
-    for (i = 0; i < TEXTSCROLLER_BLOB_FONT_DEPTH; i++)
-    {
-        BltClear(textscrollerScreen->Planes[i],
-                 (textscrollerScreen->BytesPerRow) * (textscrollerScreen->Rows),
-                 1);
-    }
+    textscrollerScreen = AllocBitMap(TEXTSCROLLER_VIEW_TEXTSECTION_WIDTH,
+        TEXTSCROLLER_VIEW_TEXTSECTION_HEIGHT, TEXTSCROLLER_BLOB_FONT_DEPTH,
+        BMF_CLEAR | BMF_DISPLAYABLE, NULL);
     writeLogFS("TextScroller Screen BitMap: BytesPerRow: %d, Rows: %d, Flags: %d, pad: %d\n",
                textscrollerScreen->BytesPerRow, textscrollerScreen->Rows,
                textscrollerScreen->Flags, textscrollerScreen->pad);
@@ -268,7 +261,7 @@ void exitTextScroller(void)
 
     if (textscrollerScreen)
     {
-        cleanBitMap(textscrollerScreen);
+        FreeBitMap(textscrollerScreen);
         textscrollerScreen = NULL;
     }
 
