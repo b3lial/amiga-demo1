@@ -338,10 +338,10 @@ void fadeToWhite(void)
 
     // calculated new color sets, now we can update copper and co
     WaitTOF();
-    WaitBOVP(&textScrollerscreen1->ViewPort);
+    WaitBOVP(&textScrollerScreen0->ViewPort);
     LoadRGB4(&textScrollerScreen0->ViewPort, colortable0, TEXTSCROLLER_BLOB_FONT_COLORS);
     OFF_SPRITE;
-    WaitBOVP(&textScrollerScreen0->ViewPort);
+    WaitBOVP(&textScrollerscreen1->ViewPort);
     LoadRGB32(&textScrollerscreen1->ViewPort, colortable1);
     OFF_SPRITE;
 }
