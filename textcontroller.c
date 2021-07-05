@@ -48,7 +48,7 @@ BOOL initTextController(struct BitMap *screen, UWORD depth, UWORD screenWidth)
 void exitTextController(void)
 {
     if(fontBlob){
-        cleanBitMap(fontBlob);
+        FreeBitMap(fontBlob);
         fontBlob = NULL;
     }
 }
@@ -86,8 +86,8 @@ void setStringTextController(struct TextConfig *c)
     CURRENT_CHAR(c).yPos = c->charYPosDestination;
 
     // save background at character starting position
-    CURRENT_CHAR(c).oldBackground = createBitMap(charDepth, 
-        MAX_CHAR_WIDTH, MAX_CHAR_HEIGHT);
+    CURRENT_CHAR(c).oldBackground = AllocBitMap(MAX_CHAR_WIDTH, MAX_CHAR_HEIGHT, 
+        charDepth, BMF_DISPLAYABLE | BMF_CLEAR, NULL);
     saveCharacterBackground(c);
 }
 
@@ -256,7 +256,8 @@ void prepareForNextCharacter(struct TextConfig *c)
     // found next character, prepare everything for his arrival
     c->charIndex++;
     getCharData(letter, &CURRENT_CHAR(c));
-    CURRENT_CHAR(c).oldBackground = createBitMap(charDepth, 50, 50);
+    CURRENT_CHAR(c).oldBackground = AllocBitMap(50, 50, 
+        charDepth, BMF_DISPLAYABLE | BMF_CLEAR, NULL);
     CURRENT_CHAR(c).xPos = scrollControlWidth - CURRENT_CHAR(c).xSize;
     CURRENT_CHAR(c).yPos = c->charYPosDestination;
 
@@ -287,7 +288,7 @@ void resetTextConfig(struct TextConfig *textConfig)
     {
         if (textConfig->characters[i].oldBackground)
         {
-            cleanBitMap(textConfig->characters[i].oldBackground);
+            FreeBitMap(textConfig->characters[i].oldBackground);
             textConfig->characters[i].oldBackground = NULL;
         }
     }

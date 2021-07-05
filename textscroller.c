@@ -267,7 +267,7 @@ void exitTextScroller(void)
 
     if (spaceBlob)
     {
-        cleanBitMap(spaceBlob);
+        FreeBitMap(spaceBlob);
         spaceBlob = NULL;
     }
 

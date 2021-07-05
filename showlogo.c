@@ -117,7 +117,7 @@ void exitShowLogo(void)
 
     if (logo)
     {
-        cleanBitMap(logo);
+        FreeBitMap(logo);
         logo = NULL;
     }
     if (color0)

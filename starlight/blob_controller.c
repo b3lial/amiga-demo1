@@ -114,7 +114,8 @@ struct BitMap* loadBlob(const char* fileName, UBYTE depth, UWORD width,
     writeLogFS("Blob %s has file size %d\n", fileName, fileSize);
     
     //Copy file content to raster
-    blobBitMap = createBitMap(depth, width, height);
+    blobBitMap = AllocBitMap(width, height, depth,
+        BMF_DISPLAYABLE | BMF_CLEAR, NULL);
     if(blobBitMap == NULL){
         return NULL;
     }
