@@ -33,7 +33,6 @@
 #include <hardware/custom.h>
 #include <hardware/cia.h>
 
-#include "starlight/bitmap_controller.h"
 #include "starlight/blob_controller.h"
 #include "starlight/graphics_controller.h"
 #include "starlight/utils.h"
