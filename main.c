@@ -6,8 +6,16 @@ WORD fsmCurrentState = FSM_START;
 WORD fsmNextState = -1;
 
 int main(void) {
+    // requires aga for 8 bitplanes 24 bit colors
+    if(!isAga()){
+        printf("Error, this demo requires an aga chipset to run\n");
+        exit(RETURN_ERROR);
+    }
+
+    // write logfile to ram: if debug is enabled
     initLog();
 
+    // main loop which inits screens and executes effects
     while (fsmCurrentState != FSM_QUIT) {
         UWORD moduleStatus = NULL;
 
@@ -58,4 +66,10 @@ int main(void) {
     }
 
     exit(RETURN_OK);
+}
+
+int isAga(void) {
+  short int *vposr = (short int*) 0xdff004;
+
+  return *vposr & (1<<9);
 }

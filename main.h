@@ -11,4 +11,6 @@
 #define MODULE_FINISHED 10
 #define MODULE_CONTINUE 11
 
+int isAga(void);
+
 #endif
