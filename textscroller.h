@@ -32,7 +32,7 @@
 WORD fsmTextScroller(void);
 void initTextScroller(void);
 void exitTextScroller(void);
-void createStars(struct BitMap *bitmap);
+void createStars(void);
 void fadeToWhite(void);
 BOOL hasFadeToWhiteFinished(void);
 

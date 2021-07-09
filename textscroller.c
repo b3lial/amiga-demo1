@@ -17,8 +17,8 @@ struct TextConfig text1;
 struct TextConfig text2;
 struct TextConfig text3;
 
-struct Screen* textScrollerScreen0;
-struct Screen* textScrollerscreen1;
+struct Screen *textScrollerScreen0;
+struct Screen *textScrollerscreen1;
 
 WORD fsmTextScroller(void)
 {
@@ -185,45 +185,55 @@ void initTextScroller(void)
 
     // Load Textscroller Screen Bitmap
     textscrollerScreen = AllocBitMap(TEXTSCROLLER_VIEW_TEXTSECTION_WIDTH,
-        TEXTSCROLLER_VIEW_TEXTSECTION_HEIGHT, TEXTSCROLLER_BLOB_FONT_DEPTH,
-        BMF_CLEAR | BMF_DISPLAYABLE, NULL);
+                                     TEXTSCROLLER_VIEW_TEXTSECTION_HEIGHT, TEXTSCROLLER_BLOB_FONT_DEPTH,
+                                     BMF_CLEAR | BMF_DISPLAYABLE, NULL);
     writeLogFS("TextScroller Screen BitMap: BytesPerRow: %d, Rows: %d, Flags: %d, pad: %d\n",
                textscrollerScreen->BytesPerRow, textscrollerScreen->Rows,
                textscrollerScreen->Flags, textscrollerScreen->pad);
-    createStars(textscrollerScreen);
 
     // Load Textscroller color table
     loadColorMap("img/charset_final.CMAP", colortable0,
                  TEXTSCROLLER_BLOB_FONT_COLORS);
 
-    // Create View and ViewExtra memory structures
-    writeLog("\nCreate screen\n");
 
-    // Create double buffer screen which displays the previously created bitmaps
+    writeLog("\nCreate two screens\n");
+    // text scroller section screen
     starsClip.MinX = 0;
     starsClip.MinY = 0;
     starsClip.MaxX = TEXTSCROLLER_VIEW_WIDTH;
     starsClip.MaxY = TEXTSCROLLER_VIEW_TEXTSECTION_HEIGHT;
-
-    textScrollerScreen0 = createScreen(textscrollerScreen, TRUE, 
-        -MAX_CHAR_WIDTH, 0, 
-        TEXTSCROLLER_VIEW_TEXTSECTION_WIDTH, 
-        TEXTSCROLLER_VIEW_TEXTSECTION_HEIGHT,
-        TEXTSCROLLER_BLOB_FONT_DEPTH, &starsClip);
+    textScrollerScreen0 = createScreen(textscrollerScreen, TRUE,
+                                       -MAX_CHAR_WIDTH, 0,
+                                       TEXTSCROLLER_VIEW_TEXTSECTION_WIDTH,
+                                       TEXTSCROLLER_VIEW_TEXTSECTION_HEIGHT,
+                                       TEXTSCROLLER_BLOB_FONT_DEPTH, &starsClip);
+    if(!textScrollerScreen0){
+        writeLog("Error: Could not allocate memory for text scroller screen\n");
+        exitTextScroller();
+        exit(RETURN_ERROR);
+    }
     LoadRGB4(&textScrollerScreen0->ViewPort, colortable0, TEXTSCROLLER_BLOB_FONT_COLORS);
+    createStars();
 
-    textScrollerscreen1 = createScreen(spaceBlob, TRUE, 
-        0, TEXTSCROLLER_VIEW_TEXTSECTION_HEIGHT + 6, 
-        TEXTSCROLLER_VIEW_WIDTH,
-        TEXTSCROLLER_VIEW_SPACESECTION_HEIGHT, 
-        TEXTSCROLLER_BLOB_SPACE_DEPTH, NULL);
+    // static space image screen
+    textScrollerscreen1 = createScreen(spaceBlob, TRUE,
+                                       0, TEXTSCROLLER_VIEW_TEXTSECTION_HEIGHT + 6,
+                                       TEXTSCROLLER_VIEW_WIDTH,
+                                       TEXTSCROLLER_VIEW_SPACESECTION_HEIGHT,
+                                       TEXTSCROLLER_BLOB_SPACE_DEPTH, NULL);
+    if(!textScrollerscreen1){
+        writeLog("Error: Could not allocate memory for space background screen\n");
+        exitTextScroller();
+        exit(RETURN_ERROR);
+    }
     LoadRGB32(&textScrollerscreen1->ViewPort, colortable1);
 
-    // Make Screens visible
+    // Make Screens visible on screen
     ScreenToFront(textScrollerScreen0);
     ScreenToFront(textScrollerscreen1);
     OFF_SPRITE;
 
+    // init text scroller engine
     if (!initTextController(textscrollerScreen,
                             TEXTSCROLLER_BLOB_FONT_DEPTH,
                             TEXTSCROLLER_VIEW_TEXTSECTION_WIDTH))
@@ -239,12 +249,14 @@ void exitTextScroller(void)
     exitTextController();
 
     // restore old screen
-    if (textScrollerScreen0){
+    if (textScrollerScreen0)
+    {
         CloseScreen(textScrollerScreen0);
         textScrollerScreen0 = NULL;
-    } 
+    }
     OFF_SPRITE;
-    if (textScrollerscreen1){
+    if (textScrollerscreen1)
+    {
         CloseScreen(textScrollerscreen1);
         textScrollerscreen1 = NULL;
     }
@@ -255,8 +267,6 @@ void exitTextScroller(void)
     {
         FreeVec(colortable1);
         colortable1 = NULL;
-        writeLogFS("Freeing %d bytes of space bitmap color table\n",
-                   COLORMAP32_BYTE_SIZE(TEXTSCROLLER_BLOB_SPACE_COLORS));
     }
 
     if (textscrollerScreen)
@@ -274,22 +284,18 @@ void exitTextScroller(void)
     payloadTextScrollerState = TEXTSCROLLER_INIT;
 }
 
-void createStars(struct BitMap *bitmap)
+void createStars()
 {
     BYTE i;
     UWORD x, y;
 
-    struct RastPort rastPort = {0};
-    InitRastPort(&rastPort);
-    rastPort.BitMap = bitmap;
-
-    SetAPen(&rastPort, 6);
+    writeLogFS("creating random stars on text scroller screen\n");
+    SetAPen(&textScrollerScreen0->RastPort, 6);
     for (i = 0; i < 50; i++)
     {
         x = RangeRand(TEXTSCROLLER_VIEW_TEXTSECTION_WIDTH);
         y = RangeRand(TEXTSCROLLER_VIEW_TEXTSECTION_HEIGHT);
-        writeLogFS("random value x %d, y %d\n", x, y);
-        WritePixel(&rastPort, x, y);
+        WritePixel(&textScrollerScreen0->RastPort, x, y);
     }
 }
 
