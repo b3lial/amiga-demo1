@@ -68,7 +68,7 @@ void initShowLogo(void)
     UWORD i = 0;
     writeLog("\n\n== initShowLogo() ==\n");
 
-    // load logo from file we want to display
+    // load demo logo from file which we want to display
     logo = loadBlob("img/dawn_320_256_8.RAW", SHOWLOGO_BLOB_DEPTH,
                     SHOWLOGO_BLOB_WIDTH, SHOWLOGO_BLOB_HEIGHT);
     if (!logo)
@@ -91,17 +91,21 @@ void initShowLogo(void)
         color0[i] = 0x0fff;
     }
 
+    // create one screen which contains the demo logo
     writeLog("Create screen\n");
-    
-    // we create two doublebuffer screens for flicker free color dim operations
     logoscreen0 = createScreen(logo, TRUE, 0, 0,
         SHOWLOGO_BLOB_WIDTH, SHOWLOGO_BLOB_HEIGHT,
         SHOWLOGO_BLOB_DEPTH, NULL);
+    if(!logoscreen0){
+        writeLog("Error: Could not allocate memory for logo screen\n");
+        exitShowLogo();
+        exit(RETURN_ERROR);        
+    }
     OFF_SPRITE;
     LoadRGB4(&logoscreen0->ViewPort, color0, SHOWLOGO_BLOB_COLORS);
     OFF_SPRITE;
 
-    // Make Screens visible
+    // make screen great again ;)
     ScreenToFront(logoscreen0);
     OFF_SPRITE;
 }
@@ -151,13 +155,9 @@ void fadeInFromWhite(void)
         color0[i] -= decrementer;
     }
 
-    // show result of fade in one of the screen buffers and show it
+    // update screen and show result of fade in step
     WaitTOF();
-    while(TRUE){
-        if(VBeamPos() > 256){
-            break;
-        }
-    }
+    WaitBOVP(&logoscreen0->ViewPort);
     LoadRGB4(&logoscreen0->ViewPort, color0, SHOWLOGO_BLOB_COLORS);
     OFF_SPRITE;
 }
