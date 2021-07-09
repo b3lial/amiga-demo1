@@ -32,6 +32,7 @@
 
 #include <hardware/custom.h>
 #include <hardware/cia.h>
+#include <hardware/dmabits.h>
 
 #include "starlight/blob_controller.h"
 #include "starlight/graphics_controller.h"
