@@ -149,14 +149,14 @@ void initTextScroller(void)
 {
     BYTE i = 0;
     struct Rectangle starsClip;
-    writeLog("\n== initTextScroller() ==\n");
+    writeLog("== initTextScroller() ==\n\n");
 
     for (; i < TEXT_LIST_SIZE; i++)
     {
         textList[i] = NULL;
     }
 
-    writeLog("\nLoad space background bitmap and colors\n");
+    writeLog("Load space background bitmap and colors\n");
     // Load space background bitmap
     spaceBlob = loadBlob("img/space4_320_125_8.RAW", TEXTSCROLLER_BLOB_SPACE_DEPTH,
                          TEXTSCROLLER_BLOB_SPACE_WIDTH, TEXTSCROLLER_BLOB_SPACE_HEIGHT);
@@ -196,7 +196,7 @@ void initTextScroller(void)
                  TEXTSCROLLER_BLOB_FONT_COLORS);
 
 
-    writeLog("\nCreate two screens\n");
+    writeLog("Create two screens\n");
     // text scroller section screen
     starsClip.MinX = 0;
     starsClip.MinY = 0;

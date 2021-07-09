@@ -66,7 +66,7 @@ WORD fsmShowLogo(void)
 void initShowLogo(void)
 {
     UWORD i = 0;
-    writeLog("\n== initShowLogo() ==\n");
+    writeLog("\n\n== initShowLogo() ==\n");
 
     // load logo from file we want to display
     logo = loadBlob("img/dawn_320_256_8.RAW", SHOWLOGO_BLOB_DEPTH,
@@ -91,7 +91,7 @@ void initShowLogo(void)
         color0[i] = 0x0fff;
     }
 
-    writeLog("\nCreate screen\n");
+    writeLog("Create screen\n");
     
     // we create two doublebuffer screens for flicker free color dim operations
     logoscreen0 = createScreen(logo, TRUE, 0, 0,
