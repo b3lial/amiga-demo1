@@ -136,3 +136,11 @@ is decremented until it reaches the corresponding value in *dawnPaletteRGB4*.
 ### Logging
 
 When the demo is compiled with DEMO_DEBUG, log messages are written to *ram:starlight-demo.log*.
+
+### Screenshots
+
+![](img/screenshots/1.png)
+![](img/screenshots/2.png)
+![](img/screenshots/3.png)
+![](img/screenshots/4.png)
+![](img/screenshots/5.png)
