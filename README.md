@@ -13,6 +13,12 @@ Implements the following effects:
 * When the screen is completely white, it fades back and displays
   a logo
 
+## Video
+
+To give you a better impression, the demo can be seen on youtube:
+
+[![Amiga Demo 1 Screen Capture](https://img.youtube.com/vi/HvHvUcGxF7c/0.jpg)](https://www.youtube.com/watch?v=HvHvUcGxF7c)
+
 ## Build
 
 Can be 
@@ -136,11 +142,3 @@ is decremented until it reaches the corresponding value in *dawnPaletteRGB4*.
 ### Logging
 
 When the demo is compiled with DEMO_DEBUG, log messages are written to *ram:starlight-demo.log*.
-
-### Screenshots
-
-![](img/screenshots/1.png)
-![](img/screenshots/2.png)
-![](img/screenshots/3.png)
-![](img/screenshots/4.png)
-![](img/screenshots/5.png)
