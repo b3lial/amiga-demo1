@@ -7,7 +7,7 @@ hardware access (besides sprite dma disable) is used. AmigaOS
 is not deactivated and kickstart APIs are used to write on screen.
 Implements the following effects:
 
-* Shows stars, a planet and text scrolls in from right to left.
+* Shows stars, a planet and an advanced text scroller from right to left.
   Characters are loaded from a custom font painted by myself ;)
 * When text scroller has finished, the screen fades to white
 * When the screen is completely white, it fades back and displays
@@ -51,8 +51,9 @@ to use *intuition.library* instead. I previously had ignored the *intuition.libr
 because my assumption was, it is more meant for high level window creation and not
 low level programming with higher performance requirements. This was wrong, you
 can use intuition to set up some basic*ViewPorts* and still use low level
-*graphics.library* calls for good performance. So, my final advice for any 
-AmigaOS programming newbies (like myself) is:
+*graphics.library* calls for good performance. 
+
+So, my final advice for any AmigaOS programming newbies (like myself) is:
 
 * Read the hardware reference guide because it helps alot to understand
 why AmigaOS uses *Views* and *ViewPorts* as an abstraction layer based on the 
@@ -65,22 +66,22 @@ Copper co-processor.
 ### State Machines
 
 In *main.c*, a state machine is implemented which initialises effects, executes them
-and shuts them down. Each effect contains a sub state machine for the details. E.g.
+and shuts them down. Each effect contains a sub state machine. E.g.
 the text scroller has its own state machine which waits until a character sequence
-was displayed, sets up the next string, displays the string, etc.
+was displayed, sets up the next string, scrolls in this string, etc.
 
-### Text Scroller
+### Text Scroller Effect
 
 The text scroller engine creates two *ViewPorts* on startup:
 
 * a star field consisting of three bitplanes, a black background and
-randomly created white dots
+randomly created white dots (dots can be easily painted with *RstPort* and *SetAPen()*).
 * earth as an eight bitplane image with 24 bit color depth loaded from *img/space4_320_125_8.RAW*
-and *img/space3_320_148_8.CMAP*
+and *img/space3_320_148_8.CMAP*.
 
-The text is blitted into the star field. The design decision to split things up into a leightweight
-and a more heavy *ViewPort* was in the hope of not to completely block the DMA channel. ;)
-When the *ViewPorts* are set up, the text scroller engine gets:
+The scrolling text is blitted into the star field. The design decision to split things up into a lightweight
+and a more heavy *ViewPort* was in the hope of not to completely block the DMA channel
+during screen updates. ;) When the *ViewPorts* are set up, the text scroller engine gets:
 
 * a set of strings
 * target coordinates for each string
@@ -90,15 +91,48 @@ and *img/charset_final.CMAP*. The font was created with *PPaint*, stored as an
 IFF and extraced with [IFFTrasher](http://aminet.net/package/gfx/conv/IFFTrasher).
 The dimensions of each character are hardcoded in *getCharData()*. 
 
-Before a character is blitted on screen, the background is saved. Vice versa, before
+Before a character is blitted on screen, the destination area background is saved. Vice versa, before
 a character is written at its new position, the previsously saved background is
-restored. The scrolling process for each character consists of three phases:
+restored. The advantage is, only small chunks of data have to be blitted around (and not the whole *ViewPort*)
+and DMA bandwith is spared. The scrolling process for each character consists of three phases:
 
-* Write the string character by character from left to right to its destination.
+* Write the string character by character from right to left to its destination.
 * Display the final string for a few seconds.
 * Scroll the string character by character from right to left and until they
 disappear on the left side of the screen.
 
-### Logo
+The text scroller can be skipped with a mouse click. If the mouse was clicked or
+the last text was scrolled successfully, the screen fades from its original colors to white.
+After each iteration of the fade effect, *LoadRGB()* is called to update the color map.
+Originally, I called *WaitTOF()* and did the update but this lead to flickering because
+of video synchronosation issues. Although the AmigaOS documenation says "the horrors" ;), I switched
+to *WaitBOVP()*:
 
-...
+* Call *WaitBOVP()* and wait until the first viewport is painted on screen. Afterwards,
+savely update its colortable.
+* Wait via *WaitBOVP()* until the second *ViewPort* was painted on screen. Afterwards,
+savely update its colortable.
+
+### Logo Effect
+
+This effect simply displays the demo logo in PAL resolution on a single screen. The interesting
+part is the switch from the first effect to the logo effect. My main concern
+here was to avoid any flickering and to get a smooth transition.
+
+Therefore, before the first effect terminates, the second effect creates its *Screen* in the background.
+The image is loaded from file. The colortable is dynamically allocated and initiliased with white
+color entries. We will later fade from white to the original colors. They could be easily
+achieved as a character array `UWORD dawnPaletteRGB4[256]` because *PPaint* has a C source code export mode.
+
+When the *Screen* is created, it is moved to front via *ScreenToFront()*. This is done during vertical
+synchronisation. Therefore, the user does not recognize the transistion. The *intuition* APIs
+seem the activate sprite DMA which leads to a visible mouse courser. To disable it again,
+I had to execute *OFF_SPRITE* macro. If anybody knows a better way to hide the mouse pointer,
+please drop me a line. :)
+
+When the logo *Screen* becomes visible, a fade in effect begins. Each color table entry
+is decremented until it reaches the corresponding value in *dawnPaletteRGB4*.
+
+### Logging
+
+When the demo is compiled with DEMO_DEBUG, log messages are written to *ram:starlight-demo.log*.
