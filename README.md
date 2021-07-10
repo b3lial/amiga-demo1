@@ -71,7 +71,33 @@ was displayed, sets up the next string, displays the string, etc.
 
 ### Text Scroller
 
-...
+The text scroller engine creates two *ViewPorts* on startup:
+
+* a star field consisting of three bitplanes, a black background and
+randomly created white dots
+* earth as an eight bitplane image with 24 bit color depth loaded from *img/space4_320_125_8.RAW*
+and *img/space3_320_148_8.CMAP*
+
+The text is blitted into the star field. The design decision to split things up into a leightweight
+and a more heavy *ViewPort* was in the hope of not to completely block the DMA channel. ;)
+When the *ViewPorts* are set up, the text scroller engine gets:
+
+* a set of strings
+* target coordinates for each string
+
+Afterwards, the text scroller loads a font and its color table from *img/charset_final.RAW*
+and *img/charset_final.CMAP*. The font was created with *PPaint*, stored as an
+IFF and extraced with [IFFTrasher](http://aminet.net/package/gfx/conv/IFFTrasher).
+The dimensions of each character are hardcoded in *getCharData()*. 
+
+Before a character is blitted on screen, the background is saved. Vice versa, before
+a character is written at its new position, the previsously saved background is
+restored. The scrolling process for each character consists of three phases:
+
+* Write the string character by character from left to right to its destination.
+* Display the final string for a few seconds.
+* Scroll the string character by character from right to left and until they
+disappear on the left side of the screen.
 
 ### Logo
 
