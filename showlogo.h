@@ -10,6 +10,8 @@
 #define SHOWLOGO_BLOB_WIDTH 320
 #define SHOWLOGO_BLOB_HEIGHT 256
 
+#define SHOWLOGO_BLOB_BORDER 20
+
 WORD fsmShowLogo(void);
 void initShowLogo(void);
 void exitShowLogo(void);

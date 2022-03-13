@@ -2,6 +2,7 @@
 
 WORD payloadShowLogoState = SHOWLOGO_INIT;
 struct BitMap *logo = NULL;
+struct BitMap *logoWithBorders;
 struct Screen *logoscreen0 = NULL;
 UWORD dawnPaletteRGB4[256] =
     {
@@ -63,17 +64,35 @@ WORD fsmShowLogo(void)
     return MODULE_CONTINUE;
 }
 
+/* We create two bitmaps here: the bitmap which is shown on the
+ * screen and the image blob. The onscreen bitmap has a size
+ * of image blob + border. The image blob is blitted into
+ * the middle of the oncreen bitmap. This allows rotation effects
+ * without bothering any array out of bounds problems 
+ */
 void initShowLogo(void)
 {
     UWORD i = 0;
     writeLog("\n\n== initShowLogo() ==\n");
 
-    // load demo logo from file which we want to display
+    // load demo logo from file which we blit later into logoWithBorders
     logo = loadBlob("img/dawn_320_256_8.RAW", SHOWLOGO_BLOB_DEPTH,
                     SHOWLOGO_BLOB_WIDTH, SHOWLOGO_BLOB_HEIGHT);
     if (!logo)
     {
         writeLog("Error: Could not allocate memory for logo bitmap\n");
+        exitShowLogo();
+        exit(RETURN_ERROR);
+    }
+
+    // load onscreen bitmap which will be shown on screen
+    logoWithBorders = AllocBitMap(SHOWLOGO_BLOB_WIDTH + SHOWLOGO_BLOB_BORDER, 
+                             SHOWLOGO_BLOB_HEIGHT + SHOWLOGO_BLOB_BORDER, 
+                             SHOWLOGO_BLOB_DEPTH, BMF_DISPLAYABLE | BMF_CLEAR, 
+                             NULL);
+    if (!logoWithBorders)
+    {
+        writeLog("Error: Could not allocate memory for onscreen bitmap\n");
         exitShowLogo();
         exit(RETURN_ERROR);
     }
@@ -123,6 +142,11 @@ void exitShowLogo(void)
     {
         FreeBitMap(logo);
         logo = NULL;
+    }
+    if (logoWithBorders)
+    {
+        FreeBitMap(logoWithBorders);
+        logo = NULL;        
     }
     if (color0)
     {
