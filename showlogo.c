@@ -97,6 +97,15 @@ void initShowLogo(void)
         exit(RETURN_ERROR);
     }
 
+    // blit logo into logoWithBorders and delete old bitmap
+    BltBitMap(logo, 0, 0,
+          logoWithBorders,
+          SHOWLOGO_BLOB_BORDER, SHOWLOGO_BLOB_BORDER,
+          SHOWLOGO_BLOB_WIDTH, SHOWLOGO_BLOB_HEIGHT,
+          0xC0, 0xff, 0);
+    FreeBitMap(logo);
+    logo = NULL;
+
     // this color table will fade from white to logo
     color0 = AllocVec(sizeof(dawnPaletteRGB4), NULL);
     if (!color0)
@@ -112,7 +121,8 @@ void initShowLogo(void)
 
     // create one screen which contains the demo logo
     writeLog("Create screen\n");
-    logoscreen0 = createScreen(logo, TRUE, 0, 0,
+    logoscreen0 = createScreen(logoWithBorders, TRUE, 
+        SHOWLOGO_BLOB_BORDER, SHOWLOGO_BLOB_BORDER,
         SHOWLOGO_BLOB_WIDTH, SHOWLOGO_BLOB_HEIGHT,
         SHOWLOGO_BLOB_DEPTH, NULL);
     if(!logoscreen0){
