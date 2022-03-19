@@ -73,6 +73,7 @@ WORD fsmShowLogo(void)
 void initShowLogo(void)
 {
     UWORD i = 0;
+    struct Rectangle logoClip;
     writeLog("\n\n== initShowLogo() ==\n");
 
     // load demo logo from file which we blit later into logoWithBorders
@@ -121,10 +122,15 @@ void initShowLogo(void)
 
     // create one screen which contains the demo logo
     writeLog("Create screen\n");
+    logoClip.MinX = 0;
+    logoClip.MinY = 0;
+    logoClip.MaxX = SHOWLOGO_BLOB_WIDTH;
+    logoClip.MaxY = SHOWLOGO_BLOB_HEIGHT;
     logoscreen0 = createScreen(logoWithBorders, TRUE, 
-        SHOWLOGO_BLOB_BORDER, SHOWLOGO_BLOB_BORDER,
-        SHOWLOGO_BLOB_WIDTH, SHOWLOGO_BLOB_HEIGHT,
-        SHOWLOGO_BLOB_DEPTH, NULL);
+        -SHOWLOGO_BLOB_BORDER, -SHOWLOGO_BLOB_BORDER,
+        SHOWLOGO_BLOB_WIDTH_WITH_BORDER, 
+        SHOWLOGO_BLOB_HEIGHT_WITH_BORDER,
+        SHOWLOGO_BLOB_DEPTH, &logoClip);
     if(!logoscreen0){
         writeLog("Error: Could not allocate memory for logo screen\n");
         exitShowLogo();
