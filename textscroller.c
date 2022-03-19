@@ -164,6 +164,7 @@ void initTextScroller(void)
     {
         writeLog("Error: Could not load space blob\n");
         exitTextScroller();
+        ON_SPRITE;
         exit(RETURN_ERROR);
     }
     writeLogFS(
