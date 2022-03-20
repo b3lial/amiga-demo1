@@ -28,42 +28,34 @@ int main(void) {
 
     // main loop which inits screens and executes effects
     while (fsmCurrentState != FSM_QUIT) {
-        UWORD moduleStatus = NULL;
 
         switch (fsmCurrentState) {
             case FSM_START:
-                initTextScroller();
-                fsmNextState = FSM_TEXTSCROLLER;
+                fsmNextState = initTextScroller();
                 break;
 
             case FSM_TEXTSCROLLER:
-                moduleStatus = fsmTextScroller();
-                if (moduleStatus == MODULE_CONTINUE) {
-                    fsmNextState = FSM_TEXTSCROLLER;
-                } else {
-                    fsmNextState = FSM_TEXTSCROLLER_FINISHED;
-                }
+                fsmNextState = fsmTextScroller();
                 break;
 
             case FSM_TEXTSCROLLER_FINISHED:
-                initShowLogo();
+                fsmNextState = initShowLogo();
                 exitTextScroller();
-                fsmNextState = FSM_SHOWLOGO;
                 break;
 
             case FSM_SHOWLOGO:
-                moduleStatus = fsmShowLogo();
-                if (moduleStatus == MODULE_CONTINUE) {
-                    fsmNextState = FSM_SHOWLOGO;
-                } else {
-                    fsmNextState = FSM_STOP;
-                }
+                fsmNextState = fsmShowLogo();
                 break;
 
             case FSM_STOP:
                 exitShowLogo();
                 fsmNextState = FSM_QUIT;
                 break;
+
+            case FSM_ERROR:
+                fsmNextState = FSM_QUIT;
+                writeLogFS("Error: Main, submodule in error state\n");
+                break;    
 
             // something unexpected happened, we better leave
             default:

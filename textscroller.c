@@ -20,7 +20,7 @@ struct TextConfig text3;
 struct Screen *textScrollerScreen0;
 struct Screen *textScrollerscreen1;
 
-WORD fsmTextScroller(void)
+UWORD fsmTextScroller(void)
 {
     //terminate effect on mouse click
     if (mouseClick())
@@ -137,15 +137,15 @@ WORD fsmTextScroller(void)
         fadeToWhite();
         if (hasFadeToWhiteFinished())
         {
-            return MODULE_FINISHED;
+            return FSM_TEXTSCROLLER_FINISHED;
         }
         break;
     }
 
-    return MODULE_CONTINUE;
+    return FSM_TEXTSCROLLER;
 }
 
-void initTextScroller(void)
+UWORD initTextScroller(void)
 {
     BYTE i = 0;
     struct Rectangle starsClip;
@@ -163,8 +163,7 @@ void initTextScroller(void)
     if (spaceBlob == NULL)
     {
         writeLog("Error: Could not load space blob\n");
-        exitTextScroller();
-        exit(RETURN_ERROR);
+        goto __exit_init_scroller;
     }
     writeLogFS(
         "Space Bitmap: BytesPerRow: %d, Rows: %d, Flags: %d, pad: %d\n",
@@ -176,8 +175,7 @@ void initTextScroller(void)
     if (!colortable1)
     {
         writeLog("Error: Could not allocate memory for space bitmap color table\n");
-        exitTextScroller();
-        exit(RETURN_ERROR);
+        goto __exit_init_scroller;
     }
     writeLogFS("Allocated %d  bytes for space bitmap color table\n",
                COLORMAP32_BYTE_SIZE(TEXTSCROLLER_BLOB_SPACE_COLORS));
@@ -209,8 +207,7 @@ void initTextScroller(void)
                                        TEXTSCROLLER_BLOB_FONT_DEPTH, &starsClip);
     if(!textScrollerScreen0){
         writeLog("Error: Could not allocate memory for text scroller screen\n");
-        exitTextScroller();
-        exit(RETURN_ERROR);
+        goto __exit_init_scroller;
     }
     LoadRGB4(&textScrollerScreen0->ViewPort, colortable0, TEXTSCROLLER_BLOB_FONT_COLORS);
     createStars();
@@ -223,8 +220,7 @@ void initTextScroller(void)
                                        TEXTSCROLLER_BLOB_SPACE_DEPTH, NULL);
     if(!textScrollerscreen1){
         writeLog("Error: Could not allocate memory for space background screen\n");
-        exitTextScroller();
-        exit(RETURN_ERROR);
+        goto __exit_init_scroller;
     }
     LoadRGB32(&textScrollerscreen1->ViewPort, colortable1);
 
@@ -237,9 +233,13 @@ void initTextScroller(void)
                             TEXTSCROLLER_BLOB_FONT_DEPTH,
                             TEXTSCROLLER_VIEW_TEXTSECTION_WIDTH))
     {
-        exitTextScroller();
-        exit(RETURN_ERROR);
+        goto __exit_init_scroller;
     }
+    return FSM_TEXTSCROLLER;
+
+__exit_init_scroller:
+    exitTextScroller();
+    return FSM_ERROR;
 }
 
 void exitTextScroller(void)

@@ -16,8 +16,8 @@
 #define SHOWLOGO_BLOB_HEIGHT_WITH_BORDER \
     (SHOWLOGO_BLOB_HEIGHT+SHOWLOGO_BLOB_BORDER)
 
-WORD fsmShowLogo(void);
-void initShowLogo(void);
+UWORD fsmShowLogo(void);
+UWORD initShowLogo(void);
 void exitShowLogo(void);
 void fadeInFromWhite(void);
 

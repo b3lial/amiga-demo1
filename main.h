@@ -6,10 +6,8 @@
 #define FSM_TEXTSCROLLER_FINISHED 2
 #define FSM_SHOWLOGO 3
 #define FSM_STOP  4
-#define FSM_QUIT  5
-
-#define MODULE_FINISHED 10
-#define MODULE_CONTINUE 11
+#define FSM_ERROR 5
+#define FSM_QUIT  6
 
 int isAga(void);
 

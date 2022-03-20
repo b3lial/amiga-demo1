@@ -29,8 +29,8 @@
 #define TEXTSCROLLER_BLOB_FONT_DEPTH 3
 #define TEXTSCROLLER_BLOB_FONT_COLORS 8
 
-WORD fsmTextScroller(void);
-void initTextScroller(void);
+UWORD fsmTextScroller(void);
+UWORD initTextScroller(void);
 void exitTextScroller(void);
 void createStars(void);
 void fadeToWhite(void);

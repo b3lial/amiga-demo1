@@ -42,7 +42,7 @@ UWORD *color0 = NULL;
 
 __far extern struct Custom custom;
 
-WORD fsmShowLogo(void)
+UWORD fsmShowLogo(void)
 {
     if (mouseClick())
     {
@@ -58,10 +58,10 @@ WORD fsmShowLogo(void)
         fadeInFromWhite();
         break;
     case SHOWLOGO_SHUTDOWN:
-        return MODULE_FINISHED;
+        return FSM_STOP;
     }
 
-    return MODULE_CONTINUE;
+    return FSM_SHOWLOGO;
 }
 
 /* We create two bitmaps here: the bitmap which is shown on the
@@ -70,7 +70,7 @@ WORD fsmShowLogo(void)
  * the middle of the oncreen bitmap. This allows rotation effects
  * without bothering any array out of bounds problems 
  */
-void initShowLogo(void)
+UWORD initShowLogo(void)
 {
     UWORD i = 0;
     struct Rectangle logoClip;
@@ -82,8 +82,7 @@ void initShowLogo(void)
     if (!logo)
     {
         writeLog("Error: Could not allocate memory for logo bitmap\n");
-        exitShowLogo();
-        exit(RETURN_ERROR);
+        goto __exit_init_logo;
     }
 
     // load onscreen bitmap which will be shown on screen
@@ -94,8 +93,7 @@ void initShowLogo(void)
     if (!logoWithBorders)
     {
         writeLog("Error: Could not allocate memory for onscreen bitmap\n");
-        exitShowLogo();
-        exit(RETURN_ERROR);
+        goto __exit_init_logo;
     }
 
     // blit logo into logoWithBorders and delete old bitmap
@@ -112,8 +110,7 @@ void initShowLogo(void)
     if (!color0)
     {
         writeLog("Error: Could not allocate memory for logo color table\n");
-        exitShowLogo();
-        exit(RETURN_ERROR);
+        goto __exit_init_logo;
     }
     for (; i < SHOWLOGO_BLOB_COLORS; i++)
     {
@@ -133,13 +130,17 @@ void initShowLogo(void)
         SHOWLOGO_BLOB_DEPTH, &logoClip);
     if(!logoscreen0){
         writeLog("Error: Could not allocate memory for logo screen\n");
-        exitShowLogo();
-        exit(RETURN_ERROR);        
+        goto __exit_init_logo;       
     }
     LoadRGB4(&logoscreen0->ViewPort, color0, SHOWLOGO_BLOB_COLORS);
 
     // make screen great again ;)
     ScreenToFront(logoscreen0);
+    return FSM_SHOWLOGO;
+
+__exit_init_logo:
+    exitShowLogo();
+    return FSM_ERROR;
 }
 
 void exitShowLogo(void)
