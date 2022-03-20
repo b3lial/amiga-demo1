@@ -164,7 +164,6 @@ void initTextScroller(void)
     {
         writeLog("Error: Could not load space blob\n");
         exitTextScroller();
-        ON_SPRITE;
         exit(RETURN_ERROR);
     }
     writeLogFS(
@@ -232,7 +231,6 @@ void initTextScroller(void)
     // Make Screens visible on screen
     ScreenToFront(textScrollerScreen0);
     ScreenToFront(textScrollerscreen1);
-    OFF_SPRITE;
 
     // init text scroller engine
     if (!initTextController(textscrollerScreen,
@@ -255,13 +253,11 @@ void exitTextScroller(void)
         CloseScreen(textScrollerScreen0);
         textScrollerScreen0 = NULL;
     }
-    OFF_SPRITE;
     if (textScrollerscreen1)
     {
         CloseScreen(textScrollerscreen1);
         textScrollerscreen1 = NULL;
     }
-    OFF_SPRITE;
 
     // restore screen elements
     if (colortable1)
@@ -347,10 +343,8 @@ void fadeToWhite(void)
     WaitTOF();
     WaitBOVP(&textScrollerScreen0->ViewPort);
     LoadRGB4(&textScrollerScreen0->ViewPort, colortable0, TEXTSCROLLER_BLOB_FONT_COLORS);
-    OFF_SPRITE;
     WaitBOVP(&textScrollerscreen1->ViewPort);
     LoadRGB32(&textScrollerscreen1->ViewPort, colortable1);
-    OFF_SPRITE;
 }
 
 BOOL hasFadeToWhiteFinished(void)

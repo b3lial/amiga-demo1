@@ -136,13 +136,10 @@ void initShowLogo(void)
         exitShowLogo();
         exit(RETURN_ERROR);        
     }
-    OFF_SPRITE;
     LoadRGB4(&logoscreen0->ViewPort, color0, SHOWLOGO_BLOB_COLORS);
-    OFF_SPRITE;
 
     // make screen great again ;)
     ScreenToFront(logoscreen0);
-    OFF_SPRITE;
 }
 
 void exitShowLogo(void)
@@ -152,7 +149,6 @@ void exitShowLogo(void)
         logoscreen0 = NULL;
     }
     WaitTOF();
-    ON_SPRITE;
 
     if (logo)
     {
@@ -199,5 +195,4 @@ void fadeInFromWhite(void)
     WaitTOF();
     WaitBOVP(&logoscreen0->ViewPort);
     LoadRGB4(&logoscreen0->ViewPort, color0, SHOWLOGO_BLOB_COLORS);
-    OFF_SPRITE;
 }

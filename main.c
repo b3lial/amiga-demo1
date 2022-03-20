@@ -5,12 +5,23 @@
 WORD fsmCurrentState = FSM_START;
 WORD fsmNextState = -1;
 
+// empty mouse pointer because we dont want to see a mouse
+UWORD *emptyPointer;
+
 int main(void) {
+    struct Screen  *my_wbscreen_ptr;
+
     // requires aga for 8 bitplanes 24 bit colors
     if(!isAga()){
         printf("Error, this demo requires an aga chipset to run\n");
         exit(RETURN_ERROR);
     }
+
+    // hide mouse
+    emptyPointer = AllocVec(22*sizeof(UWORD), MEMF_CHIP | MEMF_CLEAR);
+    my_wbscreen_ptr = LockPubScreen("Workbench");
+    SetPointer(my_wbscreen_ptr->FirstWindow, emptyPointer, 8, 8, -6, 0);
+    UnlockPubScreen(NULL, my_wbscreen_ptr);
 
     // write logfile to ram: if debug is enabled
     initLog();
@@ -64,6 +75,12 @@ int main(void) {
 
         fsmCurrentState = fsmNextState;
     }
+
+    // restore mouse on every window
+    my_wbscreen_ptr = LockPubScreen("Workbench");
+    ClearPointer(my_wbscreen_ptr->FirstWindow);
+    UnlockPubScreen(NULL, my_wbscreen_ptr);
+    FreeVec(emptyPointer);
 
     exit(RETURN_OK);
 }
