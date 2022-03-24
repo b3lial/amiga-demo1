@@ -1,4 +1,5 @@
 CC=m68k-amigaos-gcc
+VASM=/opt/vbcc/bin/vasmm68k_mot
 CFLAGS = -D__far="" -DDEMO_DEBUG -Wall -O2 -I. 
 LDFLAGS = -noixemul 
 SOURCES=main.c textscroller.c textcontroller.c starlight/utils.c font.c \
@@ -6,7 +7,10 @@ SOURCES=main.c textscroller.c textcontroller.c starlight/utils.c font.c \
 OBJECTS=$(SOURCES:.c=.o)
 EXECUTABLE=demo-1-gcc
 
-all: $(SOURCES) $(EXECUTABLE) 
+all: example $(SOURCES) $(EXECUTABLE) 
+
+example:
+	$(VASM) -kick1hunks -Fhunkexe -o example -nosym example.s
 
 $(EXECUTABLE): $(OBJECTS) 
 	$(CC) $(LDFLAGS) $(OBJECTS) -o $@
