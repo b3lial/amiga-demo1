@@ -2,7 +2,7 @@
 
 #include "demo1.h"
 
-void testFunc(void);
+UWORD testFunc(void);
 
 WORD fsmCurrentState = FSM_START;
 WORD fsmNextState = -1;
@@ -29,7 +29,7 @@ int main(void) {
     initLog();
 
     // call asm test function
-    testFunc();
+    printf("testFunc() returned: %d\n", testFunc());
 
     // main loop which inits screens and executes effects
     while (fsmCurrentState != FSM_QUIT) {

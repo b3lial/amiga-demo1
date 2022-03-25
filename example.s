@@ -5,5 +5,5 @@ init:
   rts
 
 _testFunc:
-  move.w    #0000,d0
+  move.w    #42,d0
   rts
