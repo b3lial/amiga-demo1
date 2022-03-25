@@ -1,5 +1,6 @@
 CC=m68k-amigaos-gcc
 VASM=vasmm68k_mot
+VASMFLAGS=-Faout -devpac 
 CFLAGS = -D__far="" -DDEMO_DEBUG -Wall -O2 -I. -m68000
 LDFLAGS = -noixemul 
 SOURCES=main.c textscroller.c textcontroller.c starlight/utils.c font.c \
@@ -10,7 +11,7 @@ EXECUTABLE=demo-1-gcc
 all: example.o $(SOURCES) $(EXECUTABLE) 
 
 example.o: example.s
-	$(VASM) -Faout -devpac -o example.o example.s
+	$(VASM) $(VASMFLAGS) -o example.o example.s
 
 $(EXECUTABLE): $(OBJECTS) 
 	$(CC) $(LDFLAGS) $(OBJECTS) example.o -o $@
