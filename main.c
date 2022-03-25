@@ -2,6 +2,8 @@
 
 #include "demo1.h"
 
+void testFunc(void);
+
 WORD fsmCurrentState = FSM_START;
 WORD fsmNextState = -1;
 
@@ -9,16 +11,16 @@ WORD fsmNextState = -1;
 UWORD *emptyPointer;
 
 int main(void) {
-    struct Screen  *my_wbscreen_ptr;
+    struct Screen *my_wbscreen_ptr;
 
     // requires aga for 8 bitplanes 24 bit colors
-    if(!isAga()){
+    if (!isAga()) {
         printf("Error, this demo requires an aga chipset to run\n");
         exit(RETURN_ERROR);
     }
 
     // hide mouse
-    emptyPointer = AllocVec(22*sizeof(UWORD), MEMF_CHIP | MEMF_CLEAR);
+    emptyPointer = AllocVec(22 * sizeof(UWORD), MEMF_CHIP | MEMF_CLEAR);
     my_wbscreen_ptr = LockPubScreen("Workbench");
     SetPointer(my_wbscreen_ptr->FirstWindow, emptyPointer, 8, 8, -6, 0);
     UnlockPubScreen(NULL, my_wbscreen_ptr);
@@ -26,9 +28,11 @@ int main(void) {
     // write logfile to ram: if debug is enabled
     initLog();
 
+    // call asm test function
+    testFunc();
+
     // main loop which inits screens and executes effects
     while (fsmCurrentState != FSM_QUIT) {
-
         switch (fsmCurrentState) {
             case FSM_START:
                 fsmNextState = initTextScroller();
@@ -55,7 +59,7 @@ int main(void) {
             case FSM_ERROR:
                 fsmNextState = FSM_QUIT;
                 writeLogFS("Error: Main, submodule in error state\n");
-                break;    
+                break;
 
             // something unexpected happened, we better leave
             default:
@@ -78,7 +82,7 @@ int main(void) {
 }
 
 int isAga(void) {
-  short int *vposr = (short int*) 0xdff004;
+    short int *vposr = (short int *)0xdff004;
 
-  return *vposr & (1<<9);
+    return *vposr & (1 << 9);
 }
