@@ -6,6 +6,6 @@ _testFunc:
   rts
 
 _addFunc:
-  move.w    a0,d0
-  add.w     a1,d0
+  move.l    4(sp),d0
+  add.l     8(sp),d0
   rts
