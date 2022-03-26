@@ -13,7 +13,7 @@ all: example.o $(SOURCES) $(EXECUTABLE)
 example.o: example.s
 	$(VASM) $(VASMFLAGS) -o example.o example.s
 
-$(EXECUTABLE): $(OBJECTS) 
+$(EXECUTABLE): $(OBJECTS) example.o
 	$(CC) $(LDFLAGS) $(OBJECTS) example.o -o $@
 	
 clean: 

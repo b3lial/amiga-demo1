@@ -3,6 +3,7 @@
 #include "demo1.h"
 
 UWORD testFunc(void);
+UWORD addFunc(UWORD, UWORD);
 
 WORD fsmCurrentState = FSM_START;
 WORD fsmNextState = -1;
@@ -30,6 +31,7 @@ int main(void) {
 
     // call asm test function
     printf("testFunc() returned: %d\n", testFunc());
+    printf("addFunc(1,2) returned: %d\n", addFunc(1, 2));
 
     // main loop which inits screens and executes effects
     while (fsmCurrentState != FSM_QUIT) {
