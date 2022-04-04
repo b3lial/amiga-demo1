@@ -12,6 +12,6 @@ then
 fi
 
 docker run --name=$SERVICE_NAME \
-    -v  /Users/belial/Git/amiga-demo1:/build \
+    -v  $PWD:/build \
     --env BUILD_RESULT=demo-1-gcc \
     $IMAGE:latest
