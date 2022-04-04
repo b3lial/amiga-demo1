@@ -8,13 +8,19 @@ SOURCES=main.c textscroller.c textcontroller.c starlight/utils.c font.c \
 OBJECTS=$(SOURCES:.c=.o)
 EXECUTABLE=demo-1-gcc
 
-all: example.o $(SOURCES) $(EXECUTABLE) 
+all: c2p.o p2c.o example.o $(SOURCES) $(EXECUTABLE) 
 
 example.o: example.s
 	$(VASM) $(VASMFLAGS) -o example.o example.s
 
-$(EXECUTABLE): $(OBJECTS) example.o
-	$(CC) $(LDFLAGS) $(OBJECTS) example.o -o $@
+c2p.o: c2p.s
+	$(VASM) $(VASMFLAGS) -o c2p.o c2p.s
+
+p2c.o: p2c.s
+	$(VASM) $(VASMFLAGS) -o p2c.o p2c.s
+
+$(EXECUTABLE): $(OBJECTS) example.o p2c.o c2p.o
+	$(CC) $(LDFLAGS) $(OBJECTS) example.o p2c.o c2p.o -o $@
 	
 clean: 
 	rm *.o starlight/*.o starlight/*.uaem *.lnk *.info *.uaem \
