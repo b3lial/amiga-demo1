@@ -23,7 +23,6 @@
 #include <exec/memory.h>
 #include <dos/dos.h>
 
-#include <graphics/gfxbase.h>
 #include <graphics/displayinfo.h>
 #include <graphics/gfxbase.h>
 #include <graphics/rastport.h>
@@ -42,5 +41,6 @@
 #include "textscroller.h"
 #include "textcontroller.h"
 #include "showlogo.h"
+#include "chunkyconverter/chunkyconverter.h"
 
 #endif

@@ -10,14 +10,14 @@ EXECUTABLE=demo-1-gcc
 
 all: c2p.o p2c.o example.o $(SOURCES) $(EXECUTABLE) 
 
-example.o: example.s
-	$(VASM) $(VASMFLAGS) -o example.o example.s
+example.o: chunkyconverter/example.s
+	$(VASM) $(VASMFLAGS) -o example.o chunkyconverter/example.s
 
-c2p.o: c2p.s
-	$(VASM) $(VASMFLAGS) -o c2p.o c2p.s
+c2p.o: chunkyconverter/c2p.s
+	$(VASM) $(VASMFLAGS) -o c2p.o chunkyconverter/c2p.s
 
-p2c.o: p2c.s
-	$(VASM) $(VASMFLAGS) -o p2c.o p2c.s
+p2c.o: chunkyconverter/p2c.s
+	$(VASM) $(VASMFLAGS) -o p2c.o chunkyconverter/p2c.s
 
 $(EXECUTABLE): $(OBJECTS) example.o p2c.o c2p.o
 	$(CC) $(LDFLAGS) $(OBJECTS) example.o p2c.o c2p.o -o $@
