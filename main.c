@@ -2,9 +2,6 @@
 
 #include "demo1.h"
 
-UWORD testFunc(void);
-UWORD addFunc(UWORD, UWORD);
-
 WORD fsmCurrentState = FSM_START;
 WORD fsmNextState = -1;
 

@@ -3,6 +3,7 @@
 
 #include <exec/types.h>
 #include <graphics/gfxbase.h>
+#include <stdio.h>
 
 struct p2cStruct {
     struct BitMap *bmap;
@@ -16,7 +17,9 @@ struct c2pStruct {
     UBYTE *chunkybuffer;
 };
 
-void PlanarToChunkyAsm(register __a0 struct p2cStruct *);
-void ChunkyToPlanarAsm(register __a0 struct c2pStruct *);
+void PlanarToChunkyAsm(/**__reg("a0")**/ struct p2cStruct *p2c);
+void ChunkyToPlanarAsm(/**__reg("a0")**/ struct c2pStruct *c2p);
+UWORD testFunc(void);
+UWORD addFunc(UWORD, UWORD);
 
 #endif
