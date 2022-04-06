@@ -17,8 +17,8 @@ struct c2pStruct {
     UBYTE *chunkybuffer;
 };
 
-void PlanarToChunkyAsm(/**__reg("a0")**/ struct p2cStruct *p2c);
-void ChunkyToPlanarAsm(/**__reg("a0")**/ struct c2pStruct *c2p);
+void PlanarToChunkyAsm(struct p2cStruct *p2c __asm("a0"));
+void ChunkyToPlanarAsm(struct c2pStruct *c2p __asm("a0"));
 UWORD testFunc(void);
 UWORD addFunc(UWORD, UWORD);
 
