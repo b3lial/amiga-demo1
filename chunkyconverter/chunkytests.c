@@ -7,6 +7,7 @@ void chunkyTests(void) {
     struct BitMap *testBitmap;
     struct p2cStruct p2c;
     UBYTE *chunkyBuffer;
+    UWORD i, j;
 
     // just call asm test functions
     printf("testFunc() returned: %d\n", testFunc());
@@ -24,6 +25,14 @@ void chunkyTests(void) {
     p2c.chunkybuffer = chunkyBuffer;
 
     PlanarToChunkyAsm(&p2c);
+    printf("chunky buffer:\n");
+    for (i = 0; i < TEST_BITMAP_X; i++) {
+        printf("%d: ", i);
+        for (j = 0; j < TEST_BITMAP_Y; j++) {
+            printf("%x ", chunkyBuffer[i * TEST_BITMAP_X + j]);
+        }
+        printf("\n");
+    }
 
     FreeVec(chunkyBuffer);
     FreeBitMap(testBitmap);
