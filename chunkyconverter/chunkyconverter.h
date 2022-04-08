@@ -21,5 +21,6 @@ void PlanarToChunkyAsm(struct p2cStruct *p2c __asm("a0"));
 void ChunkyToPlanarAsm(struct c2pStruct *c2p __asm("a0"));
 UWORD testFunc(void);
 UWORD addFunc(UWORD, UWORD);
+void chunkyTests(void);
 
 #endif

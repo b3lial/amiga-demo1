@@ -26,9 +26,8 @@ int main(void) {
     // write logfile to ram: if debug is enabled
     initLog();
 
-    // call asm test function
-    printf("testFunc() returned: %d\n", testFunc());
-    printf("addFunc(1,2) returned: %d\n", addFunc(1, 2));
+    // run some tests
+    chunkyTests();
 
     // main loop which inits screens and executes effects
     while (fsmCurrentState != FSM_QUIT) {
