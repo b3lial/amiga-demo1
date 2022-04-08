@@ -27,7 +27,7 @@ void chunkyTests(void) {
     PlanarToChunkyAsm(&p2c);
     printf("chunky buffer:\n");
     for (i = 0; i < TEST_BITMAP_X; i++) {
-        printf("%d: ", i);
+        printf("%02d: ", i);
         for (j = 0; j < TEST_BITMAP_Y; j++) {
             printf("%x ", chunkyBuffer[i * TEST_BITMAP_X + j]);
         }
