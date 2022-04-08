@@ -24,6 +24,7 @@ void chunkyTests(void) {
     p2c.height = TEST_BITMAP_Y;
     p2c.chunkybuffer = chunkyBuffer;
 
+    testBitmap->Planes[0][0] = 0xff;
     PlanarToChunkyAsm(&p2c);
     printf("chunky buffer:\n");
     for (i = 0; i < TEST_BITMAP_X; i++) {
