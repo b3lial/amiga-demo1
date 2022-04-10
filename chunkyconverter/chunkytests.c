@@ -22,7 +22,8 @@ void chunkyTests(void) {
     // paint in the planar buffer
     InitRastPort(&rastPort);
     rastPort.BitMap = testBitmap;
-    testBitmap->Planes[0][0] = 0xff;
+    SetAPen(&rastPort, 6);
+    RectFill(&rastPort,7,7,13,13);
     
     // convert planar buffer to chunky
     p2c.bmap = testBitmap;
