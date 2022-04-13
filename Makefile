@@ -9,10 +9,7 @@ SOURCES=main.c textscroller.c textcontroller.c starlight/utils.c font.c \
 OBJECTS=$(SOURCES:.c=.o)
 EXECUTABLE=demo-1-gcc
 
-all: c2p.o p2c.o example.o $(SOURCES) $(EXECUTABLE) 
-
-example.o: chunkyconverter/example.s
-	$(VASM) $(VASMFLAGS) -o example.o chunkyconverter/example.s
+all: c2p.o p2c.o $(SOURCES) $(EXECUTABLE) 
 
 c2p.o: chunkyconverter/c2p.s
 	$(VASM) $(VASMFLAGS) -o c2p.o chunkyconverter/c2p.s
@@ -20,8 +17,8 @@ c2p.o: chunkyconverter/c2p.s
 p2c.o: chunkyconverter/p2c.s
 	$(VASM) $(VASMFLAGS) -o p2c.o chunkyconverter/p2c.s
 
-$(EXECUTABLE): $(OBJECTS) example.o p2c.o c2p.o
-	$(CC) $(LDFLAGS) $(OBJECTS) example.o p2c.o c2p.o -o $@
+$(EXECUTABLE): $(OBJECTS) p2c.o c2p.o
+	$(CC) $(LDFLAGS) $(OBJECTS) p2c.o c2p.o -o $@
 	
 clean: 
 	rm *.o starlight/*.o starlight/*.uaem *.lnk *.info *.uaem \

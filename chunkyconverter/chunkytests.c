@@ -10,10 +10,6 @@ void chunkyTests(void) {
     UBYTE *chunkyBuffer;
     UWORD i, j;
 
-    // just call asm test functions
-    printf("testFunc() returned: %d\n", testFunc());
-    printf("addFunc(1,2) returned: %d\n", addFunc(1, 2));
-
     // alloc memory for chunky and planar buffers
     testBitmap = AllocBitMap(TEST_BITMAP_X, TEST_BITMAP_Y, 8,
                              BMF_DISPLAYABLE | BMF_CLEAR, NULL);
@@ -23,8 +19,8 @@ void chunkyTests(void) {
     InitRastPort(&rastPort);
     rastPort.BitMap = testBitmap;
     SetAPen(&rastPort, 6);
-    RectFill(&rastPort,7,7,13,13);
-    
+    RectFill(&rastPort, 7, 7, 13, 13);
+
     // convert planar buffer to chunky
     p2c.bmap = testBitmap;
     p2c.startX = 0;
