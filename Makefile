@@ -1,18 +1,24 @@
 CC=m68k-amigaos-gcc
-CFLAGS = -D__far="" -DDEMO_DEBUG -Wall -O2 -I. 
+VASM=vasmm68k_mot
+VASMFLAGS=-Faout -devpac 
+CFLAGS = -D__far="" -DDEMO_DEBUG -Wall -O2 -I. -m68000
 LDFLAGS = -noixemul 
 SOURCES=main.c textscroller.c textcontroller.c starlight/utils.c font.c \
-		starlight/blob_controller.c starlight/graphics_controller.c showlogo.c
+		starlight/blob_controller.c starlight/graphics_controller.c \
+		showlogo.c
 OBJECTS=$(SOURCES:.c=.o)
 EXECUTABLE=demo-1-gcc
 
-all: $(SOURCES) $(EXECUTABLE) 
+all: c2p.o p2c.o $(SOURCES) $(EXECUTABLE) 
 
-$(EXECUTABLE): $(OBJECTS) 
-	$(CC) $(LDFLAGS) $(OBJECTS) -o $@
+c2p.o: chunkyconverter/c2p.s
+	$(VASM) $(VASMFLAGS) -o c2p.o chunkyconverter/c2p.s
 
-.cpp.o:
-	$(CC) $(CFLAGS) $< -o $@
+p2c.o: chunkyconverter/p2c.s
+	$(VASM) $(VASMFLAGS) -o p2c.o chunkyconverter/p2c.s
+
+$(EXECUTABLE): $(OBJECTS) p2c.o c2p.o
+	$(CC) $(LDFLAGS) $(OBJECTS) p2c.o c2p.o -o $@
 	
 clean: 
 	rm *.o starlight/*.o starlight/*.uaem *.lnk *.info *.uaem \

@@ -23,10 +23,13 @@ To give you a better impression, the demo can be seen on youtube:
 
 Can be 
 
-* crosscompiled with makefile and [GCC](http://aminet.net/package/dev/gcc/m68k-amigaos-gcc)
-* or compiled on a real machine with SAS-C and smake
+* crosscompiled with makefile, [GCC](http://aminet.net/package/dev/gcc/m68k-amigaos-gcc) and vasm
+* or install my [amiga build](https://hub.docker.com/r/phobosys/amiga-gcc-builder) 
+docker container and run `docker-run.sh`
 
-SAS-C seems to produce smaller binaries (18kb) compared to GCC (33kb).
+Important:
+* SAS-C and smake will not work (right now) because I have not added instructions
+on how to compile the chunky converter assembly
 
 ## History
 
