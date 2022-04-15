@@ -26,9 +26,6 @@ int main(void) {
     // write logfile to ram: if debug is enabled
     initLog();
 
-    // run some tests
-    chunkyTests();
-
     // main loop which inits screens and executes effects
     while (fsmCurrentState != FSM_QUIT) {
         switch (fsmCurrentState) {
