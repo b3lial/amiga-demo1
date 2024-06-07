@@ -1,8 +1,8 @@
 #include "demo1.h"
 
 WORD payloadShowLogoState = SHOWLOGO_INIT;
-struct BitMap *logo = NULL;
-struct BitMap *logoWithBorders;
+struct BitMap *logoBitmap = NULL;
+struct BitMap *screenBitmap;
 struct Screen *logoscreen0 = NULL;
 UWORD dawnPaletteRGB4[256] = {0};
 UWORD *color0 = NULL;
@@ -39,10 +39,10 @@ UWORD initShowLogo(void) {
     struct Rectangle logoClip;
     writeLog("\n\n== initShowLogo() ==\n");
 
-    // load demo logo from file which we blit later into logoWithBorders
-    logo = loadBlob("img/dawn2_240_201_8.RAW", SHOWLOGO_DAWN_DEPTH,
-                    SHOWLOGO_DAWN_WIDTH, SHOWLOGO_DAWN_HEIGHT);
-    if (!logo) {
+    // load demo logo from file which we blit later into screenBitmap
+    logoBitmap = loadBlob("img/dawn2_240_201_8.RAW", SHOWLOGO_DAWN_DEPTH,
+                          SHOWLOGO_DAWN_WIDTH, SHOWLOGO_DAWN_HEIGHT);
+    if (!logoBitmap) {
         writeLog("Error: Could not allocate memory for dawn logo bitmap\n");
         goto __exit_init_logo;
     }
@@ -52,23 +52,23 @@ UWORD initShowLogo(void) {
                  SHOWLOGO_DAWN_COLORS);
 
     // load onscreen bitmap which will be shown on screen
-    logoWithBorders = AllocBitMap(SHOWLOGO_BLOB_WIDTH + SHOWLOGO_BLOB_BORDER,
-                                  SHOWLOGO_BLOB_HEIGHT + SHOWLOGO_BLOB_BORDER,
-                                  SHOWLOGO_BLOB_DEPTH, BMF_DISPLAYABLE | BMF_CLEAR,
-                                  NULL);
-    if (!logoWithBorders) {
+    screenBitmap = AllocBitMap(SHOWLOGO_SCREEN_WIDTH + SHOWLOGO_SCREEN_BORDER,
+                               SHOWLOGO_SCREEN_HEIGHT + SHOWLOGO_SCREEN_BORDER,
+                               SHOWLOGO_SCREEN_DEPTH, BMF_DISPLAYABLE | BMF_CLEAR,
+                               NULL);
+    if (!screenBitmap) {
         writeLog("Error: Could not allocate memory for onscreen bitmap\n");
         goto __exit_init_logo;
     }
 
-    // blit logo into logoWithBorders and delete old bitmap
-    BltBitMap(logo, 0, 0,
-              logoWithBorders,
-              SHOWLOGO_BLOB_BORDER, SHOWLOGO_BLOB_BORDER,
+    // blit logo into screenBitmap and delete old bitmap
+    BltBitMap(logoBitmap, 0, 0,
+              screenBitmap,
+              SHOWLOGO_DAWN_X_POS, SHOWLOGO_DAWN_Y_POS,
               SHOWLOGO_DAWN_WIDTH, SHOWLOGO_DAWN_HEIGHT,
               0xC0, 0xff, 0);
-    FreeBitMap(logo);
-    logo = NULL;
+    FreeBitMap(logoBitmap);
+    logoBitmap = NULL;
 
     // this color table will fade from white to logo
     color0 = AllocVec(sizeof(dawnPaletteRGB4), NULL);
@@ -76,7 +76,7 @@ UWORD initShowLogo(void) {
         writeLog("Error: Could not allocate memory for logo color table\n");
         goto __exit_init_logo;
     }
-    for (; i < SHOWLOGO_BLOB_COLORS; i++) {
+    for (; i < SHOWLOGO_SCREEN_COLORS; i++) {
         color0[i] = 0x0fff;
     }
 
@@ -84,18 +84,18 @@ UWORD initShowLogo(void) {
     writeLog("Create screen\n");
     logoClip.MinX = 0;
     logoClip.MinY = 0;
-    logoClip.MaxX = SHOWLOGO_BLOB_WIDTH;
-    logoClip.MaxY = SHOWLOGO_BLOB_HEIGHT;
-    logoscreen0 = createScreen(logoWithBorders, TRUE,
-                               -SHOWLOGO_BLOB_BORDER, -SHOWLOGO_BLOB_BORDER,
-                               SHOWLOGO_BLOB_WIDTH_WITH_BORDER,
-                               SHOWLOGO_BLOB_HEIGHT_WITH_BORDER,
-                               SHOWLOGO_BLOB_DEPTH, &logoClip);
+    logoClip.MaxX = SHOWLOGO_SCREEN_WIDTH;
+    logoClip.MaxY = SHOWLOGO_SCREEN_HEIGHT;
+    logoscreen0 = createScreen(screenBitmap, TRUE,
+                               -SHOWLOGO_SCREEN_BORDER, -SHOWLOGO_SCREEN_BORDER,
+                               SHOWLOGO_SCREEN_WIDTH + SHOWLOGO_SCREEN_BORDER,
+                               SHOWLOGO_SCREEN_HEIGHT + SHOWLOGO_SCREEN_BORDER,
+                               SHOWLOGO_SCREEN_DEPTH, &logoClip);
     if (!logoscreen0) {
         writeLog("Error: Could not allocate memory for logo screen\n");
         goto __exit_init_logo;
     }
-    LoadRGB4(&logoscreen0->ViewPort, color0, SHOWLOGO_BLOB_COLORS);
+    LoadRGB4(&logoscreen0->ViewPort, color0, SHOWLOGO_SCREEN_COLORS);
 
     // make screen great again ;)
     ScreenToFront(logoscreen0);
@@ -113,13 +113,13 @@ void exitShowLogo(void) {
     }
     WaitTOF();
 
-    if (logo) {
-        FreeBitMap(logo);
-        logo = NULL;
+    if (logoBitmap) {
+        FreeBitMap(logoBitmap);
+        logoBitmap = NULL;
     }
-    if (logoWithBorders) {
-        FreeBitMap(logoWithBorders);
-        logo = NULL;
+    if (screenBitmap) {
+        FreeBitMap(screenBitmap);
+        logoBitmap = NULL;
     }
     if (color0) {
         FreeVec(color0);
@@ -132,7 +132,7 @@ void fadeInFromWhite(void) {
     UWORD i = 0;
 
     // fade effect on color table
-    for (; i < SHOWLOGO_BLOB_COLORS; i++) {
+    for (; i < SHOWLOGO_SCREEN_COLORS; i++) {
         decrementer = 0;
         if ((color0[i] & 0x000f) != (dawnPaletteRGB4[i] & 0x000f)) {
             decrementer |= 0x0001;
@@ -149,5 +149,5 @@ void fadeInFromWhite(void) {
     // update screen and show result of fade in step
     WaitTOF();
     WaitBOVP(&logoscreen0->ViewPort);
-    LoadRGB4(&logoscreen0->ViewPort, color0, SHOWLOGO_BLOB_COLORS);
+    LoadRGB4(&logoscreen0->ViewPort, color0, SHOWLOGO_SCREEN_COLORS);
 }
