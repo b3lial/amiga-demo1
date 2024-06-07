@@ -33,14 +33,8 @@
 #define DEGREE_RESOLUTION 10
 #define DEST_BUFFER_SIZE 36
 
-#define ROTATION_DEPTH 1
-#define ROTATION_COLORS 2
-#define ROTATION_WIDTH 320
-#define ROTATION_HEIGHT 256
-
 BOOL initRotationEngine(UBYTE rs, USHORT bw, USHORT bh);
 BOOL allocateChunkyBuffer(void);
-void switchScreenData(void);
 void freeChunkyBuffer(void);
 UBYTE* getSourceBuffer(void);
 UBYTE* getDestBuffer(UBYTE index);
