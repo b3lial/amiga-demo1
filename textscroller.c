@@ -20,139 +20,129 @@ struct TextConfig text3;
 struct Screen *textScrollerScreen0;
 struct Screen *textScrollerscreen1;
 
-UWORD fsmTextScroller(void)
-{
-    //terminate effect on mouse click
-    if (mouseClick())
-    {
+UWORD fsmTextScroller(void) {
+    // terminate effect on mouse click
+    if (mouseClick()) {
         resetTextController();
         payloadTextScrollerState = TEXTSCROLLER_FADE_WHITE;
     }
 
     // no mouse click -> execute state machine
-    switch (payloadTextScrollerState)
-    {
-    case TEXTSCROLLER_INIT:
-        // configure text scroll engine
-        text1.currentText = "hi there";
-        text1.charXPosDestination = MAX_CHAR_WIDTH + 70;
-        text1.charYPosDestination = 40;
-        textList[0] = &text1;
-        textList[1] = NULL;
-        WaitTOF();
-        setStringsTextController(textList);
-        payloadTextScrollerState = TEXTSCROLLER_MSG_1;
-        break;
-
-    // display "hi there"
-    case TEXTSCROLLER_MSG_1:
-        WaitTOF();
-        executeTextController();
-        if (isFinishedTextController())
-        {
+    switch (payloadTextScrollerState) {
+        case TEXTSCROLLER_INIT:
             // configure text scroll engine
-            resetTextController();
-            text1.currentText = "belial";
-            text1.charXPosDestination = MAX_CHAR_WIDTH + 95;
-            text1.charYPosDestination = 18;
-            text2.currentText = "here";
-            text2.charXPosDestination = MAX_CHAR_WIDTH + 110;
-            text2.charYPosDestination = 70;
+            text1.currentText = "hi there";
+            text1.charXPosDestination = MAX_CHAR_WIDTH + 70;
+            text1.charYPosDestination = 40;
             textList[0] = &text1;
-            textList[1] = &text2;
-            textList[2] = NULL;
-            pauseTimeTextController(180);
+            textList[1] = NULL;
             WaitTOF();
             setStringsTextController(textList);
-            payloadTextScrollerState = TEXTSCROLLER_MSG_2;
-        }
-        break;
+            payloadTextScrollerState = TEXTSCROLLER_MSG_1;
+            break;
 
-    // display "belial here"
-    case TEXTSCROLLER_MSG_2:
-        WaitTOF();
-        executeTextController();
-        if (isFinishedTextController())
-        {
-            // configure text scroll engine
-            resetTextController();
-            text1.currentText = "presenting";
-            text1.charXPosDestination = MAX_CHAR_WIDTH + 37;
-            text1.charYPosDestination = 4;
-            text2.currentText = "my";
-            text2.charXPosDestination = MAX_CHAR_WIDTH + 133;
-            text2.charYPosDestination = 44;
-            text3.currentText = "first";
-            text3.charXPosDestination = MAX_CHAR_WIDTH + 103;
-            text3.charYPosDestination = 84;
-            textList[0] = &text1;
-            textList[1] = &text2;
-            textList[2] = &text3;
-            textList[3] = NULL;
-            pauseTimeTextController(660);
+        // display "hi there"
+        case TEXTSCROLLER_MSG_1:
             WaitTOF();
-            setStringsTextController(textList);
-            payloadTextScrollerState = TEXTSCROLLER_MSG_3;
-        }
-        break;
+            executeTextController();
+            if (isFinishedTextController()) {
+                // configure text scroll engine
+                resetTextController();
+                text1.currentText = "belial";
+                text1.charXPosDestination = MAX_CHAR_WIDTH + 95;
+                text1.charYPosDestination = 18;
+                text2.currentText = "here";
+                text2.charXPosDestination = MAX_CHAR_WIDTH + 110;
+                text2.charYPosDestination = 70;
+                textList[0] = &text1;
+                textList[1] = &text2;
+                textList[2] = NULL;
+                pauseTimeTextController(180);
+                WaitTOF();
+                setStringsTextController(textList);
+                payloadTextScrollerState = TEXTSCROLLER_MSG_2;
+            }
+            break;
 
-    // display "presenting my first"
-    case TEXTSCROLLER_MSG_3:
-        WaitTOF();
-        executeTextController();
-        if (isFinishedTextController())
-        {
-            // configure text scroll engine
-            resetTextController();
-            text1.currentText = "demo";
-            text1.charXPosDestination = MAX_CHAR_WIDTH + 10;
-            text1.charYPosDestination = 18;
-            text2.currentText = "production";
-            text2.charXPosDestination = MAX_CHAR_WIDTH + 45;
-            text2.charYPosDestination = 70;
-            textList[0] = &text1;
-            textList[1] = &text2;
-            textList[2] = NULL;
-            pauseTimeTextController(300);
+        // display "belial here"
+        case TEXTSCROLLER_MSG_2:
             WaitTOF();
-            setStringsTextController(textList);
-            payloadTextScrollerState = TEXTSCROLLER_MSG_4;
-        }
-        break;
+            executeTextController();
+            if (isFinishedTextController()) {
+                // configure text scroll engine
+                resetTextController();
+                text1.currentText = "presenting";
+                text1.charXPosDestination = MAX_CHAR_WIDTH + 37;
+                text1.charYPosDestination = 4;
+                text2.currentText = "my";
+                text2.charXPosDestination = MAX_CHAR_WIDTH + 133;
+                text2.charYPosDestination = 44;
+                text3.currentText = "first";
+                text3.charXPosDestination = MAX_CHAR_WIDTH + 103;
+                text3.charYPosDestination = 84;
+                textList[0] = &text1;
+                textList[1] = &text2;
+                textList[2] = &text3;
+                textList[3] = NULL;
+                pauseTimeTextController(660);
+                WaitTOF();
+                setStringsTextController(textList);
+                payloadTextScrollerState = TEXTSCROLLER_MSG_3;
+            }
+            break;
 
-    // display "demo production"
-    case TEXTSCROLLER_MSG_4:
-        WaitTOF();
-        executeTextController();
-        if (isFinishedTextController())
-        {
-            payloadTextScrollerState = TEXTSCROLLER_FADE_WHITE;
-            resetTextController();
-        }
-        break;
+        // display "presenting my first"
+        case TEXTSCROLLER_MSG_3:
+            WaitTOF();
+            executeTextController();
+            if (isFinishedTextController()) {
+                // configure text scroll engine
+                resetTextController();
+                text1.currentText = "demo";
+                text1.charXPosDestination = MAX_CHAR_WIDTH + 10;
+                text1.charYPosDestination = 18;
+                text2.currentText = "production";
+                text2.charXPosDestination = MAX_CHAR_WIDTH + 45;
+                text2.charYPosDestination = 70;
+                textList[0] = &text1;
+                textList[1] = &text2;
+                textList[2] = NULL;
+                pauseTimeTextController(300);
+                WaitTOF();
+                setStringsTextController(textList);
+                payloadTextScrollerState = TEXTSCROLLER_MSG_4;
+            }
+            break;
 
-    // display "demo production"
-    case TEXTSCROLLER_FADE_WHITE:
-        WaitTOF();
-        fadeToWhite();
-        if (hasFadeToWhiteFinished())
-        {
-            return FSM_TEXTSCROLLER_FINISHED;
-        }
-        break;
+        // display "demo production"
+        case TEXTSCROLLER_MSG_4:
+            WaitTOF();
+            executeTextController();
+            if (isFinishedTextController()) {
+                payloadTextScrollerState = TEXTSCROLLER_FADE_WHITE;
+                resetTextController();
+            }
+            break;
+
+        // display "demo production"
+        case TEXTSCROLLER_FADE_WHITE:
+            WaitTOF();
+            fadeToWhite();
+            if (hasFadeToWhiteFinished()) {
+                return FSM_TEXTSCROLLER_FINISHED;
+            }
+            break;
     }
 
     return FSM_TEXTSCROLLER;
 }
 
-UWORD initTextScroller(void)
-{
+UWORD initTextScroller(void) {
     BYTE i = 0;
     struct Rectangle starsClip;
     writeLog("== initTextScroller() ==\n\n");
 
-    for (; i < TEXT_LIST_SIZE; i++)
-    {
+    for (; i < TEXT_LIST_SIZE; i++) {
         textList[i] = NULL;
     }
 
@@ -160,8 +150,7 @@ UWORD initTextScroller(void)
     // Load space background bitmap
     spaceBlob = loadBlob("img/space4_320_125_8.RAW", TEXTSCROLLER_BLOB_SPACE_DEPTH,
                          TEXTSCROLLER_BLOB_SPACE_WIDTH, TEXTSCROLLER_BLOB_SPACE_HEIGHT);
-    if (spaceBlob == NULL)
-    {
+    if (spaceBlob == NULL) {
         writeLog("Error: Could not load space blob\n");
         goto __exit_init_scroller;
     }
@@ -172,8 +161,7 @@ UWORD initTextScroller(void)
 
     // Load space background color table
     colortable1 = AllocVec(COLORMAP32_BYTE_SIZE(TEXTSCROLLER_BLOB_SPACE_COLORS), MEMF_ANY);
-    if (!colortable1)
-    {
+    if (!colortable1) {
         writeLog("Error: Could not allocate memory for space bitmap color table\n");
         goto __exit_init_scroller;
     }
@@ -193,7 +181,6 @@ UWORD initTextScroller(void)
     loadColorMap("img/charset_final.CMAP", colortable0,
                  TEXTSCROLLER_BLOB_FONT_COLORS);
 
-
     writeLog("Create two screens\n");
     // text scroller section screen
     starsClip.MinX = 0;
@@ -205,7 +192,7 @@ UWORD initTextScroller(void)
                                        TEXTSCROLLER_VIEW_TEXTSECTION_WIDTH,
                                        TEXTSCROLLER_VIEW_TEXTSECTION_HEIGHT,
                                        TEXTSCROLLER_BLOB_FONT_DEPTH, &starsClip);
-    if(!textScrollerScreen0){
+    if (!textScrollerScreen0) {
         writeLog("Error: Could not allocate memory for text scroller screen\n");
         goto __exit_init_scroller;
     }
@@ -218,7 +205,7 @@ UWORD initTextScroller(void)
                                        TEXTSCROLLER_VIEW_WIDTH,
                                        TEXTSCROLLER_VIEW_SPACESECTION_HEIGHT,
                                        TEXTSCROLLER_BLOB_SPACE_DEPTH, NULL);
-    if(!textScrollerscreen1){
+    if (!textScrollerscreen1) {
         writeLog("Error: Could not allocate memory for space background screen\n");
         goto __exit_init_scroller;
     }
@@ -231,8 +218,7 @@ UWORD initTextScroller(void)
     // init text scroller engine
     if (!initTextController(textscrollerScreen,
                             TEXTSCROLLER_BLOB_FONT_DEPTH,
-                            TEXTSCROLLER_VIEW_TEXTSECTION_WIDTH))
-    {
+                            TEXTSCROLLER_VIEW_TEXTSECTION_WIDTH)) {
         goto __exit_init_scroller;
     }
     return FSM_TEXTSCROLLER;
@@ -242,38 +228,32 @@ __exit_init_scroller:
     return FSM_ERROR;
 }
 
-void exitTextScroller(void)
-{
+void exitTextScroller(void) {
     writeLog("\n== exitTextScroller() ==\n");
     exitTextController();
 
     // restore old screen
-    if (textScrollerScreen0)
-    {
+    if (textScrollerScreen0) {
         CloseScreen(textScrollerScreen0);
         textScrollerScreen0 = NULL;
     }
-    if (textScrollerscreen1)
-    {
+    if (textScrollerscreen1) {
         CloseScreen(textScrollerscreen1);
         textScrollerscreen1 = NULL;
     }
 
     // restore screen elements
-    if (colortable1)
-    {
+    if (colortable1) {
         FreeVec(colortable1);
         colortable1 = NULL;
     }
 
-    if (textscrollerScreen)
-    {
+    if (textscrollerScreen) {
         FreeBitMap(textscrollerScreen);
         textscrollerScreen = NULL;
     }
 
-    if (spaceBlob)
-    {
+    if (spaceBlob) {
         FreeBitMap(spaceBlob);
         spaceBlob = NULL;
     }
@@ -281,58 +261,48 @@ void exitTextScroller(void)
     payloadTextScrollerState = TEXTSCROLLER_INIT;
 }
 
-void createStars()
-{
+void createStars() {
     BYTE i;
     UWORD x, y;
 
     writeLogFS("creating random stars on text scroller screen\n");
     SetAPen(&textScrollerScreen0->RastPort, 6);
-    for (i = 0; i < 50; i++)
-    {
+    for (i = 0; i < 50; i++) {
         x = RangeRand(TEXTSCROLLER_VIEW_TEXTSECTION_WIDTH);
         y = RangeRand(TEXTSCROLLER_VIEW_TEXTSECTION_HEIGHT);
         WritePixel(&textScrollerScreen0->RastPort, x, y);
     }
 }
 
-void fadeToWhite(void)
-{
+void fadeToWhite(void) {
     UWORD i = 0;
     UWORD incrementer;
     ULONG currentColor;
 
     // fade of text scroll area (viewPort[0])
-    for (; i < TEXTSCROLLER_BLOB_FONT_COLORS; i++)
-    {
+    for (; i < TEXTSCROLLER_BLOB_FONT_COLORS; i++) {
         incrementer = 0;
-        if ((colortable0[i] & 0x000f) != 0x000f)
-        {
+        if ((colortable0[i] & 0x000f) != 0x000f) {
             incrementer |= 0x0001;
         }
-        if ((colortable0[i] & 0x00f0) != 0x00f0)
-        {
+        if ((colortable0[i] & 0x00f0) != 0x00f0) {
             incrementer |= 0x0010;
         }
-        if ((colortable0[i] & 0x0f00) != 0x0f00)
-        {
+        if ((colortable0[i] & 0x0f00) != 0x0f00) {
             incrementer |= 0x0100;
         }
         colortable0[i] += incrementer;
     }
 
     // fade of space background area (viewPort[1])
-    for (i = 1; i < COLORMAP32_LONG_SIZE(TEXTSCROLLER_BLOB_SPACE_COLORS) - 1; i++)
-    {
+    for (i = 1; i < COLORMAP32_LONG_SIZE(TEXTSCROLLER_BLOB_SPACE_COLORS) - 1; i++) {
         currentColor = (colortable1[i] & 0x000000ff);
-        if (currentColor == 0xff)
-        {
+        if (currentColor == 0xff) {
             continue;
         }
 
         currentColor += 17;
-        if (currentColor > 0x000000ff)
-        {
+        if (currentColor > 0x000000ff) {
             currentColor = 0x000000ff;
         }
 
@@ -347,22 +317,17 @@ void fadeToWhite(void)
     LoadRGB32(&textScrollerscreen1->ViewPort, colortable1);
 }
 
-BOOL hasFadeToWhiteFinished(void)
-{
+BOOL hasFadeToWhiteFinished(void) {
     UWORD i = 0;
 
-    for (; i < TEXTSCROLLER_BLOB_FONT_COLORS; i++)
-    {
-        if ((colortable0[i] & 0x0fff) != 0x0fff)
-        {
+    for (; i < TEXTSCROLLER_BLOB_FONT_COLORS; i++) {
+        if ((colortable0[i] & 0x0fff) != 0x0fff) {
             return FALSE;
         }
     }
 
-    for (i = 1; i < COLORMAP32_LONG_SIZE(TEXTSCROLLER_BLOB_SPACE_COLORS) - 1; i++)
-    {
-        if ((colortable1[i] & 0x000000ff) != 0xff)
-        {
+    for (i = 1; i < COLORMAP32_LONG_SIZE(TEXTSCROLLER_BLOB_SPACE_COLORS) - 1; i++) {
+        if ((colortable1[i] & 0x000000ff) != 0xff) {
             return FALSE;
         }
     }
