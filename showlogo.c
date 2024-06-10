@@ -40,7 +40,7 @@ UWORD initShowLogo(void) {
     writeLog("\n\n== initShowLogo() ==\n");
 
     // load demo logo from file which we blit later into screenBitmap
-    logoBitmap = loadBlob("img/dawn2_240_201_8.RAW", SHOWLOGO_DAWN_DEPTH,
+    logoBitmap = loadBlob("img/dawn_224_224_8.RAW", SHOWLOGO_DAWN_DEPTH,
                           SHOWLOGO_DAWN_WIDTH, SHOWLOGO_DAWN_HEIGHT);
     if (!logoBitmap) {
         writeLog("Error: Could not allocate memory for dawn logo bitmap\n");
@@ -48,7 +48,7 @@ UWORD initShowLogo(void) {
     }
 
     // Load dawn logo color table
-    loadColorMap("img/dawn2_240_201_8.CMAP", dawnPaletteRGB4,
+    loadColorMap("img/dawn_224_224_8.CMAP", dawnPaletteRGB4,
                  SHOWLOGO_DAWN_COLORS);
 
     // load onscreen bitmap which will be shown on screen
