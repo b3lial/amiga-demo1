@@ -9,6 +9,8 @@ UWORD *color0 = NULL;
 
 __far extern struct Custom custom;
 
+void createStars2(void);
+
 UWORD fsmShowLogo(void) {
     if (mouseClick()) {
         payloadShowLogoState = SHOWLOGO_SHUTDOWN;
@@ -26,6 +28,19 @@ UWORD fsmShowLogo(void) {
     }
 
     return FSM_SHOWLOGO;
+}
+
+void createStars2() {
+    BYTE i;
+    UWORD x, y;
+
+    writeLogFS("creating random stars on text scroller screen\n");
+    SetAPen(&logoscreen0->RastPort, 42);
+    for (i = 0; i < 70; i++) {
+        x = RangeRand(SHOWLOGO_SCREEN_WIDTH + SHOWLOGO_SCREEN_BORDER);
+        y = RangeRand(SHOWLOGO_SCREEN_HEIGHT + SHOWLOGO_SCREEN_BORDER);
+        WritePixel(&logoscreen0->RastPort, x, y);
+    }
 }
 
 /* We create two bitmaps here: the bitmap which is shown on the
@@ -61,15 +76,6 @@ UWORD initShowLogo(void) {
         goto __exit_init_logo;
     }
 
-    // blit logo into screenBitmap and delete old bitmap
-    BltBitMap(logoBitmap, 0, 0,
-              screenBitmap,
-              SHOWLOGO_DAWN_X_POS, SHOWLOGO_DAWN_Y_POS,
-              SHOWLOGO_DAWN_WIDTH, SHOWLOGO_DAWN_HEIGHT,
-              0xC0, 0xff, 0);
-    FreeBitMap(logoBitmap);
-    logoBitmap = NULL;
-
     // this color table will fade from white to logo
     color0 = AllocVec(sizeof(dawnPaletteRGB4), NULL);
     if (!color0) {
@@ -96,6 +102,17 @@ UWORD initShowLogo(void) {
         goto __exit_init_logo;
     }
     LoadRGB4(&logoscreen0->ViewPort, color0, SHOWLOGO_SCREEN_COLORS);
+
+    createStars2();
+
+    // blit logo into screenBitmap and delete old bitmap
+    BltBitMap(logoBitmap, 0, 0,
+              screenBitmap,
+              SHOWLOGO_DAWN_X_POS, SHOWLOGO_DAWN_Y_POS,
+              SHOWLOGO_DAWN_WIDTH, SHOWLOGO_DAWN_HEIGHT,
+              0xC0, 0xff, 0);
+    FreeBitMap(logoBitmap);
+    logoBitmap = NULL;
 
     // make screen great again ;)
     ScreenToFront(logoscreen0);
