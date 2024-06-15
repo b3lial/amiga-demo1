@@ -197,7 +197,8 @@ UWORD initTextScroller(void) {
         goto __exit_init_scroller;
     }
     LoadRGB4(&textScrollerScreen0->ViewPort, colortable0, TEXTSCROLLER_BLOB_FONT_COLORS);
-    createStars();
+    createStars(&textScrollerScreen0->RastPort, 6, 50, TEXTSCROLLER_VIEW_TEXTSECTION_WIDTH,
+                TEXTSCROLLER_VIEW_TEXTSECTION_HEIGHT);
 
     // static space image screen
     textScrollerscreen1 = createScreen(spaceBlob, TRUE,
@@ -259,19 +260,6 @@ void exitTextScroller(void) {
     }
 
     payloadTextScrollerState = TEXTSCROLLER_INIT;
-}
-
-void createStars() {
-    BYTE i;
-    UWORD x, y;
-
-    writeLogFS("creating random stars on text scroller screen\n");
-    SetAPen(&textScrollerScreen0->RastPort, 6);
-    for (i = 0; i < 50; i++) {
-        x = RangeRand(TEXTSCROLLER_VIEW_TEXTSECTION_WIDTH);
-        y = RangeRand(TEXTSCROLLER_VIEW_TEXTSECTION_HEIGHT);
-        WritePixel(&textScrollerScreen0->RastPort, x, y);
-    }
 }
 
 void fadeToWhite(void) {

@@ -16,7 +16,7 @@
 
 // reserve additional space as scroll in area
 #define TEXTSCROLLER_VIEW_TEXTSECTION_WIDTH \
-    (TEXTSCROLLER_VIEW_WIDTH + MAX_CHAR_WIDTH*2)
+    (TEXTSCROLLER_VIEW_WIDTH + MAX_CHAR_WIDTH * 2)
 
 #define TEXTSCROLLER_VIEW_TEXTSECTION_HEIGHT 125
 #define TEXTSCROLLER_VIEW_SPACESECTION_HEIGHT 125
@@ -32,7 +32,6 @@
 UWORD fsmTextScroller(void);
 UWORD initTextScroller(void);
 void exitTextScroller(void);
-void createStars(void);
 void fadeToWhite(void);
 BOOL hasFadeToWhiteFinished(void);
 
