@@ -19,9 +19,16 @@ UWORD fsmShowLogo(void) {
             payloadShowLogoState = SHOWLOGO_STATIC;
             break;
         case SHOWLOGO_STATIC:
-            fadeInFromWhite();
+            payloadShowLogoState = fadeInFromWhite();
+            break;
+        case SHOWLOGO_PREPARE_ROTATION:
+            payloadShowLogoState = prepareRotation();
+            break;
+        case SHOWLOGO_ROTATE:
+            payloadShowLogoState = performRotation();
             break;
         case SHOWLOGO_SHUTDOWN:
+            exitShowLogo();
             return FSM_STOP;
     }
 
@@ -96,8 +103,6 @@ UWORD initShowLogo(void) {
               SHOWLOGO_DAWN_X_POS, SHOWLOGO_DAWN_Y_POS,
               SHOWLOGO_DAWN_WIDTH, SHOWLOGO_DAWN_HEIGHT,
               0xC0, 0xff, 0);
-    FreeBitMap(logoBitmap);
-    logoBitmap = NULL;
 
     // make screen great again ;)
     ScreenToFront(logoscreen0);
@@ -129,7 +134,7 @@ void exitShowLogo(void) {
     }
 }
 
-void fadeInFromWhite(void) {
+UWORD fadeInFromWhite(void) {
     UWORD decrementer;
     UWORD i = 0;
 
@@ -152,4 +157,66 @@ void fadeInFromWhite(void) {
     WaitTOF();
     WaitBOVP(&logoscreen0->ViewPort);
     LoadRGB4(&logoscreen0->ViewPort, color0, SHOWLOGO_SCREEN_COLORS);
+    return SHOWLOGO_PREPARE_ROTATION;
+}
+
+UWORD prepareRotation(void) {
+    struct p2cStruct p2c = {0};
+
+    // allocate source buffer and destination buffer array
+    if (!initRotationEngine(SHOWLOGO_ROTATION_STEPS, SHOWLOGO_DAWN_WIDTH, SHOWLOGO_DAWN_HEIGHT)) {
+        return SHOWLOGO_SHUTDOWN;
+    }
+
+    // convert planar buffer to chunky
+    p2c.bmap = logoBitmap;
+    p2c.startX = 0;
+    p2c.startY = 0;
+    p2c.width = SHOWLOGO_DAWN_WIDTH;
+    p2c.height = SHOWLOGO_DAWN_HEIGHT;
+    p2c.chunkybuffer = getSourceBuffer();
+    PlanarToChunkyAsm(&p2c);
+
+    rotateAll();
+    return SHOWLOGO_ROTATE;
+}
+
+UWORD performRotation(void) {
+    static UBYTE i = 1;
+    if (i >= SHOWLOGO_ROTATION_STEPS) {
+        i = 0;
+    }
+    convertChunkyToBitmap(getDestBuffer(i), logoBitmap);
+    WaitTOF();
+    BltBitMap(logoBitmap, 0, 0,
+              screenBitmap,
+              SHOWLOGO_DAWN_X_POS, SHOWLOGO_DAWN_Y_POS,
+              SHOWLOGO_DAWN_WIDTH, SHOWLOGO_DAWN_HEIGHT,
+              0xC0, 0xff, 0);
+    i += 1;
+    return SHOWLOGO_SHUTDOWN;
+}
+
+void convertChunkyToBitmap(UBYTE *sourceChunky, struct BitMap *destPlanar) {
+#ifdef NATIVE_CONVERTER
+    struct RastPort rastPort1 = {0};
+    struct RastPort rastPort2 = {0};
+    InitRastPort(&rastPort1);
+    InitRastPort(&rastPort2);
+
+    rastPort1.BitMap = destPlanar;
+    rastPort2.Layer = NULL;
+    rastPort2.BitMap = tempBitmap;
+    WritePixelArray8(&rastPort1, 0, 0, SHOWLOGO_DAWN_WIDTH - 1,
+                     SHOWLOGO_DAWN_HEIGHT - 1, sourceChunky, &rastPort2);
+#else
+    struct c2pStruct c2p;
+    c2p.bmap = destPlanar;
+    c2p.startX = 0;
+    c2p.startY = 0;
+    c2p.width = SHOWLOGO_DAWN_WIDTH;
+    c2p.height = SHOWLOGO_DAWN_HEIGHT;
+    c2p.chunkybuffer = sourceChunky;
+    ChunkyToPlanarAsm(&c2p);
+#endif
 }

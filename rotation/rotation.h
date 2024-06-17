@@ -45,4 +45,6 @@ void rotatePixel(int dest_x, int* new_x, int* new_y,
                  int y_mult_sin, int y_mult_cos,
                  UWORD lookupIndex);
 
+void convertChunkyToBitmap(UBYTE* sourceChunky, struct BitMap* destPlanar);
+
 #endif  // ROTATION_H

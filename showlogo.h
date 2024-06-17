@@ -3,7 +3,11 @@
 
 #define SHOWLOGO_INIT 0
 #define SHOWLOGO_STATIC 1
-#define SHOWLOGO_SHUTDOWN 2
+#define SHOWLOGO_PREPARE_ROTATION 2
+#define SHOWLOGO_ROTATE 3
+#define SHOWLOGO_SHUTDOWN 4
+
+#define SHOWLOGO_ROTATION_STEPS 36
 
 #define SHOWLOGO_SCREEN_BORDER 20
 #define SHOWLOGO_SCREEN_DEPTH 8
@@ -24,6 +28,8 @@
 UWORD fsmShowLogo(void);
 UWORD initShowLogo(void);
 void exitShowLogo(void);
-void fadeInFromWhite(void);
+UWORD fadeInFromWhite(void);
+UWORD prepareRotation(void);
+UWORD performRotation(void);
 
 #endif
