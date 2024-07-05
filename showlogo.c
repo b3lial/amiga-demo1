@@ -158,7 +158,12 @@ UWORD fadeInFromWhite(void) {
     WaitTOF();
     WaitBOVP(&logoscreen0->ViewPort);
     LoadRGB4(&logoscreen0->ViewPort, color0, SHOWLOGO_SCREEN_COLORS);
-    return SHOWLOGO_STATIC;
+
+    if (decrementer == 0) {
+        return SHOWLOGO_PREPARE_ROTATION;
+    } else {
+        return SHOWLOGO_STATIC;
+    }
 }
 
 UWORD prepareRotation(void) {
@@ -195,7 +200,7 @@ UWORD performRotation(void) {
               SHOWLOGO_DAWN_WIDTH, SHOWLOGO_DAWN_HEIGHT,
               0xC0, 0xff, 0);
     i += 1;
-    return SHOWLOGO_SHUTDOWN;
+    return SHOWLOGO_ROTATE;
 }
 
 void convertChunkyToBitmap(UBYTE *sourceChunky, struct BitMap *destPlanar) {
