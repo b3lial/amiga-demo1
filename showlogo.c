@@ -114,6 +114,7 @@ __exit_init_logo:
 }
 
 void exitShowLogo(void) {
+    WaitTOF();
     if (logoscreen0) {
         CloseScreen(logoscreen0);
         logoscreen0 = NULL;
@@ -126,7 +127,7 @@ void exitShowLogo(void) {
     }
     if (screenBitmap) {
         FreeBitMap(screenBitmap);
-        logoBitmap = NULL;
+        screenBitmap = NULL;
     }
     if (color0) {
         FreeVec(color0);
@@ -157,7 +158,7 @@ UWORD fadeInFromWhite(void) {
     WaitTOF();
     WaitBOVP(&logoscreen0->ViewPort);
     LoadRGB4(&logoscreen0->ViewPort, color0, SHOWLOGO_SCREEN_COLORS);
-    return SHOWLOGO_PREPARE_ROTATION;
+    return SHOWLOGO_STATIC;
 }
 
 UWORD prepareRotation(void) {
