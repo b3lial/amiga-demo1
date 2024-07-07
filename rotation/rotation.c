@@ -102,8 +102,7 @@ void rotatePixel(int dest_x, int *src_x, int *src_y,
                  UWORD i) {
     int f_x = INTTOFIX(dest_x);
     *src_x = FIXTOINT(FIXMULT(f_x, cosLookup[i]) - y_mult_sin);
-    *src_y = FIXTOINT(FIXMULT(f_x, sinLookup[i]) + y_mult_cos);
-    *src_y *= (-1);
+    *src_y = -FIXTOINT(FIXMULT(f_x, sinLookup[i]) + y_mult_cos);
 }
 
 /**
