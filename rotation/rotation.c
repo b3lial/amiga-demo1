@@ -114,6 +114,7 @@ void rotateAll() {
     UBYTE i = 0;
 
     for (i = 0; i < rotationSteps; i++) {
+        printf("Rotating angle %d of %d\n", angle, i);
         rotate(destBuffer[i], angle);
         angle += (360 / rotationSteps);  // 360 degrees / number of steps == rotation degree
     }
@@ -127,11 +128,11 @@ void rotateAll() {
  * in fix point format.
  */
 void rotate(UBYTE *dest, USHORT angle) {
-    int x, y;
-    int src_index, dest_index;
-    int dest_x, dest_y;
-    int src_x, src_y;
-    int y_mult_sin, y_mult_cos;
+    int x, y = 0;
+    int src_index, dest_index = 0;
+    int dest_x, dest_y = 0;
+    int src_x, src_y = 0;
+    int y_mult_sin, y_mult_cos = 0;
     UWORD lookupIndex;
 
     // in this case, we can simply perform a copy
@@ -159,6 +160,18 @@ void rotate(UBYTE *dest, USHORT angle) {
             dest_index = x + y * bitmapWidth;
             src_index = (src_x + (bitmapWidth / 2)) +
                         ((src_y + (bitmapHeight / 2)) * bitmapWidth);
+
+            if (angle == 50 && y == 0 && x == 223) {
+                printf("x: %d, y: %d\n", x, y);
+                printf("dest_x: %d, dest_y: %d\n", dest_x, dest_y);
+                printf("src_x: %d, src_y: %d\n", src_x, src_y);
+                printf("lookupIndex: %d\n", lookupIndex);
+                printf("src_index: %d, dest_index: %d\n", src_index, dest_index);
+                printf("srcBuffer[src_index]: %d\n", srcBuffer[src_index]);
+                printf("destBuffer[i][dest_index]: %d\n", dest[dest_index]);
+                printf("bitmapWidth: %d, bitmapHeight: %d\n", bitmapWidth, bitmapHeight);
+            }
+
             if (src_index < 0 || src_index >= (bitmapHeight * bitmapWidth)) {
                 continue;
             }
