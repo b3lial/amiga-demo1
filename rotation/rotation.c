@@ -172,7 +172,12 @@ void rotate(UBYTE *dest, USHORT angle) {
                 printf("bitmapWidth: %d, bitmapHeight: %d\n", bitmapWidth, bitmapHeight);
             }
 
-            if (src_index < 0 || src_index >= (bitmapHeight * bitmapWidth)) {
+            // verify x outofbounds
+            if (src_x < -(bitmapWidth / 2) || src_x >= bitmapWidth / 2) {
+                continue;
+            }
+            // verify y outofbounds
+            if (src_y < -(bitmapHeight / 2) || src_y >= bitmapHeight / 2) {
                 continue;
             }
             dest[dest_index] = srcBuffer[src_index];
