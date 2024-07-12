@@ -10,16 +10,8 @@ UWORD *color0 = NULL;
 __far extern struct Custom custom;
 
 UWORD fsmShowLogo(void) {
-    static UBYTE i = 1;
     if (mouseClick()) {
-        if (payloadShowLogoState == SHOWLOGO_ROTATE) {
-            i += 1;
-            if (i >= SHOWLOGO_ROTATION_STEPS) {
-                i = 0;
-            }
-        } else {
-            payloadShowLogoState = SHOWLOGO_SHUTDOWN;
-        }
+        payloadShowLogoState = SHOWLOGO_SHUTDOWN;
     }
 
     switch (payloadShowLogoState) {
@@ -33,7 +25,7 @@ UWORD fsmShowLogo(void) {
             payloadShowLogoState = prepareRotation();
             break;
         case SHOWLOGO_ROTATE:
-            payloadShowLogoState = performRotation(i);
+            payloadShowLogoState = performRotation();
             break;
         case SHOWLOGO_SHUTDOWN:
             exitShowLogo();
@@ -195,14 +187,18 @@ UWORD prepareRotation(void) {
     return SHOWLOGO_ROTATE;
 }
 
-UWORD performRotation(UBYTE i) {
+UWORD performRotation() {
+    static UBYTE i = 1;
     convertChunkyToBitmap(getDestBuffer(i), logoBitmap);
+    WaitTOF();
+    WaitTOF();
     WaitTOF();
     BltBitMap(logoBitmap, 0, 0,
               screenBitmap,
               SHOWLOGO_DAWN_X_POS, SHOWLOGO_DAWN_Y_POS,
               SHOWLOGO_DAWN_WIDTH, SHOWLOGO_DAWN_HEIGHT,
               0xC0, 0xff, 0);
+    i = (i < SHOWLOGO_ROTATION_STEPS - 1) ? i + 1 : 0;
     return SHOWLOGO_ROTATE;
 }
 

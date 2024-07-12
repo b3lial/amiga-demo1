@@ -30,6 +30,6 @@ UWORD initShowLogo(void);
 void exitShowLogo(void);
 UWORD fadeInFromWhite(void);
 UWORD prepareRotation(void);
-UWORD performRotation(UBYTE i);
+UWORD performRotation(void);
 
 #endif
