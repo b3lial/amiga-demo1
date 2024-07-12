@@ -138,18 +138,22 @@ void exitShowLogo(void) {
 UWORD fadeInFromWhite(void) {
     UWORD decrementer;
     UWORD i = 0;
+    BOOL fade = FALSE;
 
     // fade effect on color table
     for (; i < SHOWLOGO_SCREEN_COLORS; i++) {
         decrementer = 0;
         if ((color0[i] & 0x000f) != (dawnPaletteRGB4[i] & 0x000f)) {
             decrementer |= 0x0001;
+            fade = TRUE;
         }
         if ((color0[i] & 0x00f0) != (dawnPaletteRGB4[i] & 0x00f0)) {
             decrementer |= 0x0010;
+            fade = TRUE;
         }
         if ((color0[i] & 0x0f00) != (dawnPaletteRGB4[i] & 0x0f00)) {
             decrementer |= 0x0100;
+            fade = TRUE;
         }
         color0[i] -= decrementer;
     }
@@ -159,7 +163,7 @@ UWORD fadeInFromWhite(void) {
     WaitBOVP(&logoscreen0->ViewPort);
     LoadRGB4(&logoscreen0->ViewPort, color0, SHOWLOGO_SCREEN_COLORS);
 
-    if (decrementer == 0) {
+    if (!fade) {
         return SHOWLOGO_PREPARE_ROTATION;
     } else {
         return SHOWLOGO_STATIC;
