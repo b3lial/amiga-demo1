@@ -10,17 +10,16 @@ UWORD *color0 = NULL;
 __far extern struct Custom custom;
 
 UWORD fsmShowLogo(void) {
-    static UBYTE i = 5;
+    static UBYTE i = 1;
     if (mouseClick()) {
-        /**
         if (payloadShowLogoState == SHOWLOGO_ROTATE) {
             i += 1;
             if (i >= SHOWLOGO_ROTATION_STEPS) {
                 i = 0;
             }
-        } else {*/
-        payloadShowLogoState = SHOWLOGO_SHUTDOWN;
-        //}
+        } else {
+            payloadShowLogoState = SHOWLOGO_SHUTDOWN;
+        }
     }
 
     switch (payloadShowLogoState) {

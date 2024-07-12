@@ -114,7 +114,6 @@ void rotateAll() {
     UBYTE i = 0;
 
     for (i = 0; i < rotationSteps; i++) {
-        printf("Rotating angle %d of %d\n", angle, i);
         rotate(destBuffer[i], angle);
         angle += (360 / rotationSteps);  // 360 degrees / number of steps == rotation degree
     }
@@ -141,8 +140,10 @@ void rotate(UBYTE *dest, USHORT angle) {
         return;
     }
 
-    // iterate over destination array
+    // negate angle because we have to rotate in the opposite direction
     lookupIndex = (360 - angle) / DEGREE_RESOLUTION;
+
+    // iterate over destination array
     for (y = 0; y < bitmapHeight; y++) {
         // precalculate these values to speed things up
         dest_y = (bitmapHeight / 2) - y;
@@ -161,23 +162,12 @@ void rotate(UBYTE *dest, USHORT angle) {
             src_index = (src_x + (bitmapWidth / 2)) +
                         ((src_y + (bitmapHeight / 2)) * bitmapWidth);
 
-            if (angle == 50 && y == 0 && x == 223) {
-                printf("x: %d, y: %d\n", x, y);
-                printf("dest_x: %d, dest_y: %d\n", dest_x, dest_y);
-                printf("src_x: %d, src_y: %d\n", src_x, src_y);
-                printf("lookupIndex: %d\n", lookupIndex);
-                printf("src_index: %d, dest_index: %d\n", src_index, dest_index);
-                printf("srcBuffer[src_index]: %d\n", srcBuffer[src_index]);
-                printf("destBuffer[i][dest_index]: %d\n", dest[dest_index]);
-                printf("bitmapWidth: %d, bitmapHeight: %d\n", bitmapWidth, bitmapHeight);
-            }
-
             // verify x outofbounds
-            if (src_x < -(bitmapWidth / 2) || src_x >= bitmapWidth / 2) {
+            if (src_x < -(bitmapWidth / 2) || src_x >= (bitmapWidth / 2)) {
                 continue;
             }
             // verify y outofbounds
-            if (src_y < -(bitmapHeight / 2) || src_y >= bitmapHeight / 2) {
+            if (src_y <= -(bitmapHeight / 2) || (src_y > bitmapHeight / 2)) {
                 continue;
             }
             dest[dest_index] = srcBuffer[src_index];
