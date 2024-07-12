@@ -187,19 +187,18 @@ UWORD prepareRotation(void) {
     return SHOWLOGO_ROTATE;
 }
 
-UWORD performRotation(void) {
+UWORD performRotation() {
     static UBYTE i = 1;
-    if (i >= SHOWLOGO_ROTATION_STEPS) {
-        i = 0;
-    }
     convertChunkyToBitmap(getDestBuffer(i), logoBitmap);
+    WaitTOF();
+    WaitTOF();
     WaitTOF();
     BltBitMap(logoBitmap, 0, 0,
               screenBitmap,
               SHOWLOGO_DAWN_X_POS, SHOWLOGO_DAWN_Y_POS,
               SHOWLOGO_DAWN_WIDTH, SHOWLOGO_DAWN_HEIGHT,
               0xC0, 0xff, 0);
-    i += 1;
+    i = (i < SHOWLOGO_ROTATION_STEPS - 1) ? i + 1 : 0;
     return SHOWLOGO_ROTATE;
 }
 

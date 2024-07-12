@@ -102,7 +102,7 @@ void rotatePixel(int dest_x, int *src_x, int *src_y,
                  UWORD i) {
     int f_x = INTTOFIX(dest_x);
     *src_x = FIXTOINT(FIXMULT(f_x, cosLookup[i]) - y_mult_sin);
-    *src_y = FIXTOINT(FIXMULT(f_x, sinLookup[i]) + y_mult_cos);
+    *src_y = -FIXTOINT(FIXMULT(f_x, sinLookup[i]) + y_mult_cos);
 }
 
 /**
@@ -127,11 +127,11 @@ void rotateAll() {
  * in fix point format.
  */
 void rotate(UBYTE *dest, USHORT angle) {
-    int x, y;
-    int src_index, dest_index;
-    int dest_x, dest_y;
-    int src_x, src_y;
-    int y_mult_sin, y_mult_cos;
+    int x, y = 0;
+    int src_index, dest_index = 0;
+    int dest_x, dest_y = 0;
+    int src_x, src_y = 0;
+    int y_mult_sin, y_mult_cos = 0;
     UWORD lookupIndex;
 
     // in this case, we can simply perform a copy
@@ -140,8 +140,10 @@ void rotate(UBYTE *dest, USHORT angle) {
         return;
     }
 
-    // iterate over destination array
+    // negate angle because we have to rotate in the opposite direction
     lookupIndex = (360 - angle) / DEGREE_RESOLUTION;
+
+    // iterate over destination array
     for (y = 0; y < bitmapHeight; y++) {
         // precalculate these values to speed things up
         dest_y = (bitmapHeight / 2) - y;
@@ -159,7 +161,13 @@ void rotate(UBYTE *dest, USHORT angle) {
             dest_index = x + y * bitmapWidth;
             src_index = (src_x + (bitmapWidth / 2)) +
                         ((src_y + (bitmapHeight / 2)) * bitmapWidth);
-            if (src_index < 0 || src_index >= (bitmapHeight * bitmapWidth)) {
+
+            // verify x outofbounds
+            if (src_x < -(bitmapWidth / 2) || src_x >= (bitmapWidth / 2)) {
+                continue;
+            }
+            // verify y outofbounds
+            if (src_y <= -(bitmapHeight / 2) || (src_y > bitmapHeight / 2)) {
                 continue;
             }
             dest[dest_index] = srcBuffer[src_index];
