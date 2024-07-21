@@ -1,3 +1,4 @@
+// Copyright 2021 Christian Ammann
 #include "demo1.h"
 
 // buffers for chunky data
@@ -92,17 +93,13 @@ BOOL initRotationEngine(UBYTE rs, USHORT bw, USHORT bh) {
     rotationSteps = rs;
     bitmapWidth = bw;
     bitmapHeight = bh;
-    return allocateChunkyBuffer();
-}
 
-// apply rotation matrix
-// multiplication with y is precalculated
-void rotatePixel(int dest_x, int *src_x, int *src_y,
-                 int y_mult_sin, int y_mult_cos,
-                 UWORD i) {
-    int f_x = INTTOFIX(dest_x);
-    *src_x = FIXTOINT(FIXMULT(f_x, cosLookup[i]) - y_mult_sin);
-    *src_y = -FIXTOINT(FIXMULT(f_x, sinLookup[i]) + y_mult_cos);
+    if (bitmapWidth > MAX_BITMAP_WIDTH || bitmapHeight > MAX_BITMAP_HEIGHT) {
+        writeLogFS("Error: Invalid bitmap size %dx%d\n", bitmapWidth, bitmapHeight);
+        writeLogFS("Maximum bitmap size is %dx%d\n", MAX_BITMAP_WIDTH, MAX_BITMAP_HEIGHT);
+        return FALSE;
+    }
+    return allocateChunkyBuffer();
 }
 
 /**
@@ -129,10 +126,15 @@ void rotateAll() {
 void rotate(UBYTE *dest, USHORT angle) {
     int x, y = 0;
     int src_index, dest_index = 0;
-    int dest_x, dest_y = 0;
     int src_x, src_y = 0;
-    int y_mult_sin, y_mult_cos = 0;
+    UWORD halfBitmapHeight, halfBitmapWidth = 0;
     UWORD lookupIndex;
+
+    // precalculate x/y * sin/cos values
+    int y_mult_sin[MAX_BITMAP_HEIGHT] = {0};
+    int y_mult_cos[MAX_BITMAP_HEIGHT] = {0};
+    int x_mult_sin[MAX_BITMAP_WIDTH] = {0};
+    int x_mult_cos[MAX_BITMAP_WIDTH] = {0};
 
     // in this case, we can simply perform a copy
     if (angle == 360 || angle == 0) {
@@ -143,36 +145,60 @@ void rotate(UBYTE *dest, USHORT angle) {
     // negate angle because we have to rotate in the opposite direction
     lookupIndex = (360 - angle) / DEGREE_RESOLUTION;
 
+    // precalculate expensive stuff
+    halfBitmapHeight = bitmapHeight / 2;
+    halfBitmapWidth = bitmapWidth / 2;
+    preCalcSinCos(lookupIndex, x_mult_sin, x_mult_cos,
+                  y_mult_sin, y_mult_cos, halfBitmapWidth, halfBitmapHeight);
+
     // iterate over destination array
     for (y = 0; y < bitmapHeight; y++) {
-        // precalculate these values to speed things up
-        dest_y = (bitmapHeight / 2) - y;
-        y_mult_sin = FIXMULT(INTTOFIX(dest_y), sinLookup[lookupIndex]);
-        y_mult_cos = FIXMULT(INTTOFIX(dest_y), cosLookup[lookupIndex]);
-
         for (x = 0; x < bitmapWidth; x++) {
             // calculate src x/y coordinates
-            dest_x = x - (bitmapWidth / 2);
-            rotatePixel(dest_x, &src_x, &src_y,
-                        y_mult_sin, y_mult_cos, lookupIndex);
+            src_x = FIXTOINT(x_mult_cos[x] - y_mult_sin[y]);
+            src_y = -FIXTOINT(x_mult_sin[x] + y_mult_sin[y]);
 
             // convert coordinates back to array indexes
             // so we can move the rotated pixel to its new position
             dest_index = x + y * bitmapWidth;
-            src_index = (src_x + (bitmapWidth / 2)) +
-                        ((src_y + (bitmapHeight / 2)) * bitmapWidth);
+            src_index = (src_x + halfBitmapWidth) +
+                        ((src_y + halfBitmapHeight) * bitmapWidth);
 
             // verify x outofbounds
-            if (src_x < -(bitmapWidth / 2) || src_x >= (bitmapWidth / 2)) {
+            if (src_x < -halfBitmapWidth || src_x >= halfBitmapWidth) {
                 continue;
             }
             // verify y outofbounds
-            if (src_y <= -(bitmapHeight / 2) || (src_y > bitmapHeight / 2)) {
+            if (src_y <= -halfBitmapHeight || (src_y > halfBitmapHeight)) {
                 continue;
             }
             dest[dest_index] = srcBuffer[src_index];
         }
     }
+}
+
+/**
+ * Pre-calculate sin/cos values for x/y coordinates
+ * because this math is expensive
+ */
+void preCalcSinCos(UWORD lookupIndex, int *sinLookupX, int *cosLookupX,
+                   int *sinLookupY, int *cosLookupY,
+                   UWORD halfBitmapWidth, UWORD halfBitmapHeight) {
+    UWORD x, y = 0;
+    int dest_x, dest_y = 0;
+
+    for (y = 0; y < bitmapHeight; y++) {
+        dest_y = halfBitmapHeight - y;
+        for (x = 0; x < bitmapWidth; x++) {
+            dest_x = x - halfBitmapWidth;
+
+            sinLookupY[y] = FIXMULT(INTTOFIX(dest_y), sinLookup[lookupIndex]);
+            cosLookupY[y] = FIXMULT(INTTOFIX(dest_y), cosLookup[lookupIndex]);
+            sinLookupX[x] = FIXMULT(INTTOFIX(dest_x), sinLookup[lookupIndex]);
+            cosLookupX[x] = FIXMULT(INTTOFIX(dest_x), cosLookup[lookupIndex]);
+        }
+    }
+    return;
 }
 
 /**

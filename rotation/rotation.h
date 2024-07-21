@@ -33,17 +33,20 @@
 #define DEGREE_RESOLUTION 10
 #define DEST_BUFFER_SIZE 36
 
+#define MAX_BITMAP_WIDTH 320
+#define MAX_BITMAP_HEIGHT 256
+
 BOOL initRotationEngine(UBYTE rs, USHORT bw, USHORT bh);
 BOOL allocateChunkyBuffer(void);
 void freeChunkyBuffer(void);
 UBYTE* getSourceBuffer(void);
 UBYTE* getDestBuffer(UBYTE index);
+void preCalcSinCos(UWORD lookupIndex, int* sinLookupX, int* cosLookupX,
+                   int* sinLookupY, int* cosLookupY,
+                   UWORD halfBitmapWidth, UWORD halfBitmapHeight);
 
 void rotateAll(void);
 void rotate(UBYTE* dest, USHORT angle);
-void rotatePixel(int dest_x, int* new_x, int* new_y,
-                 int y_mult_sin, int y_mult_cos,
-                 UWORD lookupIndex);
 
 void convertChunkyToBitmap(UBYTE* sourceChunky, struct BitMap* destPlanar);
 
