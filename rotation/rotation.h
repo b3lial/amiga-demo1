@@ -37,6 +37,7 @@
 #define MAX_BITMAP_HEIGHT 256
 
 BOOL initRotationEngine(UBYTE rs, USHORT bw, USHORT bh);
+void freeRotationEngine(void);
 BOOL allocateChunkyBuffer(void);
 void freeChunkyBuffer(void);
 UBYTE* getSourceBuffer(void);

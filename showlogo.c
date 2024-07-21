@@ -133,6 +133,8 @@ void exitShowLogo(void) {
         FreeVec(color0);
         color0 = NULL;
     }
+
+    freeRotationEngine();
 }
 
 UWORD fadeInFromWhite(void) {
