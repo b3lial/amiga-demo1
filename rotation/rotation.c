@@ -270,11 +270,16 @@ _exit_chunky_source_allocation_error:
 void freeChunkyBuffer(void) {
     BYTE i = 0;
 
-    FreeVec(srcBuffer);
-    srcBuffer = NULL;
+    if (srcBuffer) {
+        FreeVec(srcBuffer);
+        srcBuffer = NULL;
+    }
+
     for (i = 0; i < rotationSteps; i++) {
-        FreeVec(destBuffer[i]);
-        destBuffer[i] = NULL;
+        if (destBuffer[i]) {
+            FreeVec(destBuffer[i]);
+            destBuffer[i] = NULL;
+        }
     }
 }
 
