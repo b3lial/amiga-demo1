@@ -156,7 +156,7 @@ void rotate(UBYTE *dest, USHORT angle) {
         for (x = 0; x < bitmapWidth; x++) {
             // calculate src x/y coordinates
             src_x = FIXTOINT(x_mult_cos[x] - y_mult_sin[y]);
-            src_y = -FIXTOINT(x_mult_sin[x] + y_mult_sin[y]);
+            src_y = -FIXTOINT(x_mult_sin[x] + y_mult_cos[y]);
 
             // convert coordinates back to array indexes
             // so we can move the rotated pixel to its new position
