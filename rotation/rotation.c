@@ -1,4 +1,7 @@
 // Copyright 2021 Christian Ammann
+#include <stdio.h>
+#include <time.h>
+
 #include "demo1.h"
 
 // buffers for chunky data
@@ -160,6 +163,9 @@ void rotate(UBYTE *dest, USHORT angle) {
     WORD src_x, src_y = 0;
     WORD halfBitmapHeight, halfBitmapWidth = 0;
     UWORD lookupIndex;
+    clock_t start_time;
+    clock_t end_time;
+    clock_t elapsed_time;
 
     // in this case, we can simply perform a copy
     if (angle == 360 || angle == 0) {
@@ -173,8 +179,12 @@ void rotate(UBYTE *dest, USHORT angle) {
     // precalculate expensive stuff
     halfBitmapHeight = bitmapHeight / 2;
     halfBitmapWidth = bitmapWidth / 2;
+    start_time = clock();
     preCalcSinCos(lookupIndex, x_mult_sin, x_mult_cos,
                   y_mult_sin, y_mult_cos, halfBitmapWidth, halfBitmapHeight);
+    end_time = clock();
+    elapsed_time = end_time - start_time;
+    printf("Runtime of preCalcSinCos(): %ld clocks\n", elapsed_time);
 
     // iterate over destination array
     for (y = 0; y < bitmapHeight; y++) {
