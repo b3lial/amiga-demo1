@@ -165,6 +165,7 @@ void rotate(UBYTE *dest, USHORT angle) {
     UWORD src_index, dest_index = 0;
     WORD src_x, src_y = 0;
     UWORD lookupIndex;
+    UWORD y_mult_bitmapWidth;
     clock_t start_time;
     clock_t end_time;
     clock_t elapsed_time;
@@ -179,14 +180,13 @@ void rotate(UBYTE *dest, USHORT angle) {
     lookupIndex = (360 - angle) / DEGREE_RESOLUTION;
 
     // precalculate expensive stuff
-    start_time = clock();
     preCalcSinCos(lookupIndex, x_mult_sin, x_mult_cos, y_mult_sin, y_mult_cos);
-    end_time = clock();
-    elapsed_time = end_time - start_time;
-    printf("Runtime of preCalcSinCos(): %ld clocks\n", elapsed_time);
 
     // iterate over destination array
+    start_time = clock();
     for (y = 0; y < bitmapHeight; y++) {
+        y_mult_bitmapWidth = y * bitmapWidth;
+
         for (x = 0; x < bitmapWidth; x++) {
             // calculate src x/y coordinates
             src_x = FIXTOINT(x_mult_cos[x] - y_mult_sin[y]);
@@ -194,7 +194,7 @@ void rotate(UBYTE *dest, USHORT angle) {
 
             // convert coordinates back to array indexes
             // so we can move the rotated pixel to its new position
-            dest_index = x + y * bitmapWidth;
+            dest_index = x + y_mult_bitmapWidth;
             src_index = (src_x + halfBitmapWidth) +
                         ((src_y + halfBitmapHeight) * bitmapWidth);
 
@@ -209,6 +209,9 @@ void rotate(UBYTE *dest, USHORT angle) {
             dest[dest_index] = srcBuffer[src_index];
         }
     }
+    end_time = clock();
+    elapsed_time = end_time - start_time;
+    printf("Runtime of rotation: %ld clocks\n", elapsed_time);
 }
 
 /**
