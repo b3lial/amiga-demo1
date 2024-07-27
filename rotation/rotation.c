@@ -9,8 +9,9 @@ UBYTE *srcBuffer;
 UBYTE *destBuffer[DEST_BUFFER_SIZE] = {0};
 
 UBYTE rotationSteps = 0;
-USHORT bitmapWidth = 0;
-USHORT bitmapHeight = 0;
+UWORD bitmapWidth = 0;
+UWORD bitmapHeight = 0;
+WORD halfBitmapHeight, halfBitmapWidth = 0;
 
 // precalculate x/y * sin/cos values
 WORD *y_mult_sin = 0;
@@ -102,6 +103,8 @@ BOOL initRotationEngine(UBYTE rs, USHORT bw, USHORT bh) {
     rotationSteps = rs;
     bitmapWidth = bw;
     bitmapHeight = bh;
+    halfBitmapHeight = bitmapHeight / 2;
+    halfBitmapWidth = bitmapWidth / 2;
 
     if (bitmapWidth > MAX_BITMAP_WIDTH || bitmapHeight > MAX_BITMAP_HEIGHT) {
         writeLogFS("Error: Invalid bitmap size %dx%d\n", bitmapWidth, bitmapHeight);
@@ -109,25 +112,25 @@ BOOL initRotationEngine(UBYTE rs, USHORT bw, USHORT bh) {
         return FALSE;
     }
 
-    y_mult_sin = AllocVec(sizeof(UWORD) * MAX_BITMAP_HEIGHT, MEMF_FAST | MEMF_CLEAR);
+    y_mult_sin = AllocVec(sizeof(WORD) * MAX_BITMAP_HEIGHT, MEMF_FAST | MEMF_CLEAR);
     if (!y_mult_sin) {
         writeLog("Error: Could not allocate memory for y_mult_sin\n");
         return FALSE;
     }
 
-    y_mult_cos = AllocVec(sizeof(UWORD) * MAX_BITMAP_HEIGHT, MEMF_FAST | MEMF_CLEAR);
+    y_mult_cos = AllocVec(sizeof(WORD) * MAX_BITMAP_HEIGHT, MEMF_FAST | MEMF_CLEAR);
     if (!y_mult_cos) {
         writeLog("Error: Could not allocate memory for y_mult_cos\n");
         return FALSE;
     }
 
-    x_mult_sin = AllocVec(sizeof(UWORD) * MAX_BITMAP_WIDTH, MEMF_FAST | MEMF_CLEAR);
+    x_mult_sin = AllocVec(sizeof(WORD) * MAX_BITMAP_WIDTH, MEMF_FAST | MEMF_CLEAR);
     if (!x_mult_sin) {
         writeLog("Error: Could not allocate memory for x_mult_sin\n");
         return FALSE;
     }
 
-    x_mult_cos = AllocVec(sizeof(UWORD) * MAX_BITMAP_WIDTH, MEMF_FAST | MEMF_CLEAR);
+    x_mult_cos = AllocVec(sizeof(WORD) * MAX_BITMAP_WIDTH, MEMF_FAST | MEMF_CLEAR);
     if (!x_mult_cos) {
         writeLog("Error: Could not allocate memory for x_mult_cos\n");
         return FALSE;
@@ -161,7 +164,6 @@ void rotate(UBYTE *dest, USHORT angle) {
     UWORD x, y = 0;
     UWORD src_index, dest_index = 0;
     WORD src_x, src_y = 0;
-    WORD halfBitmapHeight, halfBitmapWidth = 0;
     UWORD lookupIndex;
     clock_t start_time;
     clock_t end_time;
@@ -177,11 +179,8 @@ void rotate(UBYTE *dest, USHORT angle) {
     lookupIndex = (360 - angle) / DEGREE_RESOLUTION;
 
     // precalculate expensive stuff
-    halfBitmapHeight = bitmapHeight / 2;
-    halfBitmapWidth = bitmapWidth / 2;
     start_time = clock();
-    preCalcSinCos(lookupIndex, x_mult_sin, x_mult_cos,
-                  y_mult_sin, y_mult_cos, halfBitmapWidth, halfBitmapHeight);
+    preCalcSinCos(lookupIndex, x_mult_sin, x_mult_cos, y_mult_sin, y_mult_cos);
     end_time = clock();
     elapsed_time = end_time - start_time;
     printf("Runtime of preCalcSinCos(): %ld clocks\n", elapsed_time);
@@ -217,8 +216,7 @@ void rotate(UBYTE *dest, USHORT angle) {
  * because this math is expensive
  */
 void preCalcSinCos(UWORD lookupIndex, WORD *sinLookupX, WORD *cosLookupX,
-                   WORD *sinLookupY, WORD *cosLookupY,
-                   UWORD halfBitmapWidth, UWORD halfBitmapHeight) {
+                   WORD *sinLookupY, WORD *cosLookupY) {
     UWORD x, y = 0;
     WORD dest_x, dest_y = 0;
 

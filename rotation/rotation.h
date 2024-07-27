@@ -43,8 +43,7 @@ void freeChunkyBuffer(void);
 UBYTE* getSourceBuffer(void);
 UBYTE* getDestBuffer(UBYTE index);
 void preCalcSinCos(UWORD lookupIndex, WORD* sinLookupX, WORD* cosLookupX,
-                   WORD* sinLookupY, WORD* cosLookupY,
-                   UWORD halfBitmapWidth, UWORD halfBitmapHeight);
+                   WORD* sinLookupY, WORD* cosLookupY);
 
 void rotateAll(void);
 void rotate(UBYTE* dest, USHORT angle);
