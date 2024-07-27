@@ -22,4 +22,4 @@ $(EXECUTABLE): $(OBJECTS) p2c.o c2p.o
 	
 clean: 
 	rm *.o starlight/*.o starlight/*.uaem *.lnk *.info *.uaem \
-		demo-1-gcc demo-1-sasc
+		demo-1-gcc demo-1-sasc rotation/*.o
