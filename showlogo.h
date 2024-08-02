@@ -31,5 +31,6 @@ void exitShowLogo(void);
 UWORD fadeInFromWhite(void);
 UWORD prepareRotation(void);
 UWORD performRotation(void);
+void switchScreenData(void);
 
 #endif

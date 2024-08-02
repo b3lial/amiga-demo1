@@ -2,10 +2,17 @@
 
 WORD payloadShowLogoState = SHOWLOGO_INIT;
 struct BitMap *logoBitmap = NULL;
-struct BitMap *screenBitmap;
+struct BitMap *screenBitmap0;
+struct BitMap *screenBitmap1;
 struct Screen *logoscreen0 = NULL;
+struct Screen *logoscreen1 = NULL;
 UWORD dawnPaletteRGB4[256] = {0};
 UWORD *color0 = NULL;
+
+// used for double buffering
+BOOL bufferSelector;
+struct BitMap *currentBitmap = NULL;
+struct Screen *currentScreen = NULL;
 
 __far extern struct Custom custom;
 
@@ -59,12 +66,22 @@ UWORD initShowLogo(void) {
                  SHOWLOGO_DAWN_COLORS);
 
     // load onscreen bitmap which will be shown on screen
-    screenBitmap = AllocBitMap(SHOWLOGO_SCREEN_WIDTH + SHOWLOGO_SCREEN_BORDER,
-                               SHOWLOGO_SCREEN_HEIGHT + SHOWLOGO_SCREEN_BORDER,
-                               SHOWLOGO_SCREEN_DEPTH, BMF_DISPLAYABLE | BMF_CLEAR,
-                               NULL);
-    if (!screenBitmap) {
-        writeLog("Error: Could not allocate memory for onscreen bitmap\n");
+    screenBitmap0 = AllocBitMap(SHOWLOGO_SCREEN_WIDTH + SHOWLOGO_SCREEN_BORDER,
+                                SHOWLOGO_SCREEN_HEIGHT + SHOWLOGO_SCREEN_BORDER,
+                                SHOWLOGO_SCREEN_DEPTH, BMF_DISPLAYABLE | BMF_CLEAR,
+                                NULL);
+    if (!screenBitmap0) {
+        writeLog("Error: Could not allocate memory for onscreen bitmap 0\n");
+        goto __exit_init_logo;
+    }
+
+    // load second onscreen bitmap which will be shown on screen for double buffering
+    screenBitmap1 = AllocBitMap(SHOWLOGO_SCREEN_WIDTH + SHOWLOGO_SCREEN_BORDER,
+                                SHOWLOGO_SCREEN_HEIGHT + SHOWLOGO_SCREEN_BORDER,
+                                SHOWLOGO_SCREEN_DEPTH, BMF_DISPLAYABLE | BMF_CLEAR,
+                                NULL);
+    if (!screenBitmap1) {
+        writeLog("Error: Could not allocate memory for onscreen bitmap 0\n");
         goto __exit_init_logo;
     }
 
@@ -84,22 +101,42 @@ UWORD initShowLogo(void) {
     logoClip.MinY = 0;
     logoClip.MaxX = SHOWLOGO_SCREEN_WIDTH;
     logoClip.MaxY = SHOWLOGO_SCREEN_HEIGHT;
-    logoscreen0 = createScreen(screenBitmap, TRUE,
+    logoscreen0 = createScreen(screenBitmap0, TRUE,
                                -SHOWLOGO_SCREEN_BORDER, -SHOWLOGO_SCREEN_BORDER,
                                SHOWLOGO_SCREEN_WIDTH + SHOWLOGO_SCREEN_BORDER,
                                SHOWLOGO_SCREEN_HEIGHT + SHOWLOGO_SCREEN_BORDER,
                                SHOWLOGO_SCREEN_DEPTH, &logoClip);
     if (!logoscreen0) {
-        writeLog("Error: Could not allocate memory for logo screen\n");
+        writeLog("Error: Could not allocate memory for logo screen 0\n");
         goto __exit_init_logo;
     }
+
+    // create second screen which will be used for double buffering
+    logoscreen1 = createScreen(screenBitmap1, TRUE,
+                               -SHOWLOGO_SCREEN_BORDER, -SHOWLOGO_SCREEN_BORDER,
+                               SHOWLOGO_SCREEN_WIDTH + SHOWLOGO_SCREEN_BORDER,
+                               SHOWLOGO_SCREEN_HEIGHT + SHOWLOGO_SCREEN_BORDER,
+                               SHOWLOGO_SCREEN_DEPTH, &logoClip);
+    if (!logoscreen1) {
+        writeLog("Error: Could not allocate memory for logo screen 1\n");
+        goto __exit_init_logo;
+    }
+
+    // init double buffering
+    bufferSelector = TRUE;
+    currentScreen = logoscreen0;  // main screen turn on ;)
+    currentBitmap = screenBitmap0;
+
     LoadRGB4(&logoscreen0->ViewPort, color0, SHOWLOGO_SCREEN_COLORS);
+    LoadRGB4(&logoscreen1->ViewPort, color0, SHOWLOGO_SCREEN_COLORS);
     createStars(&logoscreen0->RastPort, 42, 70, SHOWLOGO_SCREEN_WIDTH + SHOWLOGO_SCREEN_BORDER,
+                SHOWLOGO_SCREEN_HEIGHT + SHOWLOGO_SCREEN_BORDER);
+    createStars(&logoscreen1->RastPort, 42, 70, SHOWLOGO_SCREEN_WIDTH + SHOWLOGO_SCREEN_BORDER,
                 SHOWLOGO_SCREEN_HEIGHT + SHOWLOGO_SCREEN_BORDER);
 
     // blit logo into screenBitmap and delete old bitmap
     BltBitMap(logoBitmap, 0, 0,
-              screenBitmap,
+              screenBitmap0,
               SHOWLOGO_DAWN_X_POS, SHOWLOGO_DAWN_Y_POS,
               SHOWLOGO_DAWN_WIDTH, SHOWLOGO_DAWN_HEIGHT,
               0xC0, 0xff, 0);
@@ -119,15 +156,23 @@ void exitShowLogo(void) {
         CloseScreen(logoscreen0);
         logoscreen0 = NULL;
     }
+    if (logoscreen1) {
+        CloseScreen(logoscreen1);
+        logoscreen1 = NULL;
+    }
     WaitTOF();
 
     if (logoBitmap) {
         FreeBitMap(logoBitmap);
         logoBitmap = NULL;
     }
-    if (screenBitmap) {
-        FreeBitMap(screenBitmap);
-        screenBitmap = NULL;
+    if (screenBitmap0) {
+        FreeBitMap(screenBitmap0);
+        screenBitmap0 = NULL;
+    }
+    if (screenBitmap1) {
+        FreeBitMap(screenBitmap1);
+        screenBitmap1 = NULL;
     }
     if (color0) {
         FreeVec(color0);
@@ -200,7 +245,7 @@ UWORD performRotation() {
     WaitTOF();
     WaitTOF();
     BltBitMap(logoBitmap, 0, 0,
-              screenBitmap,
+              screenBitmap0,
               SHOWLOGO_DAWN_X_POS, SHOWLOGO_DAWN_Y_POS,
               SHOWLOGO_DAWN_WIDTH, SHOWLOGO_DAWN_HEIGHT,
               0xC0, 0xff, 0);
@@ -230,4 +275,16 @@ void convertChunkyToBitmap(UBYTE *sourceChunky, struct BitMap *destPlanar) {
     c2p.chunkybuffer = sourceChunky;
     ChunkyToPlanarAsm(&c2p);
 #endif
+}
+
+void switchScreenData() {
+    if (bufferSelector) {
+        currentScreen = logoscreen0;
+        currentBitmap = screenBitmap0;
+        bufferSelector = FALSE;
+    } else {
+        currentScreen = logoscreen1;
+        currentBitmap = screenBitmap1;
+        bufferSelector = TRUE;
+    }
 }
