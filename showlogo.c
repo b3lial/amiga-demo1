@@ -124,8 +124,8 @@ UWORD initShowLogo(void) {
 
     // init double buffering
     bufferSelector = TRUE;
-    currentScreen = logoscreen0;  // main screen turn on ;)
-    currentBitmap = screenBitmap0;
+    currentScreen = logoscreen1;  // main screen turn on ;)
+    currentBitmap = screenBitmap1;
 
     LoadRGB4(&logoscreen0->ViewPort, color0, SHOWLOGO_SCREEN_COLORS);
     LoadRGB4(&logoscreen1->ViewPort, color0, SHOWLOGO_SCREEN_COLORS);
@@ -213,6 +213,7 @@ UWORD fadeInFromWhite(void) {
     if (!fade) {
         return SHOWLOGO_PREPARE_ROTATION;
     } else {
+        LoadRGB4(&logoscreen1->ViewPort, color0, SHOWLOGO_SCREEN_COLORS);
         return SHOWLOGO_STATIC;
     }
 }
@@ -241,14 +242,19 @@ UWORD prepareRotation(void) {
 UWORD performRotation() {
     static UBYTE i = 1;
     convertChunkyToBitmap(getDestBuffer(i), logoBitmap);
-    WaitTOF();
-    WaitTOF();
-    WaitTOF();
+
+    switchScreenData();
     BltBitMap(logoBitmap, 0, 0,
-              screenBitmap0,
+              currentBitmap,
               SHOWLOGO_DAWN_X_POS, SHOWLOGO_DAWN_Y_POS,
               SHOWLOGO_DAWN_WIDTH, SHOWLOGO_DAWN_HEIGHT,
               0xC0, 0xff, 0);
+
+    WaitTOF();
+    WaitTOF();
+    WaitTOF();
+    ScreenToFront(currentScreen);
+
     i = (i < SHOWLOGO_ROTATION_STEPS - 1) ? i + 1 : 0;
     return SHOWLOGO_ROTATE;
 }
@@ -279,12 +285,12 @@ void convertChunkyToBitmap(UBYTE *sourceChunky, struct BitMap *destPlanar) {
 
 void switchScreenData() {
     if (bufferSelector) {
-        currentScreen = logoscreen0;
-        currentBitmap = screenBitmap0;
-        bufferSelector = FALSE;
-    } else {
         currentScreen = logoscreen1;
         currentBitmap = screenBitmap1;
+        bufferSelector = FALSE;
+    } else {
+        currentScreen = logoscreen0;
+        currentBitmap = screenBitmap0;
         bufferSelector = TRUE;
     }
 }
