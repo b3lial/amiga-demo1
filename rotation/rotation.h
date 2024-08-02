@@ -18,10 +18,10 @@
 // #define NATIVE_CONVERTER
 
 // credits to: https://coronax.wordpress.com/2014/01/31/running-with-the-numbers/
-#define FIXSHIFT 16  // shift 16 bits = scale factor 65536
-#define HALFSHIFT 8
+#define FIXSHIFT 8  // shift 16 bits = scale factor 65536
+#define HALFSHIFT 4
 // convert float to fix (and back)
-#define FLOATTOFIX(x) ((int)((x) * (1 << FIXSHIFT)))
+#define FLOATTOFIX(x) ((WORD)((x) * (1 << FIXSHIFT)))
 #define FIXTOFLOAT(x) ((float)(x) / (1 << FIXSHIFT))
 // convert int to fix (and back)
 #define INTTOFIX(x) ((x) << FIXSHIFT)
@@ -42,9 +42,8 @@ BOOL allocateChunkyBuffer(void);
 void freeChunkyBuffer(void);
 UBYTE* getSourceBuffer(void);
 UBYTE* getDestBuffer(UBYTE index);
-void preCalcSinCos(UWORD lookupIndex, int* sinLookupX, int* cosLookupX,
-                   int* sinLookupY, int* cosLookupY,
-                   UWORD halfBitmapWidth, UWORD halfBitmapHeight);
+void preCalcSinCos(UWORD lookupIndex, WORD* sinLookupX, WORD* cosLookupX,
+                   WORD* sinLookupY, WORD* cosLookupY);
 
 void rotateAll(void);
 void rotate(UBYTE* dest, USHORT angle);
