@@ -124,8 +124,8 @@ UWORD initShowLogo(void) {
 
     // init double buffering
     bufferSelector = TRUE;
-    currentScreen = logoscreen1;  // main screen turn on ;)
-    currentBitmap = screenBitmap1;
+    currentScreen = logoscreen0;  // main screen turn on ;)
+    currentBitmap = screenBitmap0;
 
     LoadRGB4(&logoscreen0->ViewPort, color0, SHOWLOGO_SCREEN_COLORS);
     LoadRGB4(&logoscreen1->ViewPort, color0, SHOWLOGO_SCREEN_COLORS);
@@ -136,13 +136,13 @@ UWORD initShowLogo(void) {
 
     // blit logo into screenBitmap and delete old bitmap
     BltBitMap(logoBitmap, 0, 0,
-              screenBitmap0,
+              currentBitmap,
               SHOWLOGO_DAWN_X_POS, SHOWLOGO_DAWN_Y_POS,
               SHOWLOGO_DAWN_WIDTH, SHOWLOGO_DAWN_HEIGHT,
               0xC0, 0xff, 0);
 
     // make screen great again ;)
-    ScreenToFront(logoscreen0);
+    ScreenToFront(currentScreen);
     return FSM_SHOWLOGO;
 
 __exit_init_logo:
@@ -209,11 +209,11 @@ UWORD fadeInFromWhite(void) {
     WaitTOF();
     WaitBOVP(&logoscreen0->ViewPort);
     LoadRGB4(&logoscreen0->ViewPort, color0, SHOWLOGO_SCREEN_COLORS);
+    LoadRGB4(&logoscreen1->ViewPort, color0, SHOWLOGO_SCREEN_COLORS);
 
     if (!fade) {
         return SHOWLOGO_PREPARE_ROTATION;
     } else {
-        LoadRGB4(&logoscreen1->ViewPort, color0, SHOWLOGO_SCREEN_COLORS);
         return SHOWLOGO_STATIC;
     }
 }
