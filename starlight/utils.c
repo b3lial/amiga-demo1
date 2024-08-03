@@ -1,5 +1,8 @@
 #include "demo1.h"
 
+UWORD xStars[STAR_MAX];
+UWORD yStars[STAR_MAX];
+
 BOOL mousePressed = FALSE;
 char* logMessage = "Starlight Demo Logfile\n";
 __far extern struct CIA ciaa;
@@ -25,16 +28,23 @@ BOOL mouseCiaStatus(void) {
     }
 }
 
+void initStars(UWORD numStars, UWORD width, UWORD height) {
+    UWORD i, x, y;
+    writeLogFS("initStars with numStars==%d\n", numStars);
+
+    for (i = 0; i < numStars; i++) {
+        xStars[i] = RangeRand(width);
+        yStars[i] = RangeRand(height);
+    }
+}
+
 void createStars(struct RastPort* rp, UWORD color, UWORD numStars, UWORD width, UWORD height) {
     UWORD i;
-    UWORD x, y;
 
     writeLogFS("creating random stars on screen\n");
     SetAPen(rp, color);
     for (i = 0; i < numStars; i++) {
-        x = RangeRand(width);
-        y = RangeRand(height);
-        WritePixel(rp, x, y);
+        WritePixel(rp, xStars[i], yStars[i]);
     }
 }
 

@@ -197,6 +197,8 @@ UWORD initTextScroller(void) {
         goto __exit_init_scroller;
     }
     LoadRGB4(&textScrollerScreen0->ViewPort, colortable0, TEXTSCROLLER_BLOB_FONT_COLORS);
+
+    initStars(50, TEXTSCROLLER_VIEW_TEXTSECTION_WIDTH, TEXTSCROLLER_VIEW_TEXTSECTION_HEIGHT);
     createStars(&textScrollerScreen0->RastPort, 6, 50, TEXTSCROLLER_VIEW_TEXTSECTION_WIDTH,
                 TEXTSCROLLER_VIEW_TEXTSECTION_HEIGHT);
 

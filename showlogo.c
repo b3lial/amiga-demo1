@@ -129,6 +129,10 @@ UWORD initShowLogo(void) {
 
     LoadRGB4(&logoscreen0->ViewPort, color0, SHOWLOGO_SCREEN_COLORS);
     LoadRGB4(&logoscreen1->ViewPort, color0, SHOWLOGO_SCREEN_COLORS);
+
+    // create stars
+    initStars(70, SHOWLOGO_SCREEN_WIDTH + SHOWLOGO_SCREEN_BORDER,
+              SHOWLOGO_SCREEN_HEIGHT + SHOWLOGO_SCREEN_BORDER);
     createStars(&logoscreen0->RastPort, 42, 70, SHOWLOGO_SCREEN_WIDTH + SHOWLOGO_SCREEN_BORDER,
                 SHOWLOGO_SCREEN_HEIGHT + SHOWLOGO_SCREEN_BORDER);
     createStars(&logoscreen1->RastPort, 42, 70, SHOWLOGO_SCREEN_WIDTH + SHOWLOGO_SCREEN_BORDER,
