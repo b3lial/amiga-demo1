@@ -130,13 +130,8 @@ UWORD initShowLogo(void) {
     LoadRGB4(&logoscreen0->ViewPort, color0, SHOWLOGO_SCREEN_COLORS);
     LoadRGB4(&logoscreen1->ViewPort, color0, SHOWLOGO_SCREEN_COLORS);
 
-    // create stars
     initStars(70, SHOWLOGO_SCREEN_WIDTH + SHOWLOGO_SCREEN_BORDER,
               SHOWLOGO_SCREEN_HEIGHT + SHOWLOGO_SCREEN_BORDER);
-    createStars(&logoscreen0->RastPort, 42, 70, SHOWLOGO_SCREEN_WIDTH + SHOWLOGO_SCREEN_BORDER,
-                SHOWLOGO_SCREEN_HEIGHT + SHOWLOGO_SCREEN_BORDER);
-    createStars(&logoscreen1->RastPort, 42, 70, SHOWLOGO_SCREEN_WIDTH + SHOWLOGO_SCREEN_BORDER,
-                SHOWLOGO_SCREEN_HEIGHT + SHOWLOGO_SCREEN_BORDER);
 
     // blit logo into screenBitmap and delete old bitmap
     BltBitMap(logoBitmap, 0, 0,
@@ -144,6 +139,9 @@ UWORD initShowLogo(void) {
               SHOWLOGO_DAWN_X_POS, SHOWLOGO_DAWN_Y_POS,
               SHOWLOGO_DAWN_WIDTH, SHOWLOGO_DAWN_HEIGHT,
               0xC0, 0xff, 0);
+
+    createStars(&currentScreen->RastPort, 42, 70, SHOWLOGO_SCREEN_WIDTH + SHOWLOGO_SCREEN_BORDER,
+                SHOWLOGO_SCREEN_HEIGHT + SHOWLOGO_SCREEN_BORDER);
 
     // make screen great again ;)
     ScreenToFront(currentScreen);
@@ -253,6 +251,9 @@ UWORD performRotation() {
               SHOWLOGO_DAWN_X_POS, SHOWLOGO_DAWN_Y_POS,
               SHOWLOGO_DAWN_WIDTH, SHOWLOGO_DAWN_HEIGHT,
               0xC0, 0xff, 0);
+
+    createStars(&currentScreen->RastPort, 42, 70, SHOWLOGO_SCREEN_WIDTH + SHOWLOGO_SCREEN_BORDER,
+                SHOWLOGO_SCREEN_HEIGHT + SHOWLOGO_SCREEN_BORDER);
 
     WaitTOF();
     WaitTOF();

@@ -29,7 +29,7 @@ BOOL mouseCiaStatus(void) {
 }
 
 void initStars(UWORD numStars, UWORD width, UWORD height) {
-    UWORD i, x, y;
+    UWORD i;
     writeLogFS("initStars with numStars==%d\n", numStars);
 
     for (i = 0; i < numStars; i++) {
@@ -40,11 +40,15 @@ void initStars(UWORD numStars, UWORD width, UWORD height) {
 
 void createStars(struct RastPort* rp, UWORD color, UWORD numStars, UWORD width, UWORD height) {
     UWORD i;
+    ULONG currentColor;
 
     writeLogFS("creating random stars on screen\n");
     SetAPen(rp, color);
     for (i = 0; i < numStars; i++) {
-        WritePixel(rp, xStars[i], yStars[i]);
+        currentColor = ReadPixel(rp, xStars[i], yStars[i]);
+        if (currentColor == 0) {
+            WritePixel(rp, xStars[i], yStars[i]);
+        }
     }
 }
 
