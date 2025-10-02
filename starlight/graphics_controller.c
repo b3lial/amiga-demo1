@@ -5,7 +5,7 @@ struct Screen* createScreen(struct BitMap* b, BOOL hidden,
                             struct Rectangle* clip) {
     UBYTE endOfLineClub = 8;
     struct TagItem screentags[11] = {
-        {SA_BitMap, NULL},
+        {SA_BitMap, 0},
         {SA_Left, 0},
         {SA_Top, 0},
         {SA_Width, 0},
@@ -13,9 +13,9 @@ struct Screen* createScreen(struct BitMap* b, BOOL hidden,
         {SA_Depth, 0},
         {SA_Type, CUSTOMSCREEN},
         {SA_Quiet, TRUE},
-        {TAG_DONE, NULL},
-        {NULL, NULL},
-        {NULL, NULL}};
+        {TAG_DONE, 0},
+        {0, 0},
+        {0, 0}};
 
     screentags[0].ti_Data = (ULONG)b;
     screentags[1].ti_Data = x;
@@ -29,7 +29,7 @@ struct Screen* createScreen(struct BitMap* b, BOOL hidden,
         screentags[endOfLineClub].ti_Data = TRUE;
         endOfLineClub++;
         screentags[endOfLineClub].ti_Tag = TAG_DONE;
-        screentags[endOfLineClub].ti_Data = NULL;
+        screentags[endOfLineClub].ti_Data = 0;
     }
 
     if (clip) {
@@ -37,7 +37,7 @@ struct Screen* createScreen(struct BitMap* b, BOOL hidden,
         screentags[endOfLineClub].ti_Data = (ULONG)clip;
         endOfLineClub++;
         screentags[endOfLineClub].ti_Tag = TAG_DONE;
-        screentags[endOfLineClub].ti_Data = NULL;
+        screentags[endOfLineClub].ti_Data = 0;
     }
 
     return OpenScreenTagList(NULL, screentags);

@@ -1,8 +1,8 @@
 CC=m68k-amigaos-gcc
 VASM=vasmm68k_mot
 VASMFLAGS=-Faout -devpac 
-CFLAGS = -D__far="" -DDEMO_DEBUG -Wall -O2 -I. -m68020
-LDFLAGS = -noixemul 
+CFLAGS = -DDEMO_DEBUG -noixemul -Wall -O2 -I. -m68020
+LDFLAGS = -noixemul
 SOURCES=main.c textscroller.c textcontroller.c starlight/utils.c font.c \
 		starlight/blob_controller.c starlight/graphics_controller.c \
 		showlogo.c rotation/rotation.c

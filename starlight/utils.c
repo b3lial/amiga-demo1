@@ -54,8 +54,8 @@ void createStars(struct RastPort* rp, UWORD color, UWORD numStars, UWORD width, 
 
 #ifdef DEMO_DEBUG
 BOOL initLog(void) {
-    BPTR logHandle = Open("ram:starlight-demo.log", MODE_NEWFILE);
-    if (logHandle == NULL) {
+    BPTR logHandle = Open((CONST_STRPTR)"ram:starlight-demo.log", MODE_NEWFILE);
+    if (logHandle == ((BPTR) NULL)) {
         return FALSE;
     }
 
@@ -81,8 +81,8 @@ BOOL writeLogFS(const char* formatString, ...) {
  * Write string into logfile
  */
 BOOL writeLog(char* msg) {
-    BPTR logHandle = Open("ram:starlight-demo.log", MODE_OLDFILE);
-    if (logHandle == NULL) {
+    BPTR logHandle = Open((CONST_STRPTR)"ram:starlight-demo.log", MODE_OLDFILE);
+    if (logHandle == ((BPTR) NULL)) {
         return FALSE;
     }
 

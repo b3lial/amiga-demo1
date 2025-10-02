@@ -19,7 +19,7 @@ int main(void) {
 
     // hide mouse
     emptyPointer = AllocVec(22 * sizeof(UWORD), MEMF_CHIP | MEMF_CLEAR);
-    my_wbscreen_ptr = LockPubScreen("Workbench");
+    my_wbscreen_ptr = LockPubScreen((CONST_STRPTR)"Workbench");
     SetPointer(my_wbscreen_ptr->FirstWindow, emptyPointer, 8, 8, -6, 0);
     UnlockPubScreen(NULL, my_wbscreen_ptr);
 
@@ -68,7 +68,7 @@ int main(void) {
     }
 
     // restore mouse on every window
-    my_wbscreen_ptr = LockPubScreen("Workbench");
+    my_wbscreen_ptr = LockPubScreen((CONST_STRPTR)"Workbench");
     ClearPointer(my_wbscreen_ptr->FirstWindow);
     UnlockPubScreen(NULL, my_wbscreen_ptr);
     FreeVec(emptyPointer);

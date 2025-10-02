@@ -86,7 +86,7 @@ UWORD initShowLogo(void) {
     }
 
     // this color table will fade from white to logo
-    color0 = AllocVec(sizeof(dawnPaletteRGB4), NULL);
+    color0 = AllocVec(sizeof(dawnPaletteRGB4), 0);
     if (!color0) {
         writeLog("Error: Could not allocate memory for logo color table\n");
         goto __exit_init_logo;

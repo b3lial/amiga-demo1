@@ -7,11 +7,11 @@
 BOOL loadColorMap(char *fileName, UWORD *map, UWORD mapLength)
 {
     LONG dataRead = 0;
-    BPTR mapFileHandle = NULL;
+    BPTR mapFileHandle = (BPTR) NULL;
     writeLogFS("Trying to load color table %s\n", fileName);
 
     //Open input file
-    mapFileHandle = Open(fileName, MODE_OLDFILE);
+    mapFileHandle = Open((CONST_STRPTR) fileName, MODE_OLDFILE);
     if (!mapFileHandle)
     {
         writeLogFS("Error: Could not read %s\n", fileName);
@@ -103,7 +103,7 @@ BOOL loadColorMap32(char *fileName, ULONG *map, UWORD colorAmount)
 struct BitMap *loadBlob(const char *fileName, UBYTE depth, UWORD width,
                         UWORD height)
 {
-    LONG fileSize, planeSize, dataRead = 0;
+    LONG fileSize, dataRead = 0;
     UWORD rowSize = 0;
     UWORD destRowSize = 0;
     UWORD i = 0;
@@ -112,11 +112,11 @@ struct BitMap *loadBlob(const char *fileName, UBYTE depth, UWORD width,
     ULONG dataIndex = 0;
 
     struct BitMap *blobBitMap = NULL;
-    BPTR blobFileHandle = NULL;
+    BPTR blobFileHandle = (BPTR) NULL;
     writeLogFS("Trying to load blob %s\n", fileName);
 
     //Open input file
-    blobFileHandle = Open(fileName, MODE_OLDFILE);
+    blobFileHandle = Open((CONST_STRPTR) fileName, MODE_OLDFILE);
     if (!blobFileHandle)
     {
         writeLogFS("Error: Could not read %s\n", fileName);
@@ -144,7 +144,6 @@ struct BitMap *loadBlob(const char *fileName, UBYTE depth, UWORD width,
      */
     rowSize = width / 8;
     rowSize += (width % 8 > 0) ? 1 : 0;
-    planeSize = (blobBitMap->Rows) * rowSize;
     destRowSize = (blobBitMap->BytesPerRow);
     writeLogFS("Calculated input file plane size: %d\n",
                (blobBitMap->Rows) * rowSize);
