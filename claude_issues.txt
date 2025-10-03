@@ -1,0 +1,70 @@
+⏺ Based on my analysis of your Amiga demo project, here are the key architectural issues I've identified:
+
+  Critical Issues:
+
+  1. Global State Everywhere
+
+  Almost every module uses global variables (rotation.c:4-17, textscroller.c:7-17, showlogo.c:3-15). This creates:
+  - Hidden dependencies between functions
+  - Difficult-to-track state mutations
+  - Memory leak risks if initialization/cleanup order is wrong
+  - No ability to run multiple instances
+
+  2. Memory Leak Vulnerabilities
+
+  Multiple error paths don't properly clean up:
+  - rotation.c:260-265 - rollback only frees destBuffer but not srcBuffer, y_mult_sin, etc.
+  - textcontroller.c:259 - allocates 50x50 bitmap using magic numbers instead of MAX_CHAR_WIDTH/HEIGHT constants
+  - Missing null checks after allocations in several places before using the pointer
+
+  3. Inconsistent Error Handling
+
+  - Some functions use goto-based cleanup (rotation.c:260, textscroller.c:229)
+  - Some just return FALSE without cleanup (textcontroller.c:36)
+  - No consistent error propagation strategy
+  - initRotationEngine failure paths don't free previously allocated buffers
+
+  4. Hardcoded Magic Numbers
+
+  - rotation.c:221-225 - nested loop recalculates x values for every y iteration
+  - textcontroller.c:259 - "50, 50" instead of using defined constants
+  - textscroller.c:35-102 - hardcoded screen positions scattered throughout state machine
+
+  5. Poor Module Boundaries
+
+  - demo1.h includes everything for all modules - violation of encapsulation
+  - Rotation engine has global buffers but also returns pointers to them (rotation.c:308-313)
+  - Text scroller logic mixed with screen management
+
+  6. Fixed-Point Arithmetic Issues
+
+  - rotation.c:30 - FIXMULT macro shifts both operands, losing precision
+  - No overflow protection in fixed-point operations
+  - Comment says "shift 16 bits" but FIXSHIFT is 8 (rotation.h:21)
+
+  7. Inefficient Algorithms
+
+  - rotation.c:216-226 - preCalcSinCos recalculates x_mult values for every y iteration unnecessarily
+  - showlogo.c:244-265 - rotation performed on every frame instead of pre-calculating
+  - textscroller.c:267-308 - palette fade done per-frame with no temporal coherence
+
+  8. Resource Management
+
+  - Double buffering state in showlogo.c:13-15 is fragile
+  - No clear ownership of bitmaps - who allocates vs who frees is unclear
+  - Font blob loaded but never checked if already loaded
+
+  9. State Machine Complexity
+
+  The FSM in main.c is reasonable, but substates (textscroller.c:31-135) have no clear transition diagram and mix presentation logic with state transitions.
+
+  Recommendations:
+
+  1. Encapsulate modules - pass state structures instead of globals
+  2. Consistent cleanup - use resource acquisition patterns or goto-cleanup everywhere
+  3. Pre-calculate rotation frames once during init, not per-frame
+  4. Fix fixed-point math - verify precision requirements and document shift amounts
+  5. Extract constants - replace all magic numbers with named defines
+  6. Separate concerns - split screen management from effect logic
+
+  The most problematic areas for stability are memory management (potential leaks/crashes) and the inefficient rotation recalculation on line 221-225 of rotation.c.
