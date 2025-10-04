@@ -14,13 +14,10 @@
 #include "textscroller.h"
 #include "showlogo.h"
 
-WORD fsmCurrentState = FSM_START;
-WORD fsmNextState = -1;
-
-// empty mouse pointer because we dont want to see a mouse
-UWORD *emptyPointer;
-
 int main(void) {
+    WORD fsmCurrentState = FSM_START;
+    WORD fsmNextState = -1;
+    UWORD *emptyPointer = NULL;
     struct Screen *my_wbscreen_ptr;
 
     // requires aga for 8 bitplanes 24 bit colors
