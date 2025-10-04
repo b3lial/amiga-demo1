@@ -5,8 +5,8 @@
 #include <clib/exec_protos.h>
 #include <stdio.h>
 
-#include "rotation.h"
-#include "../starlight/utils.h"
+#include "rotation/rotation.h"
+#include "starlight/utils.h"
 
 // buffers for chunky data
 UBYTE *srcBuffer;
