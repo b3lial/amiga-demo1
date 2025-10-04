@@ -6,7 +6,8 @@
 #include <hardware/custom.h>
 
 #include "showlogo.h"
-#include "main.h"
+
+#include "fsm_states.h"
 #include "starlight/utils.h"
 #include "starlight/graphics_controller.h"
 #include "starlight/blob_controller.h"

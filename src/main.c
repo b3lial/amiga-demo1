@@ -8,6 +8,8 @@
 #include <dos/dos.h>
 
 #include "main.h"
+
+#include "fsm_states.h"
 #include "starlight/utils.h"
 #include "textscroller.h"
 #include "showlogo.h"
