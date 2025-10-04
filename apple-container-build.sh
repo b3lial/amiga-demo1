@@ -18,7 +18,7 @@ fi
 
 echo "starting $IMAGE"
 echo
-container run --platform linux/amd64 --name=$SERVICE_NAME \
+container run --name=$SERVICE_NAME \
     -v  $PWD:/build \
     --env BUILD_RESULT=demo-1-gcc \
     $IMAGE:latest
