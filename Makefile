@@ -3,7 +3,7 @@ VASM=vasmm68k_mot
 VASMFLAGS=-Faout -devpac 
 CFLAGS = -DDEMO_DEBUG -noixemul -Wall -O2 -I. -m68020
 LDFLAGS = -noixemul
-SOURCES=main.c textscroller.c textcontroller.c starlight/utils.c font.c \
+SOURCES=main.c textscroller.c textcontroller.c starlight/utils.c \
 		starlight/blob_controller.c starlight/graphics_controller.c \
 		showlogo.c rotation/rotation.c
 OBJECTS=$(SOURCES:.c=.o)

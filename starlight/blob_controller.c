@@ -1,4 +1,13 @@
-#include "demo1.h"
+#include <exec/types.h>
+#include <exec/memory.h>
+#include <graphics/gfx.h>
+#include <clib/graphics_protos.h>
+#include <clib/dos_protos.h>
+#include <clib/exec_protos.h>
+#include <dos/dos.h>
+
+#include "blob_controller.h"
+#include "utils.h"
 
 /**
  * Loads a set of unsigned words from file and copies them into

@@ -1,5 +1,12 @@
 // Copyright 2021 Christian Ammann
-#include "demo1.h"
+
+#include <exec/types.h>
+#include <exec/memory.h>
+#include <clib/exec_protos.h>
+#include <stdio.h>
+
+#include "rotation.h"
+#include "../starlight/utils.h"
 
 // buffers for chunky data
 UBYTE *srcBuffer;

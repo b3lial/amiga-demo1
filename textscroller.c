@@ -1,6 +1,20 @@
 // Copyright 2021 Christian Ammann
 
-#include "demo1.h"
+#include <exec/types.h>
+#include <exec/memory.h>
+#include <graphics/gfx.h>
+#include <graphics/videocontrol.h>
+#include <clib/graphics_protos.h>
+#include <clib/intuition_protos.h>
+#include <clib/exec_protos.h>
+#include <hardware/custom.h>
+
+#include "textscroller.h"
+#include "textcontroller.h"
+#include "main.h"
+#include "starlight/utils.h"
+#include "starlight/graphics_controller.h"
+#include "starlight/blob_controller.h"
 
 __far extern struct Custom custom;
 

@@ -1,6 +1,8 @@
 #ifndef __UTILS_H__
 #define __UTILS_H__
 
+#include "demo_constants.h"
+
 #define STAR_MAX 100
 
 BOOL mouseClick(void);

@@ -1,4 +1,17 @@
-#include "demo1.h"
+#include <exec/types.h>
+#include <graphics/rastport.h>
+#include <clib/graphics_protos.h>
+#include <clib/dos_protos.h>
+#include <clib/alib_protos.h>
+#include <dos/dos.h>
+#include <hardware/cia.h>
+#include <hardware/custom.h>
+#include <hardware/dmabits.h>
+#include <stdarg.h>
+#include <stdio.h>
+#include <string.h>
+
+#include "utils.h"
 
 UWORD xStars[STAR_MAX];
 UWORD yStars[STAR_MAX];

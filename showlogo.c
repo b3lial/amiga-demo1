@@ -1,4 +1,17 @@
-#include "demo1.h"
+#include <exec/types.h>
+#include <graphics/gfx.h>
+#include <graphics/videocontrol.h>
+#include <clib/graphics_protos.h>
+#include <clib/exec_protos.h>
+#include <hardware/custom.h>
+
+#include "showlogo.h"
+#include "main.h"
+#include "starlight/utils.h"
+#include "starlight/graphics_controller.h"
+#include "starlight/blob_controller.h"
+#include "rotation/rotation.h"
+#include "chunkyconverter/chunkyconverter.h"
 
 WORD payloadShowLogoState = SHOWLOGO_INIT;
 struct BitMap *logoBitmap = NULL;

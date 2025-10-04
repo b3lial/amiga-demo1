@@ -1,6 +1,8 @@
 #ifndef __MAIN_H__
 #define __MAIN_H__
 
+#include "demo_constants.h"
+
 #define FSM_START 0
 #define FSM_TEXTSCROLLER 1
 #define FSM_TEXTSCROLLER_FINISHED 2

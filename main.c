@@ -1,6 +1,18 @@
 // Copyright 2021 Christian Ammann
 
-#include "demo1.h"
+#include <clib/exec_protos.h>
+#include <clib/intuition_protos.h>
+#include <exec/memory.h>
+#include <exec/types.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <dos/dos.h>
+
+#include "main.h"
+#include "starlight/utils.h"
+#include "textscroller.h"
+#include "showlogo.h"
+#include "textcontroller.h"
 
 WORD fsmCurrentState = FSM_START;
 WORD fsmNextState = -1;

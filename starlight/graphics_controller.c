@@ -1,4 +1,11 @@
-#include "demo1.h"
+#include <exec/types.h>
+#include <graphics/gfx.h>
+#include <intuition/intuition.h>
+#include <intuition/screens.h>
+#include <clib/intuition_protos.h>
+#include <utility/tagitem.h>
+
+#include "graphics_controller.h"
 
 struct Screen* createScreen(struct BitMap* b, BOOL hidden,
                             WORD x, WORD y, UWORD width, UWORD height, UWORD depth,
