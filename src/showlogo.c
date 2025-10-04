@@ -14,39 +14,53 @@
 #include "rotation/rotation.h"
 #include "chunkyconverter/chunkyconverter.h"
 
-WORD payloadShowLogoState = SHOWLOGO_INIT;
-struct BitMap *logoBitmap = NULL;
-struct BitMap *screenBitmap0;
-struct BitMap *screenBitmap1;
-struct Screen *logoscreen0 = NULL;
-struct Screen *logoscreen1 = NULL;
-UWORD dawnPaletteRGB4[256] = {0};
-UWORD *color0 = NULL;
+struct ShowLogoContext {
+    WORD state;
+    struct BitMap *logoBitmap;
+    struct BitMap *screenBitmap0;
+    struct BitMap *screenBitmap1;
+    struct Screen *logoscreen0;
+    struct Screen *logoscreen1;
+    UWORD dawnPaletteRGB4[256];
+    UWORD *color0;
+    BOOL bufferSelector;
+    struct BitMap *currentBitmap;
+    struct Screen *currentScreen;
+};
 
-// used for double buffering
-BOOL bufferSelector;
-struct BitMap *currentBitmap = NULL;
-struct Screen *currentScreen = NULL;
+static struct ShowLogoContext ctx = {
+    .state = SHOWLOGO_INIT,
+    .logoBitmap = NULL,
+    .screenBitmap0 = NULL,
+    .screenBitmap1 = NULL,
+    .logoscreen0 = NULL,
+    .logoscreen1 = NULL,
+    .dawnPaletteRGB4 = {0},
+    .color0 = NULL,
+    .bufferSelector = FALSE,
+    .currentBitmap = NULL,
+    .currentScreen = NULL
+};
 
 __far extern struct Custom custom;
 
 UWORD fsmShowLogo(void) {
     if (mouseClick()) {
-        payloadShowLogoState = SHOWLOGO_SHUTDOWN;
+        ctx.state = SHOWLOGO_SHUTDOWN;
     }
 
-    switch (payloadShowLogoState) {
+    switch (ctx.state) {
         case SHOWLOGO_INIT:
-            payloadShowLogoState = SHOWLOGO_STATIC;
+            ctx.state = SHOWLOGO_STATIC;
             break;
         case SHOWLOGO_STATIC:
-            payloadShowLogoState = fadeInFromWhite();
+            ctx.state = fadeInFromWhite();
             break;
         case SHOWLOGO_PREPARE_ROTATION:
-            payloadShowLogoState = prepareRotation();
+            ctx.state = prepareRotation();
             break;
         case SHOWLOGO_ROTATE:
-            payloadShowLogoState = performRotation();
+            ctx.state = performRotation();
             break;
         case SHOWLOGO_SHUTDOWN:
             exitShowLogo();
@@ -68,45 +82,45 @@ UWORD initShowLogo(void) {
     writeLog("\n\n== initShowLogo() ==\n");
 
     // load demo logo from file which we blit later into screenBitmap
-    logoBitmap = loadBlob("img/dawn_224_224_8.RAW", SHOWLOGO_DAWN_DEPTH,
+    ctx.logoBitmap = loadBlob("img/dawn_224_224_8.RAW", SHOWLOGO_DAWN_DEPTH,
                           SHOWLOGO_DAWN_WIDTH, SHOWLOGO_DAWN_HEIGHT);
-    if (!logoBitmap) {
+    if (!ctx.logoBitmap) {
         writeLog("Error: Could not allocate memory for dawn logo bitmap\n");
         goto __exit_init_logo;
     }
 
     // Load dawn logo color table
-    loadColorMap("img/dawn_224_224_8.CMAP", dawnPaletteRGB4,
+    loadColorMap("img/dawn_224_224_8.CMAP", ctx.dawnPaletteRGB4,
                  SHOWLOGO_DAWN_COLORS);
 
     // load onscreen bitmap which will be shown on screen
-    screenBitmap0 = AllocBitMap(SHOWLOGO_SCREEN_WIDTH + SHOWLOGO_SCREEN_BORDER,
+    ctx.screenBitmap0 = AllocBitMap(SHOWLOGO_SCREEN_WIDTH + SHOWLOGO_SCREEN_BORDER,
                                 SHOWLOGO_SCREEN_HEIGHT + SHOWLOGO_SCREEN_BORDER,
                                 SHOWLOGO_SCREEN_DEPTH, BMF_DISPLAYABLE | BMF_CLEAR,
                                 NULL);
-    if (!screenBitmap0) {
+    if (!ctx.screenBitmap0) {
         writeLog("Error: Could not allocate memory for onscreen bitmap 0\n");
         goto __exit_init_logo;
     }
 
     // load second onscreen bitmap which will be shown on screen for double buffering
-    screenBitmap1 = AllocBitMap(SHOWLOGO_SCREEN_WIDTH + SHOWLOGO_SCREEN_BORDER,
+    ctx.screenBitmap1 = AllocBitMap(SHOWLOGO_SCREEN_WIDTH + SHOWLOGO_SCREEN_BORDER,
                                 SHOWLOGO_SCREEN_HEIGHT + SHOWLOGO_SCREEN_BORDER,
                                 SHOWLOGO_SCREEN_DEPTH, BMF_DISPLAYABLE | BMF_CLEAR,
                                 NULL);
-    if (!screenBitmap1) {
+    if (!ctx.screenBitmap1) {
         writeLog("Error: Could not allocate memory for onscreen bitmap 0\n");
         goto __exit_init_logo;
     }
 
     // this color table will fade from white to logo
-    color0 = AllocVec(sizeof(dawnPaletteRGB4), 0);
-    if (!color0) {
+    ctx.color0 = AllocVec(sizeof(ctx.dawnPaletteRGB4), 0);
+    if (!ctx.color0) {
         writeLog("Error: Could not allocate memory for logo color table\n");
         goto __exit_init_logo;
     }
     for (; i < SHOWLOGO_SCREEN_COLORS; i++) {
-        color0[i] = 0x0fff;
+        ctx.color0[i] = 0x0fff;
     }
 
     // create one screen which contains the demo logo
@@ -115,50 +129,50 @@ UWORD initShowLogo(void) {
     logoClip.MinY = 0;
     logoClip.MaxX = SHOWLOGO_SCREEN_WIDTH;
     logoClip.MaxY = SHOWLOGO_SCREEN_HEIGHT;
-    logoscreen0 = createScreen(screenBitmap0, TRUE,
+    ctx.logoscreen0 = createScreen(ctx.screenBitmap0, TRUE,
                                -SHOWLOGO_SCREEN_BORDER, -SHOWLOGO_SCREEN_BORDER,
                                SHOWLOGO_SCREEN_WIDTH + SHOWLOGO_SCREEN_BORDER,
                                SHOWLOGO_SCREEN_HEIGHT + SHOWLOGO_SCREEN_BORDER,
                                SHOWLOGO_SCREEN_DEPTH, &logoClip);
-    if (!logoscreen0) {
+    if (!ctx.logoscreen0) {
         writeLog("Error: Could not allocate memory for logo screen 0\n");
         goto __exit_init_logo;
     }
 
     // create second screen which will be used for double buffering
-    logoscreen1 = createScreen(screenBitmap1, TRUE,
+    ctx.logoscreen1 = createScreen(ctx.screenBitmap1, TRUE,
                                -SHOWLOGO_SCREEN_BORDER, -SHOWLOGO_SCREEN_BORDER,
                                SHOWLOGO_SCREEN_WIDTH + SHOWLOGO_SCREEN_BORDER,
                                SHOWLOGO_SCREEN_HEIGHT + SHOWLOGO_SCREEN_BORDER,
                                SHOWLOGO_SCREEN_DEPTH, &logoClip);
-    if (!logoscreen1) {
+    if (!ctx.logoscreen1) {
         writeLog("Error: Could not allocate memory for logo screen 1\n");
         goto __exit_init_logo;
     }
 
     // init double buffering
-    bufferSelector = TRUE;
-    currentScreen = logoscreen0;  // main screen turn on ;)
-    currentBitmap = screenBitmap0;
+    ctx.bufferSelector = TRUE;
+    ctx.currentScreen = ctx.logoscreen0;  // main screen turn on ;)
+    ctx.currentBitmap = ctx.screenBitmap0;
 
-    LoadRGB4(&logoscreen0->ViewPort, color0, SHOWLOGO_SCREEN_COLORS);
-    LoadRGB4(&logoscreen1->ViewPort, color0, SHOWLOGO_SCREEN_COLORS);
+    LoadRGB4(&ctx.logoscreen0->ViewPort, ctx.color0, SHOWLOGO_SCREEN_COLORS);
+    LoadRGB4(&ctx.logoscreen1->ViewPort, ctx.color0, SHOWLOGO_SCREEN_COLORS);
 
     initStars(70, SHOWLOGO_SCREEN_WIDTH + SHOWLOGO_SCREEN_BORDER,
               SHOWLOGO_SCREEN_HEIGHT + SHOWLOGO_SCREEN_BORDER);
 
     // blit logo into screenBitmap and delete old bitmap
-    BltBitMap(logoBitmap, 0, 0,
-              currentBitmap,
+    BltBitMap(ctx.logoBitmap, 0, 0,
+              ctx.currentBitmap,
               SHOWLOGO_DAWN_X_POS, SHOWLOGO_DAWN_Y_POS,
               SHOWLOGO_DAWN_WIDTH, SHOWLOGO_DAWN_HEIGHT,
               0xC0, 0xff, 0);
 
-    createStars(&currentScreen->RastPort, 42, 70, SHOWLOGO_SCREEN_WIDTH + SHOWLOGO_SCREEN_BORDER,
+    createStars(&ctx.currentScreen->RastPort, 42, 70, SHOWLOGO_SCREEN_WIDTH + SHOWLOGO_SCREEN_BORDER,
                 SHOWLOGO_SCREEN_HEIGHT + SHOWLOGO_SCREEN_BORDER);
 
     // make screen great again ;)
-    ScreenToFront(currentScreen);
+    ScreenToFront(ctx.currentScreen);
     return FSM_SHOWLOGO;
 
 __exit_init_logo:
@@ -168,31 +182,31 @@ __exit_init_logo:
 
 void exitShowLogo(void) {
     WaitTOF();
-    if (logoscreen0) {
-        CloseScreen(logoscreen0);
-        logoscreen0 = NULL;
+    if (ctx.logoscreen0) {
+        CloseScreen(ctx.logoscreen0);
+        ctx.logoscreen0 = NULL;
     }
-    if (logoscreen1) {
-        CloseScreen(logoscreen1);
-        logoscreen1 = NULL;
+    if (ctx.logoscreen1) {
+        CloseScreen(ctx.logoscreen1);
+        ctx.logoscreen1 = NULL;
     }
     WaitTOF();
 
-    if (logoBitmap) {
-        FreeBitMap(logoBitmap);
-        logoBitmap = NULL;
+    if (ctx.logoBitmap) {
+        FreeBitMap(ctx.logoBitmap);
+        ctx.logoBitmap = NULL;
     }
-    if (screenBitmap0) {
-        FreeBitMap(screenBitmap0);
-        screenBitmap0 = NULL;
+    if (ctx.screenBitmap0) {
+        FreeBitMap(ctx.screenBitmap0);
+        ctx.screenBitmap0 = NULL;
     }
-    if (screenBitmap1) {
-        FreeBitMap(screenBitmap1);
-        screenBitmap1 = NULL;
+    if (ctx.screenBitmap1) {
+        FreeBitMap(ctx.screenBitmap1);
+        ctx.screenBitmap1 = NULL;
     }
-    if (color0) {
-        FreeVec(color0);
-        color0 = NULL;
+    if (ctx.color0) {
+        FreeVec(ctx.color0);
+        ctx.color0 = NULL;
     }
 
     freeRotationEngine();
@@ -206,26 +220,26 @@ UWORD fadeInFromWhite(void) {
     // fade effect on color table
     for (; i < SHOWLOGO_SCREEN_COLORS; i++) {
         decrementer = 0;
-        if ((color0[i] & 0x000f) != (dawnPaletteRGB4[i] & 0x000f)) {
+        if ((ctx.color0[i] & 0x000f) != (ctx.dawnPaletteRGB4[i] & 0x000f)) {
             decrementer |= 0x0001;
             fade = TRUE;
         }
-        if ((color0[i] & 0x00f0) != (dawnPaletteRGB4[i] & 0x00f0)) {
+        if ((ctx.color0[i] & 0x00f0) != (ctx.dawnPaletteRGB4[i] & 0x00f0)) {
             decrementer |= 0x0010;
             fade = TRUE;
         }
-        if ((color0[i] & 0x0f00) != (dawnPaletteRGB4[i] & 0x0f00)) {
+        if ((ctx.color0[i] & 0x0f00) != (ctx.dawnPaletteRGB4[i] & 0x0f00)) {
             decrementer |= 0x0100;
             fade = TRUE;
         }
-        color0[i] -= decrementer;
+        ctx.color0[i] -= decrementer;
     }
 
     // update screen and show result of fade in step
     WaitTOF();
-    WaitBOVP(&logoscreen0->ViewPort);
-    LoadRGB4(&logoscreen0->ViewPort, color0, SHOWLOGO_SCREEN_COLORS);
-    LoadRGB4(&logoscreen1->ViewPort, color0, SHOWLOGO_SCREEN_COLORS);
+    WaitBOVP(&ctx.logoscreen0->ViewPort);
+    LoadRGB4(&ctx.logoscreen0->ViewPort, ctx.color0, SHOWLOGO_SCREEN_COLORS);
+    LoadRGB4(&ctx.logoscreen1->ViewPort, ctx.color0, SHOWLOGO_SCREEN_COLORS);
 
     if (!fade) {
         return SHOWLOGO_PREPARE_ROTATION;
@@ -243,7 +257,7 @@ UWORD prepareRotation(void) {
     }
 
     // convert planar buffer to chunky
-    p2c.bmap = logoBitmap;
+    p2c.bmap = ctx.logoBitmap;
     p2c.startX = 0;
     p2c.startY = 0;
     p2c.width = SHOWLOGO_DAWN_WIDTH;
@@ -257,22 +271,22 @@ UWORD prepareRotation(void) {
 
 UWORD performRotation() {
     static UBYTE i = 1;
-    convertChunkyToBitmap(getDestBuffer(i), logoBitmap);
+    convertChunkyToBitmap(getDestBuffer(i), ctx.logoBitmap);
 
     switchScreenData();
-    BltBitMap(logoBitmap, 0, 0,
-              currentBitmap,
+    BltBitMap(ctx.logoBitmap, 0, 0,
+              ctx.currentBitmap,
               SHOWLOGO_DAWN_X_POS, SHOWLOGO_DAWN_Y_POS,
               SHOWLOGO_DAWN_WIDTH, SHOWLOGO_DAWN_HEIGHT,
               0xC0, 0xff, 0);
 
-    createStars(&currentScreen->RastPort, 42, 70, SHOWLOGO_SCREEN_WIDTH + SHOWLOGO_SCREEN_BORDER,
+    createStars(&ctx.currentScreen->RastPort, 42, 70, SHOWLOGO_SCREEN_WIDTH + SHOWLOGO_SCREEN_BORDER,
                 SHOWLOGO_SCREEN_HEIGHT + SHOWLOGO_SCREEN_BORDER);
 
     WaitTOF();
     WaitTOF();
     WaitTOF();
-    ScreenToFront(currentScreen);
+    ScreenToFront(ctx.currentScreen);
 
     i = (i < SHOWLOGO_ROTATION_STEPS - 1) ? i + 1 : 0;
     return SHOWLOGO_ROTATE;
@@ -303,13 +317,13 @@ void convertChunkyToBitmap(UBYTE *sourceChunky, struct BitMap *destPlanar) {
 }
 
 void switchScreenData() {
-    if (bufferSelector) {
-        currentScreen = logoscreen1;
-        currentBitmap = screenBitmap1;
-        bufferSelector = FALSE;
+    if (ctx.bufferSelector) {
+        ctx.currentScreen = ctx.logoscreen1;
+        ctx.currentBitmap = ctx.screenBitmap1;
+        ctx.bufferSelector = FALSE;
     } else {
-        currentScreen = logoscreen0;
-        currentBitmap = screenBitmap0;
-        bufferSelector = TRUE;
+        ctx.currentScreen = ctx.logoscreen0;
+        ctx.currentBitmap = ctx.screenBitmap0;
+        ctx.bufferSelector = TRUE;
     }
 }

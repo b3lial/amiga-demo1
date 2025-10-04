@@ -13,43 +13,49 @@
 #include "starlight/utils.h"
 #include "starlight/blob_controller.h"
 
-struct BitMap *fontBlob;
-struct BitMap *textDestination;
-struct TextConfig **textConfigs;
+struct TextControllerContext {
+    struct BitMap *fontBlob;
+    struct BitMap *textDestination;
+    struct TextConfig **textConfigs;
+    UWORD charDepth;
+    UWORD scrollControlWidth;
+    UWORD pauseCounter;
+    UWORD pauseTime;
+};
 
-// Color depth of font blob
-UWORD charDepth = 0;
-
-// Screen width
-UWORD scrollControlWidth = 0;
-
-// when complete text is on screen, pause for a short moment
-UWORD pauseCounter = 0;
-UWORD pauseTime = 0;
+static struct TextControllerContext ctx = {
+    .fontBlob = NULL,
+    .textDestination = NULL,
+    .textConfigs = NULL,
+    .charDepth = 0,
+    .scrollControlWidth = 0,
+    .pauseCounter = 0,
+    .pauseTime = 0
+};
 
 /**
  * Load font
  */
 BOOL initTextController(struct BitMap *screen, UWORD depth, UWORD screenWidth)
 {
-    charDepth = depth;
-    scrollControlWidth = screenWidth;
-    textDestination = screen;
-    pauseTime = TEXT_PAUSE_TIME;
+    ctx.charDepth = depth;
+    ctx.scrollControlWidth = screenWidth;
+    ctx.textDestination = screen;
+    ctx.pauseTime = TEXT_PAUSE_TIME;
 
     // Load font bitmap and its colors
     writeLog("Load font bitmap and colors\n");
-    fontBlob = loadBlob("img/charset_final.RAW", charDepth,
+    ctx.fontBlob = loadBlob("img/charset_final.RAW", ctx.charDepth,
                         TEXTSCROLLER_BLOB_FONT_WIDTH, TEXTSCROLLER_BLOB_FONT_HEIGHT);
-    if (fontBlob == NULL)
+    if (ctx.fontBlob == NULL)
     {
         writeLog("Error: Could not load font blob\n");
         return FALSE;
     }
     writeLogFS(
         "Font BitMap: BytesPerRow: %d, Rows: %d, Flags: %d, pad: %d\n",
-        fontBlob->BytesPerRow, fontBlob->Rows, fontBlob->Flags,
-        fontBlob->pad);
+        ctx.fontBlob->BytesPerRow, ctx.fontBlob->Rows, ctx.fontBlob->Flags,
+        ctx.fontBlob->pad);
     return TRUE;
 }
 
@@ -58,10 +64,10 @@ BOOL initTextController(struct BitMap *screen, UWORD depth, UWORD screenWidth)
  */
 void exitTextController(void)
 {
-    if (fontBlob)
+    if (ctx.fontBlob)
     {
-        FreeBitMap(fontBlob);
-        fontBlob = NULL;
+        FreeBitMap(ctx.fontBlob);
+        ctx.fontBlob = NULL;
     }
 }
 
@@ -72,10 +78,10 @@ void exitTextController(void)
 void setStringsTextController(struct TextConfig **configs)
 {
     UBYTE i = 0;
-    textConfigs = configs;
-    while (textConfigs[i])
+    ctx.textConfigs = configs;
+    while (ctx.textConfigs[i])
     {
-        setStringTextController(textConfigs[i]);
+        setStringTextController(ctx.textConfigs[i]);
         i++;
     }
 }
@@ -87,19 +93,19 @@ void setStringTextController(struct TextConfig *c)
 {
     // Init engines global variables
     c->currentState = TC_SCROLL_IN;
-    pauseCounter = 0;
+    ctx.pauseCounter = 0;
     c->charIndex = 0;
     memset(c->characters, 0, sizeof(c->characters));
     c->currentChar = 0;
 
     // analyse first character in text string
     getCharData(c->currentText[c->currentChar], &CURRENT_CHAR(c));
-    CURRENT_CHAR(c).xPos = scrollControlWidth - CURRENT_CHAR(c).xSize;
+    CURRENT_CHAR(c).xPos = ctx.scrollControlWidth - CURRENT_CHAR(c).xSize;
     CURRENT_CHAR(c).yPos = c->charYPosDestination;
 
     // save background at character starting position
     CURRENT_CHAR(c).oldBackground = AllocBitMap(MAX_CHAR_WIDTH, MAX_CHAR_HEIGHT,
-                                                charDepth, BMF_CLEAR, NULL);
+                                                ctx.charDepth, BMF_CLEAR, NULL);
     saveCharacterBackground(c);
 }
 
@@ -110,18 +116,18 @@ void setStringTextController(struct TextConfig *c)
 void executeTextController()
 {
     UBYTE i = 0;
-    while (textConfigs[i])
+    while (ctx.textConfigs[i])
     {
-        switch (textConfigs[i]->currentState)
+        switch (ctx.textConfigs[i]->currentState)
         {
         case TC_SCROLL_IN:
-            textScrollIn(textConfigs[i]);
+            textScrollIn(ctx.textConfigs[i]);
             break;
         case TC_SCROLL_PAUSE:
-            textScrollPause(textConfigs[i]);
+            textScrollPause(ctx.textConfigs[i]);
             break;
         case TC_SCROLL_OUT:
-            textScrollOut(textConfigs[i]);
+            textScrollOut(ctx.textConfigs[i]);
             break;
         case TC_SCROLL_FINISHED:
             break;
@@ -167,18 +173,18 @@ void textScrollIn(struct TextConfig *c)
 
 void pauseTimeTextController(UWORD newPauseTime)
 {
-    pauseTime = newPauseTime;
+    ctx.pauseTime = newPauseTime;
 }
 
 void textScrollPause(struct TextConfig *textConfig)
 {
-    if (pauseCounter >= pauseTime)
+    if (ctx.pauseCounter >= ctx.pauseTime)
     {
         textConfig->currentState = TC_SCROLL_OUT;
         return;
     }
 
-    pauseCounter++;
+    ctx.pauseCounter++;
 }
 
 void textScrollOut(struct TextConfig *c)
@@ -222,9 +228,9 @@ BOOL isFinishedTextController(void)
 {
     BOOL allFinished = TRUE;
     UBYTE i = 0;
-    while (textConfigs[i])
+    while (ctx.textConfigs[i])
     {
-        if (textConfigs[i]->currentState != TC_SCROLL_FINISHED)
+        if (ctx.textConfigs[i]->currentState != TC_SCROLL_FINISHED)
         {
             allFinished = FALSE;
         }
@@ -268,8 +274,8 @@ void prepareForNextCharacter(struct TextConfig *c)
     c->charIndex++;
     getCharData(letter, &CURRENT_CHAR(c));
     CURRENT_CHAR(c).oldBackground = AllocBitMap(50, 50,
-                                                charDepth, BMF_CLEAR, NULL);
-    CURRENT_CHAR(c).xPos = scrollControlWidth - CURRENT_CHAR(c).xSize;
+                                                ctx.charDepth, BMF_CLEAR, NULL);
+    CURRENT_CHAR(c).xPos = ctx.scrollControlWidth - CURRENT_CHAR(c).xSize;
     CURRENT_CHAR(c).yPos = c->charYPosDestination;
 
     // save background at character starting position
@@ -282,9 +288,9 @@ void prepareForNextCharacter(struct TextConfig *c)
 void resetTextController(void)
 {
     UBYTE i = 0;
-    while (textConfigs[i])
+    while (ctx.textConfigs[i])
     {
-        resetTextConfig(textConfigs[i]);
+        resetTextConfig(ctx.textConfigs[i]);
         i++;
     }
 }
@@ -315,9 +321,9 @@ UWORD displayCurrentCharacter(struct TextConfig *c)
 	 * Don't erase background if character rectangle (B) is blitted into destination (C,D)
 	 * Therefore, we use minterm: BC+NBC+BNC -> 1110xxxx -> 0xE0
 	 */
-    BltBitMap(fontBlob,
+    BltBitMap(ctx.fontBlob,
               CURRENT_CHAR(c).xPosInFont, CURRENT_CHAR(c).yPosInFont,
-              textDestination,
+              ctx.textDestination,
               CURRENT_CHAR(c).xPos, CURRENT_CHAR(c).yPos,
               CURRENT_CHAR(c).xSize, CURRENT_CHAR(c).ySize,
               0xC0, 0xff, 0);
@@ -331,7 +337,7 @@ UWORD displayCurrentCharacter(struct TextConfig *c)
 void restorePreviousBackground(struct TextConfig *c)
 {
     BltBitMap(CURRENT_CHAR(c).oldBackground,
-              0, 0, textDestination,
+              0, 0, ctx.textDestination,
               CURRENT_CHAR(c).xPos, CURRENT_CHAR(c).yPos,
               CURRENT_CHAR(c).xSize, CURRENT_CHAR(c).ySize,
               0xC0, 0xff, 0);
@@ -343,7 +349,7 @@ void restorePreviousBackground(struct TextConfig *c)
  */
 void saveCharacterBackground(struct TextConfig *c)
 {
-    BltBitMap(textDestination, CURRENT_CHAR(c).xPos,
+    BltBitMap(ctx.textDestination, CURRENT_CHAR(c).xPos,
               CURRENT_CHAR(c).yPos,
               CURRENT_CHAR(c).oldBackground, 0, 0,
               CURRENT_CHAR(c).xSize,
