@@ -3,7 +3,6 @@
 #include <exec/types.h>
 #include <exec/memory.h>
 #include <clib/exec_protos.h>
-#include <stdio.h>
 
 #include "rotation/rotation.h"
 #include "starlight/utils.h"
@@ -243,21 +242,21 @@ BOOL allocateChunkyBuffer(void) {
     BYTE i = 0;
 
     if (rotationSteps == 0 || rotationSteps > DEST_BUFFER_SIZE) {
-        printf("Error: Invalid destination buffer size %d\n", rotationSteps);
+        writeLogFS("Error: Invalid destination buffer size %d\n", rotationSteps);
         goto _exit_chunky_source_allocation_error;
     }
 
     // allocate memory for chunky buffer
     srcBuffer = AllocVec(bitmapWidth * bitmapHeight, MEMF_FAST | MEMF_CLEAR);
     if (!srcBuffer) {
-        printf("Error: Could not allocate memory for source chunky buffer\n");
+        writeLog("Error: Could not allocate memory for source chunky buffer\n");
         goto _exit_chunky_source_allocation_error;
     }
 
     for (i = 0; i < rotationSteps; i++) {
         destBuffer[i] = AllocVec(bitmapWidth * bitmapHeight, MEMF_FAST | MEMF_CLEAR);
         if (!(destBuffer[i])) {
-            printf("Error: Could not allocate memory for destination chunky buffer array\n");
+            writeLog("Error: Could not allocate memory for destination chunky buffer array\n");
             goto _exit_chunky_source_allocation_rollback;
         }
     }

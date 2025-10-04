@@ -4,7 +4,6 @@
 #include <clib/intuition_protos.h>
 #include <exec/memory.h>
 #include <exec/types.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <dos/dos.h>
 
@@ -24,7 +23,6 @@ int main(void) {
 
     // requires aga for 8 bitplanes 24 bit colors
     if (!isAga()) {
-        printf("Error, this demo requires an aga chipset to run\n");
         exit(RETURN_ERROR);
     }
 

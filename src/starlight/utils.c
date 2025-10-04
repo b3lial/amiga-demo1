@@ -55,7 +55,6 @@ void createStars(struct RastPort* rp, UWORD color, UWORD numStars, UWORD width, 
     UWORD i;
     ULONG currentColor;
 
-    writeLogFS("creating random stars on screen\n");
     SetAPen(rp, color);
     for (i = 0; i < numStars; i++) {
         currentColor = ReadPixel(rp, xStars[i], yStars[i]);
