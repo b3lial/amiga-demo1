@@ -15,8 +15,6 @@
 #define TEXTSCROLLER_MSG_4 4
 #define TEXTSCROLLER_FADE_WHITE 5
 
-#define TEXTSCROLLER_VIEW_WIDTH 320
-
 // reserve additional space as scroll in area
 #define TEXTSCROLLER_VIEW_TEXTSECTION_WIDTH \
     (TEXTSCROLLER_VIEW_WIDTH + MAX_CHAR_WIDTH * 2)

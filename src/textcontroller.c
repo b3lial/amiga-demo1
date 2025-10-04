@@ -9,6 +9,7 @@
 #include <string.h>
 
 #include "textcontroller.h"
+
 #include "starlight/utils.h"
 #include "starlight/blob_controller.h"
 

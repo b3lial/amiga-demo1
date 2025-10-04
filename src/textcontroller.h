@@ -5,7 +5,6 @@
 
 #include <exec/types.h>
 #include "demo_constants.h"
-#include "textscroller.h"
 
 #define TEXTSCROLLER_BLOB_FONT_WIDTH 288
 #define TEXTSCROLLER_BLOB_FONT_HEIGHT 160

@@ -10,6 +10,7 @@
 #include <hardware/custom.h>
 
 #include "textscroller.h"
+
 #include "textcontroller.h"
 #include "fsm_states.h"
 #include "starlight/utils.h"

@@ -7,4 +7,6 @@
 #define MAX_CHAR_WIDTH 30
 #define DEMO_STR_MAX 120
 
+#define TEXTSCROLLER_VIEW_WIDTH 320
+
 #endif
