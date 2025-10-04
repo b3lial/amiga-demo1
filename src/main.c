@@ -12,7 +12,6 @@
 #include "starlight/utils.h"
 #include "textscroller.h"
 #include "showlogo.h"
-#include "textcontroller.h"
 
 WORD fsmCurrentState = FSM_START;
 WORD fsmNextState = -1;
