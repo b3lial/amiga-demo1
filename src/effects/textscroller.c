@@ -11,12 +11,12 @@
 
 #include "textscroller.h"
 
-#include "textcontroller.h"
-#include "fsm_states.h"
-#include "starlight/utils.h"
-#include "starlight/stars.h"
-#include "starlight/graphics_controller.h"
-#include "starlight/blob_controller.h"
+#include "../gfx/textcontroller.h"
+#include "../fsm_states.h"
+#include "../utils/utils.h"
+#include "../gfx/stars.h"
+#include "../gfx/graphics_controller.h"
+#include "../gfx/blob_controller.h"
 
 struct TextScrollerContext {
     WORD state;

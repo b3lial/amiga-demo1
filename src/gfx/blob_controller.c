@@ -7,7 +7,7 @@
 #include <dos/dos.h>
 
 #include "blob_controller.h"
-#include "utils.h"
+#include "../utils/utils.h"
 
 /**
  * Loads a set of unsigned words from file and copies them into

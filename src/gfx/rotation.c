@@ -4,8 +4,8 @@
 #include <exec/memory.h>
 #include <clib/exec_protos.h>
 
-#include "rotation/rotation.h"
-#include "starlight/utils.h"
+#include "rotation.h"
+#include "../utils/utils.h"
 
 struct RotationEngineContext {
     UBYTE *srcBuffer;

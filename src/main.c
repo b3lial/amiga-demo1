@@ -10,9 +10,9 @@
 #include "main.h"
 
 #include "fsm_states.h"
-#include "starlight/utils.h"
-#include "textscroller.h"
-#include "showlogo.h"
+#include "utils/utils.h"
+#include "effects/textscroller.h"
+#include "effects/showlogo.h"
 
 int main(void) {
     WORD fsmCurrentState = FSM_START;

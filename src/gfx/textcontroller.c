@@ -10,8 +10,8 @@
 
 #include "textcontroller.h"
 
-#include "starlight/utils.h"
-#include "starlight/blob_controller.h"
+#include "../utils/utils.h"
+#include "blob_controller.h"
 
 struct TextControllerContext {
     struct BitMap *fontBlob;

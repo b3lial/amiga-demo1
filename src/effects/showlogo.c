@@ -7,13 +7,13 @@
 
 #include "showlogo.h"
 
-#include "fsm_states.h"
-#include "starlight/utils.h"
-#include "starlight/stars.h"
-#include "starlight/graphics_controller.h"
-#include "starlight/blob_controller.h"
-#include "rotation/rotation.h"
-#include "chunkyconverter/chunkyconverter.h"
+#include "../fsm_states.h"
+#include "../utils/utils.h"
+#include "../gfx/stars.h"
+#include "../gfx/graphics_controller.h"
+#include "../gfx/blob_controller.h"
+#include "../gfx/rotation.h"
+#include "../gfx/chunkyconverter.h"
 
 struct ShowLogoContext {
     WORD state;
