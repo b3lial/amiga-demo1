@@ -11,7 +11,7 @@
 
 #include "textscroller.h"
 
-#include "../gfx/textcontroller.h"
+#include "../gfx/text_controller.h"
 #include "../fsm_states.h"
 #include "../utils/utils.h"
 #include "../gfx/stars.h"

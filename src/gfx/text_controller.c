@@ -8,7 +8,7 @@
 #include <ctype.h>
 #include <string.h>
 
-#include "textcontroller.h"
+#include "text_controller.h"
 
 #include "../utils/utils.h"
 #include "blob_controller.h"
