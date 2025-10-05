@@ -4,7 +4,7 @@ VASMFLAGS=-Faout -devpac
 CFLAGS = -DDEMO_DEBUG -noixemul -Wall -O2 -Isrc -m68020
 LDFLAGS = -noixemul
 SOURCES=src/main.c src/textscroller.c src/textcontroller.c src/starlight/utils.c \
-		src/starlight/blob_controller.c src/starlight/graphics_controller.c \
+		src/starlight/stars.c src/starlight/blob_controller.c src/starlight/graphics_controller.c \
 		src/showlogo.c src/rotation/rotation.c
 OBJECTS=$(SOURCES:.c=.o)
 EXECUTABLE=demo-1-gcc

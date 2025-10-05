@@ -14,6 +14,7 @@
 #include "textcontroller.h"
 #include "fsm_states.h"
 #include "starlight/utils.h"
+#include "starlight/stars.h"
 #include "starlight/graphics_controller.h"
 #include "starlight/blob_controller.h"
 
