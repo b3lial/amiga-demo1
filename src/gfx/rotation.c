@@ -5,7 +5,7 @@
 #include <clib/exec_protos.h>
 
 #include "rotation.h"
-#include "../utils/utils.h"
+#include "utils/utils.h"
 
 struct RotationEngineContext {
     UBYTE *srcBuffer;

@@ -10,8 +10,8 @@
 
 #include "text_controller.h"
 
-#include "../utils/utils.h"
-#include "blob_controller.h"
+#include "utils/utils.h"
+#include "gfx/blob_controller.h"
 
 struct TextControllerContext {
     struct BitMap *fontBlob;

@@ -6,7 +6,7 @@
 #include <clib/alib_protos.h>
 
 #include "stars.h"
-#include "../utils/utils.h"
+#include "utils/utils.h"
 
 struct StarsContext {
     UWORD xStars[STAR_MAX];
