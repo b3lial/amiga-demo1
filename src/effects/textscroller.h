@@ -4,7 +4,6 @@
 #define TEXTSCROLLER_H__
 
 #include <exec/types.h>
-#include "demo_constants.h"
 
 #define TEXT_LIST_SIZE 4
 

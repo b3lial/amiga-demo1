@@ -273,7 +273,7 @@ void prepareForNextCharacter(struct TextConfig *c)
     // found next character, prepare everything for his arrival
     c->charIndex++;
     getCharData(letter, &CURRENT_CHAR(c));
-    CURRENT_CHAR(c).oldBackground = AllocBitMap(50, 50,
+    CURRENT_CHAR(c).oldBackground = AllocBitMap(MAX_CHAR_WIDTH, MAX_CHAR_HEIGHT,
                                                 ctx.charDepth, BMF_CLEAR, NULL);
     CURRENT_CHAR(c).xPos = ctx.scrollControlWidth - CURRENT_CHAR(c).xSize;
     CURRENT_CHAR(c).yPos = c->charYPosDestination;
