@@ -2,14 +2,6 @@
 
   Critical Issues:
 
-  1. Global State Everywhere
-
-  Almost every module uses global variables (rotation.c:4-17, textscroller.c:7-17, showlogo.c:3-15). This creates:
-  - Hidden dependencies between functions
-  - Difficult-to-track state mutations
-  - Memory leak risks if initialization/cleanup order is wrong
-  - No ability to run multiple instances
-
   2. Memory Leak Vulnerabilities
 
   Multiple error paths don't properly clean up:

@@ -277,8 +277,12 @@ BOOL allocateChunkyBuffer(void) {
     return TRUE;
 
 _exit_chunky_source_allocation_rollback:
+    FreeVec(ctx.srcBuffer);
+    ctx.srcBuffer = NULL;
+
     for (i -= 1; i >= 0; i--) {
         FreeVec(ctx.destBuffer[i]);
+        ctx.destBuffer[i] = NULL;
     }
 _exit_chunky_source_allocation_error:
     return FALSE;
