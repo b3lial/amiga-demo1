@@ -1,10 +1,9 @@
-// Copyright 2021 Christian Ammann
-
 #include <exec/types.h>
 #include <exec/memory.h>
 #include <clib/exec_protos.h>
 
 #include "rotation.h"
+
 #include "utils/utils.h"
 
 struct RotationEngineContext {

@@ -1,5 +1,3 @@
-// Copyright 2021 Christian Ammann
-
 #include <clib/exec_protos.h>
 #include <clib/intuition_protos.h>
 #include <exec/memory.h>

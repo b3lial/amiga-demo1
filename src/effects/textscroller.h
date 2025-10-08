@@ -1,5 +1,3 @@
-// Copyright 2021 Christian Ammann
-
 #ifndef TEXTSCROLLER_H__
 #define TEXTSCROLLER_H__
 

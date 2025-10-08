@@ -1,11 +1,10 @@
-// Copyright 2021 Christian Ammann
-
 #include <exec/types.h>
 #include <graphics/rastport.h>
 #include <clib/graphics_protos.h>
 #include <clib/alib_protos.h>
 
 #include "stars.h"
+
 #include "utils/utils.h"
 
 struct StarsContext {
