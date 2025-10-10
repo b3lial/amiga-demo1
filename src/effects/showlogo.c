@@ -159,7 +159,7 @@ UWORD initShowLogo(void) {
     LoadRGB4(&ctx.logoscreen0->ViewPort, ctx.color0, SHOWLOGO_SCREEN_COLORS);
     LoadRGB4(&ctx.logoscreen1->ViewPort, ctx.color0, SHOWLOGO_SCREEN_COLORS);
 
-    initStars(70, SHOWLOGO_SCREEN_WIDTH + SHOWLOGO_SCREEN_BORDER,
+    createStars(70, SHOWLOGO_SCREEN_WIDTH + SHOWLOGO_SCREEN_BORDER,
               SHOWLOGO_SCREEN_HEIGHT + SHOWLOGO_SCREEN_BORDER);
 
     // blit logo into screenBitmap and delete old bitmap
@@ -169,7 +169,7 @@ UWORD initShowLogo(void) {
               SHOWLOGO_DAWN_WIDTH, SHOWLOGO_DAWN_HEIGHT,
               0xC0, 0xff, 0);
 
-    createStars(&ctx.currentScreen->RastPort, 42, 70, SHOWLOGO_SCREEN_WIDTH + SHOWLOGO_SCREEN_BORDER,
+    paintStars(&ctx.currentScreen->RastPort, 42, 70, SHOWLOGO_SCREEN_WIDTH + SHOWLOGO_SCREEN_BORDER,
                 SHOWLOGO_SCREEN_HEIGHT + SHOWLOGO_SCREEN_BORDER);
 
     // make screen great again ;)
@@ -281,7 +281,7 @@ UWORD performRotation() {
               SHOWLOGO_DAWN_WIDTH, SHOWLOGO_DAWN_HEIGHT,
               0xC0, 0xff, 0);
 
-    createStars(&ctx.currentScreen->RastPort, 42, 70, SHOWLOGO_SCREEN_WIDTH + SHOWLOGO_SCREEN_BORDER,
+    paintStars(&ctx.currentScreen->RastPort, 42, 70, SHOWLOGO_SCREEN_WIDTH + SHOWLOGO_SCREEN_BORDER,
                 SHOWLOGO_SCREEN_HEIGHT + SHOWLOGO_SCREEN_BORDER);
 
     WaitTOF();

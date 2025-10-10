@@ -17,7 +17,7 @@ static struct StarsContext ctx = {
     .yStars = {0}
 };
 
-void initStars(UWORD numStars, UWORD width, UWORD height) {
+void createStars(UWORD numStars, UWORD width, UWORD height) {
     UWORD i;
     writeLogFS("initStars with numStars==%d\n", numStars);
 
@@ -27,7 +27,7 @@ void initStars(UWORD numStars, UWORD width, UWORD height) {
     }
 }
 
-void createStars(struct RastPort* rp, UWORD color, UWORD numStars, UWORD width, UWORD height) {
+void paintStars(struct RastPort* rp, UWORD color, UWORD numStars, UWORD width, UWORD height) {
     UWORD i;
     ULONG currentColor;
 
