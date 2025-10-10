@@ -114,7 +114,9 @@ WORD sinLookup[] = {
     FLOATTOFIX(-0.342),
     FLOATTOFIX(-0.1736)};
 
-BOOL initRotationEngine(UBYTE rs, USHORT bw, USHORT bh) {
+BOOL startRotationEngine(UBYTE rs, USHORT bw, USHORT bh) {
+    BYTE i = 0;
+
     ctx.rotationSteps = rs;
     ctx.bitmapWidth = bw;
     ctx.bitmapHeight = bh;
@@ -127,31 +129,54 @@ BOOL initRotationEngine(UBYTE rs, USHORT bw, USHORT bh) {
         return FALSE;
     }
 
+    if (ctx.rotationSteps == 0 || ctx.rotationSteps > DEST_BUFFER_SIZE) {
+        writeLogFS("Error: Invalid destination buffer size %d\n", ctx.rotationSteps);
+        return FALSE;
+    }
+
     ctx.y_mult_sin = AllocVec(sizeof(WORD) * MAX_BITMAP_HEIGHT, MEMF_FAST | MEMF_CLEAR);
     if (!ctx.y_mult_sin) {
         writeLog("Error: Could not allocate memory for y_mult_sin\n");
-        return FALSE;
+        goto _error_cleanup;
     }
 
     ctx.y_mult_cos = AllocVec(sizeof(WORD) * MAX_BITMAP_HEIGHT, MEMF_FAST | MEMF_CLEAR);
     if (!ctx.y_mult_cos) {
         writeLog("Error: Could not allocate memory for y_mult_cos\n");
-        return FALSE;
+        goto _error_cleanup;
     }
 
     ctx.x_mult_sin = AllocVec(sizeof(WORD) * MAX_BITMAP_WIDTH, MEMF_FAST | MEMF_CLEAR);
     if (!ctx.x_mult_sin) {
         writeLog("Error: Could not allocate memory for x_mult_sin\n");
-        return FALSE;
+        goto _error_cleanup;
     }
 
     ctx.x_mult_cos = AllocVec(sizeof(WORD) * MAX_BITMAP_WIDTH, MEMF_FAST | MEMF_CLEAR);
     if (!ctx.x_mult_cos) {
         writeLog("Error: Could not allocate memory for x_mult_cos\n");
-        return FALSE;
+        goto _error_cleanup;
     }
 
-    return allocateChunkyBuffer();
+    ctx.srcBuffer = AllocVec(ctx.bitmapWidth * ctx.bitmapHeight, MEMF_FAST | MEMF_CLEAR);
+    if (!ctx.srcBuffer) {
+        writeLog("Error: Could not allocate memory for source chunky buffer\n");
+        goto _error_cleanup;
+    }
+
+    for (i = 0; i < ctx.rotationSteps; i++) {
+        ctx.destBuffer[i] = AllocVec(ctx.bitmapWidth * ctx.bitmapHeight, MEMF_FAST | MEMF_CLEAR);
+        if (!(ctx.destBuffer[i])) {
+            writeLog("Error: Could not allocate memory for destination chunky buffer array\n");
+            goto _error_cleanup;
+        }
+    }
+
+    return TRUE;
+
+_error_cleanup:
+    exitRotationEngine();
+    return FALSE;
 }
 
 /**
@@ -245,68 +270,9 @@ void preCalcSinCos(UWORD lookupIndex, WORD *sinLookupX, WORD *cosLookupX,
     return;
 }
 
-/**
- * Allocate:
- * - source chunky buffer: contains the object we want to rotate
- * - destination chunky buffer array: contain the rotated objects
- */
-BOOL allocateChunkyBuffer(void) {
+void exitRotationEngine(void) {
     BYTE i = 0;
 
-    if (ctx.rotationSteps == 0 || ctx.rotationSteps > DEST_BUFFER_SIZE) {
-        writeLogFS("Error: Invalid destination buffer size %d\n", ctx.rotationSteps);
-        goto _exit_chunky_source_allocation_error;
-    }
-
-    // allocate memory for chunky buffer
-    ctx.srcBuffer = AllocVec(ctx.bitmapWidth * ctx.bitmapHeight, MEMF_FAST | MEMF_CLEAR);
-    if (!ctx.srcBuffer) {
-        writeLog("Error: Could not allocate memory for source chunky buffer\n");
-        goto _exit_chunky_source_allocation_error;
-    }
-
-    for (i = 0; i < ctx.rotationSteps; i++) {
-        ctx.destBuffer[i] = AllocVec(ctx.bitmapWidth * ctx.bitmapHeight, MEMF_FAST | MEMF_CLEAR);
-        if (!(ctx.destBuffer[i])) {
-            writeLog("Error: Could not allocate memory for destination chunky buffer array\n");
-            goto _exit_chunky_source_allocation_rollback;
-        }
-    }
-
-    return TRUE;
-
-_exit_chunky_source_allocation_rollback:
-    FreeVec(ctx.srcBuffer);
-    ctx.srcBuffer = NULL;
-
-    for (i -= 1; i >= 0; i--) {
-        FreeVec(ctx.destBuffer[i]);
-        ctx.destBuffer[i] = NULL;
-    }
-_exit_chunky_source_allocation_error:
-    return FALSE;
-}
-
-/**
- * Free allocated chunky buffers
- */
-void freeChunkyBuffer(void) {
-    BYTE i = 0;
-
-    if (ctx.srcBuffer) {
-        FreeVec(ctx.srcBuffer);
-        ctx.srcBuffer = NULL;
-    }
-
-    for (i = 0; i < ctx.rotationSteps; i++) {
-        if (ctx.destBuffer[i]) {
-            FreeVec(ctx.destBuffer[i]);
-            ctx.destBuffer[i] = NULL;
-        }
-    }
-}
-
-void freeRotationEngine(void) {
     if (ctx.y_mult_sin) {
         FreeVec(ctx.y_mult_sin);
         ctx.y_mult_sin = NULL;
@@ -324,7 +290,17 @@ void freeRotationEngine(void) {
         ctx.x_mult_cos = NULL;
     }
 
-    freeChunkyBuffer();
+    if (ctx.srcBuffer) {
+        FreeVec(ctx.srcBuffer);
+        ctx.srcBuffer = NULL;
+    }
+
+    for (i = 0; i < DEST_BUFFER_SIZE; i++) {
+        if (ctx.destBuffer[i]) {
+            FreeVec(ctx.destBuffer[i]);
+            ctx.destBuffer[i] = NULL;
+        }
+    }
 }
 
 UBYTE *getSourceBuffer(void) {

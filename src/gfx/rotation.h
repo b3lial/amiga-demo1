@@ -36,10 +36,8 @@
 #define MAX_BITMAP_WIDTH 320
 #define MAX_BITMAP_HEIGHT 256
 
-BOOL initRotationEngine(UBYTE rs, USHORT bw, USHORT bh);
-void freeRotationEngine(void);
-BOOL allocateChunkyBuffer(void);
-void freeChunkyBuffer(void);
+BOOL startRotationEngine(UBYTE rs, USHORT bw, USHORT bh);
+void exitRotationEngine(void);
 UBYTE* getSourceBuffer(void);
 UBYTE* getDestBuffer(UBYTE index);
 void preCalcSinCos(UWORD lookupIndex, WORD* sinLookupX, WORD* cosLookupX,

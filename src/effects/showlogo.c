@@ -210,7 +210,7 @@ void exitShowLogo(void) {
         ctx.color0 = NULL;
     }
 
-    freeRotationEngine();
+    exitRotationEngine();
 }
 
 UWORD fadeInFromWhite(void) {
@@ -253,7 +253,7 @@ UWORD prepareRotation(void) {
     struct p2cStruct p2c = {0};
 
     // allocate source buffer and destination buffer array
-    if (!initRotationEngine(SHOWLOGO_ROTATION_STEPS, SHOWLOGO_DAWN_WIDTH, SHOWLOGO_DAWN_HEIGHT)) {
+    if (!startRotationEngine(SHOWLOGO_ROTATION_STEPS, SHOWLOGO_DAWN_WIDTH, SHOWLOGO_DAWN_HEIGHT)) {
         return SHOWLOGO_SHUTDOWN;
     }
 

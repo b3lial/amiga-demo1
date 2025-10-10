@@ -2,11 +2,6 @@
 
   Critical Issues:
 
-  2. Memory Leak Vulnerabilities
-
-  Multiple error paths don't properly clean up:
-  - Missing null checks after allocations in several places before using the pointer
-
   3. Inconsistent Error Handling
 
   - Some functions use goto-based cleanup (rotation.c:260, textscroller.c:229)
