@@ -43,9 +43,9 @@ struct TextConfig
 };
 
 // external APIs
-BOOL initTextController(struct BitMap *screen,
+BOOL startTextController(struct BitMap *screen,
                         UWORD depth, UWORD screenWidth);
-void setStringsTextController(struct TextConfig** configs);
+void configureTextController(struct TextConfig** configs);
 void executeTextController(void);
 void resetTextController(void);
 void exitTextController(void);

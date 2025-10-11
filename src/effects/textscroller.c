@@ -59,7 +59,7 @@ UWORD fsmTextScroller(void) {
             textList[0] = &ctx.textConfigs[0];
             textList[1] = NULL;
             WaitTOF();
-            setStringsTextController(textList);
+            configureTextController(textList);
             ctx.state = TEXTSCROLLER_MSG_1;
             break;
 
@@ -81,7 +81,7 @@ UWORD fsmTextScroller(void) {
                 textList[2] = NULL;
                 pauseTimeTextController(180);
                 WaitTOF();
-                setStringsTextController(textList);
+                configureTextController(textList);
                 ctx.state = TEXTSCROLLER_MSG_2;
             }
             break;
@@ -108,7 +108,7 @@ UWORD fsmTextScroller(void) {
                 textList[3] = NULL;
                 pauseTimeTextController(660);
                 WaitTOF();
-                setStringsTextController(textList);
+                configureTextController(textList);
                 ctx.state = TEXTSCROLLER_MSG_3;
             }
             break;
@@ -131,7 +131,7 @@ UWORD fsmTextScroller(void) {
                 textList[2] = NULL;
                 pauseTimeTextController(300);
                 WaitTOF();
-                setStringsTextController(textList);
+                configureTextController(textList);
                 ctx.state = TEXTSCROLLER_MSG_4;
             }
             break;
@@ -236,7 +236,7 @@ UWORD initTextScroller(void) {
     ScreenToFront(ctx.textScrollerscreen1);
 
     // init text scroller engine
-    if (!initTextController(ctx.textBitmap,
+    if (!startTextController(ctx.textBitmap,
                             TEXTSCROLLER_BLOB_FONT_DEPTH,
                             TEXTSCROLLER_VIEW_TEXTSECTION_WIDTH)) {
         goto __exit_init_scroller;

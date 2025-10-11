@@ -67,10 +67,12 @@ static void restorePreviousBackground(struct TextScrollState *state);
 static void prepareForNextCharacter(struct TextScrollState *state);
 
 /**
- * Load font
+ * Load font and allocate scroll states
  */
-BOOL initTextController(struct BitMap *screen, UWORD depth, UWORD screenWidth)
+BOOL startTextController(struct BitMap *screen, UWORD depth, UWORD screenWidth)
 {
+    UBYTE i = 0;
+
     ctx.charDepth = depth;
     ctx.scrollControlWidth = screenWidth;
     ctx.textDestination = screen;
@@ -83,20 +85,75 @@ BOOL initTextController(struct BitMap *screen, UWORD depth, UWORD screenWidth)
     if (ctx.fontBlob == NULL)
     {
         writeLog("Error: Could not load font blob\n");
-        return FALSE;
+        goto _error_cleanup;
     }
     writeLogFS(
         "Font BitMap: BytesPerRow: %d, Rows: %d, Flags: %d, pad: %d\n",
         ctx.fontBlob->BytesPerRow, ctx.fontBlob->Rows, ctx.fontBlob->Flags,
         ctx.fontBlob->pad);
+
+    // Allocate scroll states and character background bitmaps upfront
+    writeLog("Allocating scroll states and character background bitmaps\n");
+    for (i = 0; i < TEXT_LIST_SIZE; i++)
+    {
+        UBYTE j = 0;
+
+        ctx.scrollStates[i] = AllocVec(sizeof(struct TextScrollState), MEMF_ANY | MEMF_CLEAR);
+        if (!ctx.scrollStates[i])
+        {
+            writeLog("Error: Could not allocate memory for scroll state\n");
+            goto _error_cleanup;
+        }
+
+        // Pre-allocate background bitmaps for all possible characters
+        for (j = 0; j < MAX_CHAR_PER_LINE; j++)
+        {
+            ctx.scrollStates[i]->characters[j].oldBackground =
+                AllocBitMap(MAX_CHAR_WIDTH, MAX_CHAR_HEIGHT, ctx.charDepth, BMF_CLEAR, NULL);
+            if (!ctx.scrollStates[i]->characters[j].oldBackground)
+            {
+                writeLog("Error: Could not allocate memory for character background bitmap\n");
+                goto _error_cleanup;
+            }
+        }
+    }
+
     return TRUE;
+
+_error_cleanup:
+    exitTextController();
+    return FALSE;
 }
 
 /**
- * Free font 
+ * Free font, scroll states, and character background bitmaps
  */
 void exitTextController(void)
 {
+    UBYTE i = 0;
+
+    // Free all scroll states and their character background bitmaps
+    for (i = 0; i < TEXT_LIST_SIZE; i++)
+    {
+        if (ctx.scrollStates[i])
+        {
+            UBYTE j = 0;
+
+            // Free character background bitmaps
+            for (j = 0; j < MAX_CHAR_PER_LINE; j++)
+            {
+                if (ctx.scrollStates[i]->characters[j].oldBackground)
+                {
+                    FreeBitMap(ctx.scrollStates[i]->characters[j].oldBackground);
+                    ctx.scrollStates[i]->characters[j].oldBackground = NULL;
+                }
+            }
+
+            FreeVec(ctx.scrollStates[i]);
+            ctx.scrollStates[i] = NULL;
+        }
+    }
+
     if (ctx.fontBlob)
     {
         FreeBitMap(ctx.fontBlob);
@@ -105,23 +162,16 @@ void exitTextController(void)
 }
 
 /**
- * Must be called first to init the whole engine.
- * Afterwards, executeTextScroller() can be called.
+ * Configure text strings for scrolling.
+ * Must be called after startTextController() and before executeTextController().
  */
-void setStringsTextController(struct TextConfig **configs)
+void configureTextController(struct TextConfig **configs)
 {
     UBYTE i = 0;
 
-    // Create internal scroll states for each config
-    while (configs[i])
+    // Initialize scroll states with configs
+    while (configs[i] && i < TEXT_LIST_SIZE)
     {
-        ctx.scrollStates[i] = AllocVec(sizeof(struct TextScrollState), MEMF_ANY | MEMF_CLEAR);
-        if (!ctx.scrollStates[i])
-        {
-            writeLog("Error: Could not allocate memory for scroll state\\n");
-            return;
-        }
-
         ctx.scrollStates[i]->config = configs[i];
         ctx.scrollStates[i]->charXPosDestination = configs[i]->charXPosDestination;
         ctx.scrollStates[i]->charYPosDestination = configs[i]->charYPosDestination;
@@ -129,7 +179,12 @@ void setStringsTextController(struct TextConfig **configs)
         setStringTextController(ctx.scrollStates[i]);
         i++;
     }
-    ctx.scrollStates[i] = NULL;
+
+    // Mark end of active configs (remaining states stay allocated but unused)
+    if (i < TEXT_LIST_SIZE)
+    {
+        ctx.scrollStates[i]->config = NULL;
+    }
 }
 
 /**
@@ -141,7 +196,6 @@ static void setStringTextController(struct TextScrollState *state)
     state->currentState = TC_SCROLL_IN;
     ctx.pauseCounter = 0;
     state->charIndex = 0;
-    memset(state->characters, 0, sizeof(state->characters));
     state->currentChar = 0;
 
     // analyse first character in text string
@@ -150,8 +204,6 @@ static void setStringTextController(struct TextScrollState *state)
     CURRENT_CHAR(state).yPos = state->charYPosDestination;
 
     // save background at character starting position
-    CURRENT_CHAR(state).oldBackground = AllocBitMap(MAX_CHAR_WIDTH, MAX_CHAR_HEIGHT,
-                                                ctx.charDepth, BMF_CLEAR, NULL);
     saveCharacterBackground(state);
 }
 
@@ -162,7 +214,7 @@ static void setStringTextController(struct TextScrollState *state)
 void executeTextController()
 {
     UBYTE i = 0;
-    while (ctx.scrollStates[i])
+    while (i < TEXT_LIST_SIZE && ctx.scrollStates[i]->config)
     {
         switch (ctx.scrollStates[i]->currentState)
         {
@@ -267,14 +319,14 @@ static void textScrollOut(struct TextScrollState *state)
 }
 
 /**
- * Returns true if every string TextConfig
+ * Returns true if every active text config
  * is in state TC_SCROLL_FINISHED
  */
 BOOL isFinishedTextController(void)
 {
     BOOL allFinished = TRUE;
     UBYTE i = 0;
-    while (ctx.scrollStates[i])
+    while (i < TEXT_LIST_SIZE && ctx.scrollStates[i]->config)
     {
         if (ctx.scrollStates[i]->currentState != TC_SCROLL_FINISHED)
         {
@@ -319,8 +371,6 @@ static void prepareForNextCharacter(struct TextScrollState *state)
     // found next character, prepare everything for his arrival
     state->charIndex++;
     getCharData(letter, &CURRENT_CHAR(state));
-    CURRENT_CHAR(state).oldBackground = AllocBitMap(MAX_CHAR_WIDTH, MAX_CHAR_HEIGHT,
-                                                ctx.charDepth, BMF_CLEAR, NULL);
     CURRENT_CHAR(state).xPos = ctx.scrollControlWidth - CURRENT_CHAR(state).xSize;
     CURRENT_CHAR(state).yPos = state->charYPosDestination;
 
@@ -329,33 +379,37 @@ static void prepareForNextCharacter(struct TextScrollState *state)
 }
 
 /**
- * Free the character background backup bitmaps and scroll states
+ * Reset scroll states to initial values.
+ * Does NOT deallocate anything (use exitTextController for that).
  */
 void resetTextController(void)
 {
     UBYTE i = 0;
-    while (ctx.scrollStates[i])
+    while (i < TEXT_LIST_SIZE && ctx.scrollStates[i]->config)
     {
         resetTextScrollState(ctx.scrollStates[i]);
-        FreeVec(ctx.scrollStates[i]);
-        ctx.scrollStates[i] = NULL;
+        ctx.scrollStates[i]->config = NULL;
         i++;
     }
 }
 
 /**
- * Free the character background backup bitmaps of text scroll state
+ * Reset text scroll state to initial values.
+ * Character data is zeroed but bitmaps remain allocated.
  */
 static void resetTextScrollState(struct TextScrollState *state)
 {
     UBYTE i = 0;
     for (; i < MAX_CHAR_PER_LINE; i++)
     {
-        if (state->characters[i].oldBackground)
-        {
-            FreeBitMap(state->characters[i].oldBackground);
-            state->characters[i].oldBackground = NULL;
-        }
+        // Clear character data but keep bitmap allocated
+        state->characters[i].xSize = 0;
+        state->characters[i].ySize = 0;
+        state->characters[i].xPos = 0;
+        state->characters[i].yPos = 0;
+        state->characters[i].xPosInFont = 0;
+        state->characters[i].yPosInFont = 0;
+        // oldBackground remains allocated
     }
 }
 
