@@ -19,13 +19,10 @@
 struct TextScrollerContext {
     WORD state;
     struct BitMap *spaceBlob;
-    struct BitMap *textscrollerScreen;
+    struct BitMap *textBitmap;
     ULONG *colortable1;
     UWORD colortable0[TEXTSCROLLER_BLOB_FONT_COLORS];
-    struct TextConfig *textList[TEXT_LIST_SIZE];
-    struct TextConfig text1;
-    struct TextConfig text2;
-    struct TextConfig text3;
+    struct TextConfig textConfigs[TEXT_LIST_SIZE - 1];  // configs for text1, text2, text3
     struct Screen *textScrollerScreen0;
     struct Screen *textScrollerscreen1;
 };
@@ -33,13 +30,10 @@ struct TextScrollerContext {
 static struct TextScrollerContext ctx = {
     .state = TEXTSCROLLER_INIT,
     .spaceBlob = NULL,
-    .textscrollerScreen = NULL,
+    .textBitmap = NULL,
     .colortable1 = NULL,
     .colortable0 = {0},
-    .textList = {NULL},
-    .text1 = {0},
-    .text2 = {0},
-    .text3 = {0},
+    .textConfigs = {{0}},
     .textScrollerScreen0 = NULL,
     .textScrollerscreen1 = NULL
 };
@@ -47,6 +41,8 @@ static struct TextScrollerContext ctx = {
 __far extern struct Custom custom;
 
 UWORD fsmTextScroller(void) {
+    struct TextConfig *textList[TEXT_LIST_SIZE];
+
     // terminate effect on mouse click
     if (mouseClick()) {
         resetTextController();
@@ -57,13 +53,13 @@ UWORD fsmTextScroller(void) {
     switch (ctx.state) {
         case TEXTSCROLLER_INIT:
             // configure text scroll engine
-            ctx.text1.currentText = "hi there";
-            ctx.text1.charXPosDestination = MAX_CHAR_WIDTH + 70;
-            ctx.text1.charYPosDestination = 40;
-            ctx.textList[0] = &ctx.text1;
-            ctx.textList[1] = NULL;
+            ctx.textConfigs[0].currentText = "hi there";
+            ctx.textConfigs[0].charXPosDestination = MAX_CHAR_WIDTH + 70;
+            ctx.textConfigs[0].charYPosDestination = 40;
+            textList[0] = &ctx.textConfigs[0];
+            textList[1] = NULL;
             WaitTOF();
-            setStringsTextController(ctx.textList);
+            setStringsTextController(textList);
             ctx.state = TEXTSCROLLER_MSG_1;
             break;
 
@@ -74,18 +70,18 @@ UWORD fsmTextScroller(void) {
             if (isFinishedTextController()) {
                 // configure text scroll engine
                 resetTextController();
-                ctx.text1.currentText = "belial";
-                ctx.text1.charXPosDestination = MAX_CHAR_WIDTH + 95;
-                ctx.text1.charYPosDestination = 18;
-                ctx.text2.currentText = "here";
-                ctx.text2.charXPosDestination = MAX_CHAR_WIDTH + 110;
-                ctx.text2.charYPosDestination = 70;
-                ctx.textList[0] = &ctx.text1;
-                ctx.textList[1] = &ctx.text2;
-                ctx.textList[2] = NULL;
+                ctx.textConfigs[0].currentText = "belial";
+                ctx.textConfigs[0].charXPosDestination = MAX_CHAR_WIDTH + 95;
+                ctx.textConfigs[0].charYPosDestination = 18;
+                ctx.textConfigs[1].currentText = "here";
+                ctx.textConfigs[1].charXPosDestination = MAX_CHAR_WIDTH + 110;
+                ctx.textConfigs[1].charYPosDestination = 70;
+                textList[0] = &ctx.textConfigs[0];
+                textList[1] = &ctx.textConfigs[1];
+                textList[2] = NULL;
                 pauseTimeTextController(180);
                 WaitTOF();
-                setStringsTextController(ctx.textList);
+                setStringsTextController(textList);
                 ctx.state = TEXTSCROLLER_MSG_2;
             }
             break;
@@ -97,22 +93,22 @@ UWORD fsmTextScroller(void) {
             if (isFinishedTextController()) {
                 // configure text scroll engine
                 resetTextController();
-                ctx.text1.currentText = "presenting";
-                ctx.text1.charXPosDestination = MAX_CHAR_WIDTH + 37;
-                ctx.text1.charYPosDestination = 4;
-                ctx.text2.currentText = "my";
-                ctx.text2.charXPosDestination = MAX_CHAR_WIDTH + 133;
-                ctx.text2.charYPosDestination = 44;
-                ctx.text3.currentText = "first";
-                ctx.text3.charXPosDestination = MAX_CHAR_WIDTH + 103;
-                ctx.text3.charYPosDestination = 84;
-                ctx.textList[0] = &ctx.text1;
-                ctx.textList[1] = &ctx.text2;
-                ctx.textList[2] = &ctx.text3;
-                ctx.textList[3] = NULL;
+                ctx.textConfigs[0].currentText = "presenting";
+                ctx.textConfigs[0].charXPosDestination = MAX_CHAR_WIDTH + 37;
+                ctx.textConfigs[0].charYPosDestination = 4;
+                ctx.textConfigs[1].currentText = "my";
+                ctx.textConfigs[1].charXPosDestination = MAX_CHAR_WIDTH + 133;
+                ctx.textConfigs[1].charYPosDestination = 44;
+                ctx.textConfigs[2].currentText = "first";
+                ctx.textConfigs[2].charXPosDestination = MAX_CHAR_WIDTH + 103;
+                ctx.textConfigs[2].charYPosDestination = 84;
+                textList[0] = &ctx.textConfigs[0];
+                textList[1] = &ctx.textConfigs[1];
+                textList[2] = &ctx.textConfigs[2];
+                textList[3] = NULL;
                 pauseTimeTextController(660);
                 WaitTOF();
-                setStringsTextController(ctx.textList);
+                setStringsTextController(textList);
                 ctx.state = TEXTSCROLLER_MSG_3;
             }
             break;
@@ -124,18 +120,18 @@ UWORD fsmTextScroller(void) {
             if (isFinishedTextController()) {
                 // configure text scroll engine
                 resetTextController();
-                ctx.text1.currentText = "demo";
-                ctx.text1.charXPosDestination = MAX_CHAR_WIDTH + 10;
-                ctx.text1.charYPosDestination = 18;
-                ctx.text2.currentText = "production";
-                ctx.text2.charXPosDestination = MAX_CHAR_WIDTH + 45;
-                ctx.text2.charYPosDestination = 70;
-                ctx.textList[0] = &ctx.text1;
-                ctx.textList[1] = &ctx.text2;
-                ctx.textList[2] = NULL;
+                ctx.textConfigs[0].currentText = "demo";
+                ctx.textConfigs[0].charXPosDestination = MAX_CHAR_WIDTH + 10;
+                ctx.textConfigs[0].charYPosDestination = 18;
+                ctx.textConfigs[1].currentText = "production";
+                ctx.textConfigs[1].charXPosDestination = MAX_CHAR_WIDTH + 45;
+                ctx.textConfigs[1].charYPosDestination = 70;
+                textList[0] = &ctx.textConfigs[0];
+                textList[1] = &ctx.textConfigs[1];
+                textList[2] = NULL;
                 pauseTimeTextController(300);
                 WaitTOF();
-                setStringsTextController(ctx.textList);
+                setStringsTextController(textList);
                 ctx.state = TEXTSCROLLER_MSG_4;
             }
             break;
@@ -164,13 +160,8 @@ UWORD fsmTextScroller(void) {
 }
 
 UWORD initTextScroller(void) {
-    BYTE i = 0;
     struct Rectangle starsClip;
     writeLog("== initTextScroller() ==\n\n");
-
-    for (; i < TEXT_LIST_SIZE; i++) {
-        ctx.textList[i] = NULL;
-    }
 
     writeLog("Load space background bitmap and colors\n");
     // Load space background bitmap
@@ -195,13 +186,13 @@ UWORD initTextScroller(void) {
                COLORMAP32_BYTE_SIZE(TEXTSCROLLER_BLOB_SPACE_COLORS));
     loadColorMap32("img/space3_320_148_8.CMAP", ctx.colortable1, TEXTSCROLLER_BLOB_SPACE_COLORS);
 
-    // Load Textscroller Screen Bitmap
-    ctx.textscrollerScreen = AllocBitMap(TEXTSCROLLER_VIEW_TEXTSECTION_WIDTH,
+    // Load text rendering bitmap
+    ctx.textBitmap = AllocBitMap(TEXTSCROLLER_VIEW_TEXTSECTION_WIDTH,
                                      TEXTSCROLLER_VIEW_TEXTSECTION_HEIGHT, TEXTSCROLLER_BLOB_FONT_DEPTH,
                                      BMF_CLEAR | BMF_DISPLAYABLE, NULL);
-    writeLogFS("TextScroller Screen BitMap: BytesPerRow: %d, Rows: %d, Flags: %d, pad: %d\n",
-               ctx.textscrollerScreen->BytesPerRow, ctx.textscrollerScreen->Rows,
-               ctx.textscrollerScreen->Flags, ctx.textscrollerScreen->pad);
+    writeLogFS("Text BitMap: BytesPerRow: %d, Rows: %d, Flags: %d, pad: %d\n",
+               ctx.textBitmap->BytesPerRow, ctx.textBitmap->Rows,
+               ctx.textBitmap->Flags, ctx.textBitmap->pad);
 
     // Load Textscroller color table
     loadColorMap("img/charset_final.CMAP", ctx.colortable0,
@@ -213,7 +204,7 @@ UWORD initTextScroller(void) {
     starsClip.MinY = 0;
     starsClip.MaxX = TEXTSCROLLER_VIEW_WIDTH;
     starsClip.MaxY = TEXTSCROLLER_VIEW_TEXTSECTION_HEIGHT;
-    ctx.textScrollerScreen0 = createScreen(ctx.textscrollerScreen, TRUE,
+    ctx.textScrollerScreen0 = createScreen(ctx.textBitmap, TRUE,
                                        -MAX_CHAR_WIDTH, 0,
                                        TEXTSCROLLER_VIEW_TEXTSECTION_WIDTH,
                                        TEXTSCROLLER_VIEW_TEXTSECTION_HEIGHT,
@@ -245,7 +236,7 @@ UWORD initTextScroller(void) {
     ScreenToFront(ctx.textScrollerscreen1);
 
     // init text scroller engine
-    if (!initTextController(ctx.textscrollerScreen,
+    if (!initTextController(ctx.textBitmap,
                             TEXTSCROLLER_BLOB_FONT_DEPTH,
                             TEXTSCROLLER_VIEW_TEXTSECTION_WIDTH)) {
         goto __exit_init_scroller;
@@ -277,9 +268,9 @@ void exitTextScroller(void) {
         ctx.colortable1 = NULL;
     }
 
-    if (ctx.textscrollerScreen) {
-        FreeBitMap(ctx.textscrollerScreen);
-        ctx.textscrollerScreen = NULL;
+    if (ctx.textBitmap) {
+        FreeBitMap(ctx.textBitmap);
+        ctx.textBitmap = NULL;
     }
 
     if (ctx.spaceBlob) {

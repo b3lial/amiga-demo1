@@ -11,10 +11,33 @@
 #include "utils/utils.h"
 #include "gfx/blob_controller.h"
 
+#define CURRENT_CHAR(STATE) (STATE->characters[STATE->charIndex])
+
+// Private state struct - internal to text_controller
+struct TextScrollState
+{
+    struct TextConfig *config;  // pointer to public config
+
+    // Current character tracking
+    UWORD currentChar;
+
+    // Character position tracking
+    UWORD charXPosDestination;
+    UWORD charYPosDestination;
+
+    // contains data of characters blitted on screen
+    UBYTE charIndex;
+    UBYTE maxCharIndex;
+    struct CharBlob characters[MAX_CHAR_PER_LINE];
+
+    // State machine state
+    enum TEXT_CONTROL_STATE currentState;
+};
+
 struct TextControllerContext {
     struct BitMap *fontBlob;
     struct BitMap *textDestination;
-    struct TextConfig **textConfigs;
+    struct TextScrollState *scrollStates[TEXT_LIST_SIZE];
     UWORD charDepth;
     UWORD scrollControlWidth;
     UWORD pauseCounter;
@@ -24,12 +47,24 @@ struct TextControllerContext {
 static struct TextControllerContext ctx = {
     .fontBlob = NULL,
     .textDestination = NULL,
-    .textConfigs = NULL,
+    .scrollStates = {NULL},
     .charDepth = 0,
     .scrollControlWidth = 0,
     .pauseCounter = 0,
     .pauseTime = 0
 };
+
+// Forward declarations of internal functions
+static void resetTextScrollState(struct TextScrollState *state);
+static void setStringTextController(struct TextScrollState *state);
+static void textScrollIn(struct TextScrollState *state);
+static void textScrollPause(struct TextScrollState *state);
+static void textScrollOut(struct TextScrollState *state);
+static void getCharData(char letter, struct CharBlob *charBlob);
+static UWORD displayCurrentCharacter(struct TextScrollState *state);
+static void saveCharacterBackground(struct TextScrollState *state);
+static void restorePreviousBackground(struct TextScrollState *state);
+static void prepareForNextCharacter(struct TextScrollState *state);
 
 /**
  * Load font
@@ -76,35 +111,48 @@ void exitTextController(void)
 void setStringsTextController(struct TextConfig **configs)
 {
     UBYTE i = 0;
-    ctx.textConfigs = configs;
-    while (ctx.textConfigs[i])
+
+    // Create internal scroll states for each config
+    while (configs[i])
     {
-        setStringTextController(ctx.textConfigs[i]);
+        ctx.scrollStates[i] = AllocVec(sizeof(struct TextScrollState), MEMF_ANY | MEMF_CLEAR);
+        if (!ctx.scrollStates[i])
+        {
+            writeLog("Error: Could not allocate memory for scroll state\\n");
+            return;
+        }
+
+        ctx.scrollStates[i]->config = configs[i];
+        ctx.scrollStates[i]->charXPosDestination = configs[i]->charXPosDestination;
+        ctx.scrollStates[i]->charYPosDestination = configs[i]->charYPosDestination;
+
+        setStringTextController(ctx.scrollStates[i]);
         i++;
     }
+    ctx.scrollStates[i] = NULL;
 }
 
 /**
  * Is called for each element in text list
  */
-void setStringTextController(struct TextConfig *c)
+static void setStringTextController(struct TextScrollState *state)
 {
     // Init engines global variables
-    c->currentState = TC_SCROLL_IN;
+    state->currentState = TC_SCROLL_IN;
     ctx.pauseCounter = 0;
-    c->charIndex = 0;
-    memset(c->characters, 0, sizeof(c->characters));
-    c->currentChar = 0;
+    state->charIndex = 0;
+    memset(state->characters, 0, sizeof(state->characters));
+    state->currentChar = 0;
 
     // analyse first character in text string
-    getCharData(c->currentText[c->currentChar], &CURRENT_CHAR(c));
-    CURRENT_CHAR(c).xPos = ctx.scrollControlWidth - CURRENT_CHAR(c).xSize;
-    CURRENT_CHAR(c).yPos = c->charYPosDestination;
+    getCharData(state->config->currentText[state->currentChar], &CURRENT_CHAR(state));
+    CURRENT_CHAR(state).xPos = ctx.scrollControlWidth - CURRENT_CHAR(state).xSize;
+    CURRENT_CHAR(state).yPos = state->charYPosDestination;
 
     // save background at character starting position
-    CURRENT_CHAR(c).oldBackground = AllocBitMap(MAX_CHAR_WIDTH, MAX_CHAR_HEIGHT,
+    CURRENT_CHAR(state).oldBackground = AllocBitMap(MAX_CHAR_WIDTH, MAX_CHAR_HEIGHT,
                                                 ctx.charDepth, BMF_CLEAR, NULL);
-    saveCharacterBackground(c);
+    saveCharacterBackground(state);
 }
 
 /**
@@ -114,18 +162,18 @@ void setStringTextController(struct TextConfig *c)
 void executeTextController()
 {
     UBYTE i = 0;
-    while (ctx.textConfigs[i])
+    while (ctx.scrollStates[i])
     {
-        switch (ctx.textConfigs[i]->currentState)
+        switch (ctx.scrollStates[i]->currentState)
         {
         case TC_SCROLL_IN:
-            textScrollIn(ctx.textConfigs[i]);
+            textScrollIn(ctx.scrollStates[i]);
             break;
         case TC_SCROLL_PAUSE:
-            textScrollPause(ctx.textConfigs[i]);
+            textScrollPause(ctx.scrollStates[i]);
             break;
         case TC_SCROLL_OUT:
-            textScrollOut(ctx.textConfigs[i]);
+            textScrollOut(ctx.scrollStates[i]);
             break;
         case TC_SCROLL_FINISHED:
             break;
@@ -134,38 +182,38 @@ void executeTextController()
     }
 }
 
-void textScrollIn(struct TextConfig *c)
+static void textScrollIn(struct TextScrollState *state)
 {
     // check whether every char was moved at its position
-    if (c->currentText[c->currentChar] == 0)
+    if (state->config->currentText[state->currentChar] == 0)
     {
-        c->maxCharIndex = c->charIndex;
-        c->charIndex = 0;
-        c->charXPosDestination = 0;
-        c->currentState = TC_SCROLL_PAUSE;
+        state->maxCharIndex = state->charIndex;
+        state->charIndex = 0;
+        state->charXPosDestination = 0;
+        state->currentState = TC_SCROLL_PAUSE;
         return;
     }
 
     // restore previously saved background and character position
-    restorePreviousBackground(c);
+    restorePreviousBackground(state);
 
     // move character to next position
-    CURRENT_CHAR(c).xPos -= TEXT_MOVEMENT_SPEED;
-    if (CURRENT_CHAR(c).xPos < c->charXPosDestination)
+    CURRENT_CHAR(state).xPos -= TEXT_MOVEMENT_SPEED;
+    if (CURRENT_CHAR(state).xPos < state->charXPosDestination)
     {
-        CURRENT_CHAR(c).xPos = c->charXPosDestination;
+        CURRENT_CHAR(state).xPos = state->charXPosDestination;
     }
 
     // save background there
-    saveCharacterBackground(c);
+    saveCharacterBackground(state);
 
     // blit character on screen
-    displayCurrentCharacter(c);
+    displayCurrentCharacter(state);
 
     // finally, check whether we have to switch to next letter
-    if (CURRENT_CHAR(c).xPos <= c->charXPosDestination)
+    if (CURRENT_CHAR(state).xPos <= state->charXPosDestination)
     {
-        prepareForNextCharacter(c);
+        prepareForNextCharacter(state);
     }
 }
 
@@ -174,61 +222,61 @@ void pauseTimeTextController(UWORD newPauseTime)
     ctx.pauseTime = newPauseTime;
 }
 
-void textScrollPause(struct TextConfig *textConfig)
+static void textScrollPause(struct TextScrollState *state)
 {
     if (ctx.pauseCounter >= ctx.pauseTime)
     {
-        textConfig->currentState = TC_SCROLL_OUT;
+        state->currentState = TC_SCROLL_OUT;
         return;
     }
 
     ctx.pauseCounter++;
 }
 
-void textScrollOut(struct TextConfig *c)
+static void textScrollOut(struct TextScrollState *state)
 {
     // check whether every char was scrolled out and we are finished
-    if (c->charIndex > c->maxCharIndex)
+    if (state->charIndex > state->maxCharIndex)
     {
-        c->currentState = TC_SCROLL_FINISHED;
+        state->currentState = TC_SCROLL_FINISHED;
         return;
     }
 
     // restore previously saved background and character position
-    restorePreviousBackground(c);
+    restorePreviousBackground(state);
 
     // char reached left side, delete it and switch to next char
-    if (CURRENT_CHAR(c).xPos == c->charXPosDestination)
+    if (CURRENT_CHAR(state).xPos == state->charXPosDestination)
     {
-        c->charIndex++;
+        state->charIndex++;
         return;
     }
 
     // move character to next position
-    CURRENT_CHAR(c).xPos -= TEXT_MOVEMENT_SPEED;
-    if (CURRENT_CHAR(c).xPos < 0)
+    CURRENT_CHAR(state).xPos -= TEXT_MOVEMENT_SPEED;
+    if (CURRENT_CHAR(state).xPos < 0)
     {
-        CURRENT_CHAR(c).xPos = 0;
+        CURRENT_CHAR(state).xPos = 0;
     }
 
     // save background there
-    saveCharacterBackground(c);
+    saveCharacterBackground(state);
 
     // blit character on screen
-    displayCurrentCharacter(c);
+    displayCurrentCharacter(state);
 }
 
 /**
- * Returns true if every string TextConfig 
+ * Returns true if every string TextConfig
  * is in state TC_SCROLL_FINISHED
  */
 BOOL isFinishedTextController(void)
 {
     BOOL allFinished = TRUE;
     UBYTE i = 0;
-    while (ctx.textConfigs[i])
+    while (ctx.scrollStates[i])
     {
-        if (ctx.textConfigs[i]->currentState != TC_SCROLL_FINISHED)
+        if (ctx.scrollStates[i]->currentState != TC_SCROLL_FINISHED)
         {
             allFinished = FALSE;
         }
@@ -241,14 +289,14 @@ BOOL isFinishedTextController(void)
  * Search in text string for next non-whitespace
  * character and initialize its destination position
  */
-void prepareForNextCharacter(struct TextConfig *c)
+static void prepareForNextCharacter(struct TextScrollState *state)
 {
     char letter = 0;
-    c->charXPosDestination += (CURRENT_CHAR(c).xSize + 5);
+    state->charXPosDestination += (CURRENT_CHAR(state).xSize + 5);
 
     // skip space
-    c->currentChar++;
-    letter = tolower(c->currentText[c->currentChar]);
+    state->currentChar++;
+    letter = tolower(state->config->currentText[state->currentChar]);
     // reach end of string
     if (letter == 0)
     {
@@ -257,9 +305,9 @@ void prepareForNextCharacter(struct TextConfig *c)
 
     while (letter < 'a' || letter > 'z')
     {
-        c->charXPosDestination += 15;
-        c->currentChar++;
-        letter = tolower(c->currentText[c->currentChar]);
+        state->charXPosDestination += 15;
+        state->currentChar++;
+        letter = tolower(state->config->currentText[state->currentChar]);
 
         // reach end of string
         if (letter == 0)
@@ -269,42 +317,44 @@ void prepareForNextCharacter(struct TextConfig *c)
     }
 
     // found next character, prepare everything for his arrival
-    c->charIndex++;
-    getCharData(letter, &CURRENT_CHAR(c));
-    CURRENT_CHAR(c).oldBackground = AllocBitMap(MAX_CHAR_WIDTH, MAX_CHAR_HEIGHT,
+    state->charIndex++;
+    getCharData(letter, &CURRENT_CHAR(state));
+    CURRENT_CHAR(state).oldBackground = AllocBitMap(MAX_CHAR_WIDTH, MAX_CHAR_HEIGHT,
                                                 ctx.charDepth, BMF_CLEAR, NULL);
-    CURRENT_CHAR(c).xPos = ctx.scrollControlWidth - CURRENT_CHAR(c).xSize;
-    CURRENT_CHAR(c).yPos = c->charYPosDestination;
+    CURRENT_CHAR(state).xPos = ctx.scrollControlWidth - CURRENT_CHAR(state).xSize;
+    CURRENT_CHAR(state).yPos = state->charYPosDestination;
 
     // save background at character starting position
-    saveCharacterBackground(c);
+    saveCharacterBackground(state);
 }
 
 /**
- * Free the character background backup bitmaps of all text configs
+ * Free the character background backup bitmaps and scroll states
  */
 void resetTextController(void)
 {
     UBYTE i = 0;
-    while (ctx.textConfigs[i])
+    while (ctx.scrollStates[i])
     {
-        resetTextConfig(ctx.textConfigs[i]);
+        resetTextScrollState(ctx.scrollStates[i]);
+        FreeVec(ctx.scrollStates[i]);
+        ctx.scrollStates[i] = NULL;
         i++;
     }
 }
 
 /**
- * Free the character background backup bitmaps of text config
+ * Free the character background backup bitmaps of text scroll state
  */
-void resetTextConfig(struct TextConfig *textConfig)
+static void resetTextScrollState(struct TextScrollState *state)
 {
     UBYTE i = 0;
     for (; i < MAX_CHAR_PER_LINE; i++)
     {
-        if (textConfig->characters[i].oldBackground)
+        if (state->characters[i].oldBackground)
         {
-            FreeBitMap(textConfig->characters[i].oldBackground);
-            textConfig->characters[i].oldBackground = NULL;
+            FreeBitMap(state->characters[i].oldBackground);
+            state->characters[i].oldBackground = NULL;
         }
     }
 }
@@ -313,52 +363,52 @@ void resetTextConfig(struct TextConfig *textConfig)
  * Print a character on screen. Return position of next
  * character
  */
-UWORD displayCurrentCharacter(struct TextConfig *c)
+static UWORD displayCurrentCharacter(struct TextScrollState *state)
 {
     /*
 	 * Don't erase background if character rectangle (B) is blitted into destination (C,D)
 	 * Therefore, we use minterm: BC+NBC+BNC -> 1110xxxx -> 0xE0
 	 */
     BltBitMap(ctx.fontBlob,
-              CURRENT_CHAR(c).xPosInFont, CURRENT_CHAR(c).yPosInFont,
+              CURRENT_CHAR(state).xPosInFont, CURRENT_CHAR(state).yPosInFont,
               ctx.textDestination,
-              CURRENT_CHAR(c).xPos, CURRENT_CHAR(c).yPos,
-              CURRENT_CHAR(c).xSize, CURRENT_CHAR(c).ySize,
+              CURRENT_CHAR(state).xPos, CURRENT_CHAR(state).yPos,
+              CURRENT_CHAR(state).xSize, CURRENT_CHAR(state).ySize,
               0xC0, 0xff, 0);
-    return (UWORD)(c->characters[c->charIndex].xPos + c->characters[c->charIndex].xSize + 5);
+    return (UWORD)(state->characters[state->charIndex].xPos + state->characters[state->charIndex].xSize + 5);
 }
 
 /**
- * Restore a piece which was previously stored in a TextConfig
+ * Restore a piece which was previously stored in a TextScrollState
  * object
  */
-void restorePreviousBackground(struct TextConfig *c)
+static void restorePreviousBackground(struct TextScrollState *state)
 {
-    BltBitMap(CURRENT_CHAR(c).oldBackground,
+    BltBitMap(CURRENT_CHAR(state).oldBackground,
               0, 0, ctx.textDestination,
-              CURRENT_CHAR(c).xPos, CURRENT_CHAR(c).yPos,
-              CURRENT_CHAR(c).xSize, CURRENT_CHAR(c).ySize,
+              CURRENT_CHAR(state).xPos, CURRENT_CHAR(state).yPos,
+              CURRENT_CHAR(state).xSize, CURRENT_CHAR(state).ySize,
               0xC0, 0xff, 0);
 }
 
 /**
  * Backup a part of the background before blitting a character
- * there to be able to restore it later 
+ * there to be able to restore it later
  */
-void saveCharacterBackground(struct TextConfig *c)
+static void saveCharacterBackground(struct TextScrollState *state)
 {
-    BltBitMap(ctx.textDestination, CURRENT_CHAR(c).xPos,
-              CURRENT_CHAR(c).yPos,
-              CURRENT_CHAR(c).oldBackground, 0, 0,
-              CURRENT_CHAR(c).xSize,
-              CURRENT_CHAR(c).ySize, 0xC0,
+    BltBitMap(ctx.textDestination, CURRENT_CHAR(state).xPos,
+              CURRENT_CHAR(state).yPos,
+              CURRENT_CHAR(state).oldBackground, 0, 0,
+              CURRENT_CHAR(state).xSize,
+              CURRENT_CHAR(state).ySize, 0xC0,
               0xff, 0);
 }
 
 /**
  * This data highly depends on the font
  */
-void getCharData(char letter, struct CharBlob *charBlob)
+static void getCharData(char letter, struct CharBlob *charBlob)
 {
     letter = tolower(letter);
 
