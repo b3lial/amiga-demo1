@@ -45,12 +45,10 @@ struct TextConfig
 // external APIs
 BOOL startTextController(struct BitMap *screen,
                         UWORD depth, UWORD screenWidth);
-void configureTextController(struct TextConfig** configs);
+void configureTextController(struct TextConfig** configs, UWORD pauseTime);
 void executeTextController(void);
-void resetTextController(void);
 void exitTextController(void);
 BOOL isFinishedTextController(void);
-void pauseTimeTextController(UWORD);
 
 
 #endif // TEXTCONTROLLER_H_

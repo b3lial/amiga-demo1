@@ -45,7 +45,6 @@ UWORD fsmTextScroller(void) {
 
     // terminate effect on mouse click
     if (mouseClick()) {
-        resetTextController();
         ctx.state = TEXTSCROLLER_FADE_WHITE;
     }
 
@@ -59,7 +58,7 @@ UWORD fsmTextScroller(void) {
             textList[0] = &ctx.textConfigs[0];
             textList[1] = NULL;
             WaitTOF();
-            configureTextController(textList);
+            configureTextController(textList, 0);  // 0 = use default pause time
             ctx.state = TEXTSCROLLER_MSG_1;
             break;
 
@@ -69,7 +68,6 @@ UWORD fsmTextScroller(void) {
             executeTextController();
             if (isFinishedTextController()) {
                 // configure text scroll engine
-                resetTextController();
                 ctx.textConfigs[0].currentText = "belial";
                 ctx.textConfigs[0].charXPosDestination = MAX_CHAR_WIDTH + 95;
                 ctx.textConfigs[0].charYPosDestination = 18;
@@ -79,9 +77,8 @@ UWORD fsmTextScroller(void) {
                 textList[0] = &ctx.textConfigs[0];
                 textList[1] = &ctx.textConfigs[1];
                 textList[2] = NULL;
-                pauseTimeTextController(180);
                 WaitTOF();
-                configureTextController(textList);
+                configureTextController(textList, 180);
                 ctx.state = TEXTSCROLLER_MSG_2;
             }
             break;
@@ -92,7 +89,6 @@ UWORD fsmTextScroller(void) {
             executeTextController();
             if (isFinishedTextController()) {
                 // configure text scroll engine
-                resetTextController();
                 ctx.textConfigs[0].currentText = "presenting";
                 ctx.textConfigs[0].charXPosDestination = MAX_CHAR_WIDTH + 37;
                 ctx.textConfigs[0].charYPosDestination = 4;
@@ -106,9 +102,8 @@ UWORD fsmTextScroller(void) {
                 textList[1] = &ctx.textConfigs[1];
                 textList[2] = &ctx.textConfigs[2];
                 textList[3] = NULL;
-                pauseTimeTextController(660);
                 WaitTOF();
-                configureTextController(textList);
+                configureTextController(textList, 660);
                 ctx.state = TEXTSCROLLER_MSG_3;
             }
             break;
@@ -119,7 +114,6 @@ UWORD fsmTextScroller(void) {
             executeTextController();
             if (isFinishedTextController()) {
                 // configure text scroll engine
-                resetTextController();
                 ctx.textConfigs[0].currentText = "demo";
                 ctx.textConfigs[0].charXPosDestination = MAX_CHAR_WIDTH + 10;
                 ctx.textConfigs[0].charYPosDestination = 18;
@@ -129,9 +123,8 @@ UWORD fsmTextScroller(void) {
                 textList[0] = &ctx.textConfigs[0];
                 textList[1] = &ctx.textConfigs[1];
                 textList[2] = NULL;
-                pauseTimeTextController(300);
                 WaitTOF();
-                configureTextController(textList);
+                configureTextController(textList, 300);
                 ctx.state = TEXTSCROLLER_MSG_4;
             }
             break;
@@ -142,7 +135,6 @@ UWORD fsmTextScroller(void) {
             executeTextController();
             if (isFinishedTextController()) {
                 ctx.state = TEXTSCROLLER_FADE_WHITE;
-                resetTextController();
             }
             break;
 

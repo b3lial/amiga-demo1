@@ -55,6 +55,7 @@ static struct TextControllerContext ctx = {
 };
 
 // Forward declarations of internal functions
+static void resetTextController(void);
 static void resetTextScrollState(struct TextScrollState *state);
 static void setStringTextController(struct TextScrollState *state);
 static void textScrollIn(struct TextScrollState *state);
@@ -164,10 +165,18 @@ void exitTextController(void)
 /**
  * Configure text strings for scrolling.
  * Must be called after startTextController() and before executeTextController().
+ * Automatically resets previous state before configuring new texts.
+ * pauseTime: pause duration in frames (0 = use default TEXT_PAUSE_TIME)
  */
-void configureTextController(struct TextConfig **configs)
+void configureTextController(struct TextConfig **configs, UWORD pauseTime)
 {
     UBYTE i = 0;
+
+    // Reset previous state first
+    resetTextController();
+
+    // Set pause time (use default if 0)
+    ctx.pauseTime = pauseTime ? pauseTime : TEXT_PAUSE_TIME;
 
     // Initialize scroll states with configs
     while (configs[i] && i < TEXT_LIST_SIZE)
@@ -267,11 +276,6 @@ static void textScrollIn(struct TextScrollState *state)
     {
         prepareForNextCharacter(state);
     }
-}
-
-void pauseTimeTextController(UWORD newPauseTime)
-{
-    ctx.pauseTime = newPauseTime;
 }
 
 static void textScrollPause(struct TextScrollState *state)
@@ -381,8 +385,9 @@ static void prepareForNextCharacter(struct TextScrollState *state)
 /**
  * Reset scroll states to initial values.
  * Does NOT deallocate anything (use exitTextController for that).
+ * Internal function - called automatically by configureTextController().
  */
-void resetTextController(void)
+static void resetTextController(void)
 {
     UBYTE i = 0;
     while (i < TEXT_LIST_SIZE && ctx.scrollStates[i]->config)
