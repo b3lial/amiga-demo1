@@ -2,7 +2,7 @@
 #define __UTILS_H__
 
 #include <exec/types.h>
-#include "demo_constants.h"
+#include "democonstants.h"
 
 BOOL mouseClick(void);
 BOOL mouseCiaStatus(void);

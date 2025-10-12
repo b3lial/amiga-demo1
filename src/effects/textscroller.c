@@ -10,7 +10,7 @@
 #include "textscroller.h"
 
 #include "gfx/textcontroller.h"
-#include "fsm_states.h"
+#include "fsmstates.h"
 #include "utils/utils.h"
 #include "gfx/stars.h"
 #include "gfx/graphicscontroller.h"

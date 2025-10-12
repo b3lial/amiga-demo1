@@ -1,5 +1,5 @@
-#ifndef __FSM_STATES_H__
-#define __FSM_STATES_H__
+#ifndef __FSMSTATES_H__
+#define __FSMSTATES_H__
 
 #define FSM_START 0
 #define FSM_TEXTSCROLLER 1

@@ -1,7 +1,7 @@
 // Copyright 2021 Christian Ammann
 
-#ifndef __DEMO_CONSTANTS_H__
-#define __DEMO_CONSTANTS_H__
+#ifndef __DEMOCONSTANTS_H__
+#define __DEMOCONSTANTS_H__
 
 #define MAX_CHAR_HEIGHT 33
 #define MAX_CHAR_WIDTH 30

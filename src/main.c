@@ -7,7 +7,7 @@
 
 #include "main.h"
 
-#include "fsm_states.h"
+#include "fsmstates.h"
 #include "utils/utils.h"
 #include "effects/textscroller.h"
 #include "effects/showlogo.h"
