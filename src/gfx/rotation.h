@@ -40,11 +40,8 @@ BOOL startRotationEngine(UBYTE rs, USHORT bw, USHORT bh);
 void exitRotationEngine(void);
 UBYTE* getSourceBuffer(void);
 UBYTE* getDestBuffer(UBYTE index);
-void preCalcSinCos(UWORD lookupIndex, WORD* sinLookupX, WORD* cosLookupX,
-                   WORD* sinLookupY, WORD* cosLookupY);
 
 void rotateAll(void);
-void rotate(UBYTE* dest, USHORT angle);
 
 void convertChunkyToBitmap(UBYTE* sourceChunky, struct BitMap* destPlanar);
 

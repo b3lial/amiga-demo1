@@ -20,6 +20,11 @@ struct RotationEngineContext {
     WORD *x_mult_cos;
 };
 
+// Forward declarations of static functions
+static void rotate(UBYTE *dest, USHORT angle);
+static void preCalcSinCos(UWORD lookupIndex, WORD *sinLookupX, WORD *cosLookupX,
+                          WORD *sinLookupY, WORD *cosLookupY);
+
 static struct RotationEngineContext ctx = {
     .srcBuffer = NULL,
     .destBuffer = {NULL},
@@ -200,7 +205,7 @@ void rotateAll() {
  * chunky buffer. Rotation is performed via matrix multiplcation
  * in fix point format.
  */
-void rotate(UBYTE *dest, USHORT angle) {
+static void rotate(UBYTE *dest, USHORT angle) {
     UWORD x, y = 0;
     UWORD src_index, dest_index = 0;
     WORD src_x, src_y = 0;
@@ -251,8 +256,8 @@ void rotate(UBYTE *dest, USHORT angle) {
  * Pre-calculate sin/cos values for x/y coordinates
  * because this math is expensive
  */
-void preCalcSinCos(UWORD lookupIndex, WORD *sinLookupX, WORD *cosLookupX,
-                   WORD *sinLookupY, WORD *cosLookupY) {
+static void preCalcSinCos(UWORD lookupIndex, WORD *sinLookupX, WORD *cosLookupX,
+                          WORD *sinLookupY, WORD *cosLookupY) {
     UWORD x, y = 0;
     WORD dest_x, dest_y = 0;
 
