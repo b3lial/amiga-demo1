@@ -6,10 +6,10 @@
 #include <ctype.h>
 #include <string.h>
 
-#include "text_controller.h"
+#include "textcontroller.h"
 
 #include "utils/utils.h"
-#include "gfx/graphics_controller.h"
+#include "gfx/graphicscontroller.h"
 
 #define CURRENT_CHAR(STATE) (STATE->characters[STATE->charIndex])
 

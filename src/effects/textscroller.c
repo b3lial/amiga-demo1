@@ -9,11 +9,11 @@
 
 #include "textscroller.h"
 
-#include "gfx/text_controller.h"
+#include "gfx/textcontroller.h"
 #include "fsm_states.h"
 #include "utils/utils.h"
 #include "gfx/stars.h"
-#include "gfx/graphics_controller.h"
+#include "gfx/graphicscontroller.h"
 
 struct TextScrollerContext {
     WORD state;

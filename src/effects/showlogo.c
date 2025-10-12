@@ -10,7 +10,7 @@
 #include "fsm_states.h"
 #include "utils/utils.h"
 #include "gfx/stars.h"
-#include "gfx/graphics_controller.h"
+#include "gfx/graphicscontroller.h"
 #include "gfx/rotation.h"
 #include "gfx/chunkyconverter.h"
 

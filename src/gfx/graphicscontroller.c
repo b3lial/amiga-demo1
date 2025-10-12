@@ -10,7 +10,7 @@
 #include <dos/dos.h>
 #include <utility/tagitem.h>
 
-#include "graphics_controller.h"
+#include "graphicscontroller.h"
 
 #include "utils/utils.h"
 

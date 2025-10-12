@@ -1,5 +1,5 @@
-#ifndef __GRAPHICS_CONTROLLER_H__
-#define __GRAPHICS_CONTROLLER_H__
+#ifndef __GRAPHICSCONTROLLER_H__
+#define __GRAPHICSCONTROLLER_H__
 
 #include <exec/types.h>
 

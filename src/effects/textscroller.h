@@ -2,7 +2,7 @@
 #define TEXTSCROLLER_H__
 
 #include <exec/types.h>
-#include "gfx/text_controller.h"
+#include "gfx/textcontroller.h"
 
 #define TEXTSCROLLER_INIT 0
 #define TEXTSCROLLER_MSG_1 1
