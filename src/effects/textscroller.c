@@ -57,7 +57,6 @@ UWORD fsmTextScroller(void) {
             ctx.textConfigs[0].charYPosDestination = 40;
             textList[0] = &ctx.textConfigs[0];
             textList[1] = NULL;
-            WaitTOF();
             configureTextController(textList, 0);  // 0 = use default pause time
             ctx.state = TEXTSCROLLER_MSG_1;
             break;
@@ -77,7 +76,6 @@ UWORD fsmTextScroller(void) {
                 textList[0] = &ctx.textConfigs[0];
                 textList[1] = &ctx.textConfigs[1];
                 textList[2] = NULL;
-                WaitTOF();
                 configureTextController(textList, 180);
                 ctx.state = TEXTSCROLLER_MSG_2;
             }
@@ -102,7 +100,6 @@ UWORD fsmTextScroller(void) {
                 textList[1] = &ctx.textConfigs[1];
                 textList[2] = &ctx.textConfigs[2];
                 textList[3] = NULL;
-                WaitTOF();
                 configureTextController(textList, 660);
                 ctx.state = TEXTSCROLLER_MSG_3;
             }
@@ -123,7 +120,6 @@ UWORD fsmTextScroller(void) {
                 textList[0] = &ctx.textConfigs[0];
                 textList[1] = &ctx.textConfigs[1];
                 textList[2] = NULL;
-                WaitTOF();
                 configureTextController(textList, 300);
                 ctx.state = TEXTSCROLLER_MSG_4;
             }
