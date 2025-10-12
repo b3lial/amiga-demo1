@@ -14,7 +14,6 @@
 #include "utils/utils.h"
 #include "gfx/stars.h"
 #include "gfx/graphics_controller.h"
-#include "gfx/blob_controller.h"
 
 struct TextScrollerContext {
     WORD state;

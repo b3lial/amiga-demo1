@@ -3,7 +3,7 @@
 #
 
 OBJS= starlight/graphics_controller.o font.o rotation.o \
-	  starlight/blob_controller.o starlight/utils.o \
+	  starlight/utils.o \
 	  showlogo.o main.o textscroller.o textcontroller.o
 
 demo-1-sasc: $(OBJS)
@@ -11,9 +11,7 @@ demo-1-sasc: $(OBJS)
 $(OBJS)
 <
 
-starlight/graphics_controller.o: starlight/graphics_controller.c starlight/graphics_controller.h 
-
-starlight/blob_controller.o: starlight/blob_controller.c starlight/blob_controller.h
+starlight/graphics_controller.o: starlight/graphics_controller.c starlight/graphics_controller.h
 
 main.o: main.c main.h
 

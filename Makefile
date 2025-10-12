@@ -4,7 +4,7 @@ VASMFLAGS=-Faout -devpac
 CFLAGS = -DDEMO_DEBUG -noixemul -Wall -O2 -Isrc -m68020
 LDFLAGS = -noixemul
 SOURCES=src/main.c src/effects/textscroller.c src/gfx/text_controller.c src/utils/utils.c \
-		src/gfx/stars.c src/gfx/blob_controller.c src/gfx/graphics_controller.c \
+		src/gfx/stars.c src/gfx/graphics_controller.c \
 		src/effects/showlogo.c src/gfx/rotation.c
 OBJECTS=$(SOURCES:.c=.o)
 EXECUTABLE=demo-1-gcc

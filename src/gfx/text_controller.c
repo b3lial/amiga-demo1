@@ -9,7 +9,7 @@
 #include "text_controller.h"
 
 #include "utils/utils.h"
-#include "gfx/blob_controller.h"
+#include "gfx/graphics_controller.h"
 
 #define CURRENT_CHAR(STATE) (STATE->characters[STATE->charIndex])
 
