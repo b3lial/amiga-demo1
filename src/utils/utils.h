@@ -2,7 +2,8 @@
 #define __UTILS_H__
 
 #include <exec/types.h>
-#include "democonstants.h"
+
+#define DEMO_STR_MAX 120
 
 BOOL mouseClick(void);
 BOOL mouseCiaStatus(void);
