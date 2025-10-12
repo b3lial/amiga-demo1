@@ -39,6 +39,7 @@ static struct TextScrollerContext ctx = {
 
 __far extern struct Custom custom;
 
+//----------------------------------------
 UWORD fsmTextScroller(void) {
     struct TextConfig *textList[TEXT_LIST_SIZE];
 
@@ -146,6 +147,7 @@ UWORD fsmTextScroller(void) {
     return FSM_TEXTSCROLLER;
 }
 
+//----------------------------------------
 UWORD initTextScroller(void) {
     struct Rectangle starsClip;
     writeLog("== initTextScroller() ==\n\n");
@@ -235,6 +237,7 @@ __exit_init_scroller:
     return FSM_ERROR;
 }
 
+//----------------------------------------
 void exitTextScroller(void) {
     writeLog("\n== exitTextScroller() ==\n");
     exitTextController();
@@ -268,6 +271,7 @@ void exitTextScroller(void) {
     ctx.state = TEXTSCROLLER_INIT;
 }
 
+//----------------------------------------
 void fadeToWhite(void) {
     UWORD i = 0;
     UWORD incrementer;
@@ -311,6 +315,7 @@ void fadeToWhite(void) {
     LoadRGB32(&ctx.textScrollerscreen1->ViewPort, ctx.colortable1);
 }
 
+//----------------------------------------
 BOOL hasFadeToWhiteFinished(void) {
     UWORD i = 0;
 

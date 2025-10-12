@@ -184,10 +184,7 @@ _error_cleanup:
     return FALSE;
 }
 
-/**
- * Rotate the element in source buffer and store the results
- * in destination buffer array.
- */
+//----------------------------------------
 void rotateAll() {
     USHORT angle = 0;
     UBYTE i = 0;
@@ -199,12 +196,7 @@ void rotateAll() {
     return;
 }
 
-/**
- * Gets a source chunky buffer, rotates it by degree value
- * in RotationData and writes the result into destination
- * chunky buffer. Rotation is performed via matrix multiplcation
- * in fix point format.
- */
+//----------------------------------------
 static void rotate(UBYTE *dest, USHORT angle) {
     UWORD x, y = 0;
     UWORD src_index, dest_index = 0;
@@ -252,10 +244,7 @@ static void rotate(UBYTE *dest, USHORT angle) {
     }
 }
 
-/**
- * Pre-calculate sin/cos values for x/y coordinates
- * because this math is expensive
- */
+//----------------------------------------
 static void preCalcSinCos(UWORD lookupIndex, WORD *sinLookupX, WORD *cosLookupX,
                           WORD *sinLookupY, WORD *cosLookupY) {
     UWORD x, y = 0;

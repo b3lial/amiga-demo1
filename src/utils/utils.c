@@ -51,9 +51,7 @@ BOOL initLog(void) {
     return TRUE;
 }
 
-/**
- * Write format string into logfile
- */
+//----------------------------------------
 BOOL writeLogFS(const char* formatString, ...) {
     char str[DEMO_STR_MAX];
     va_list args;
@@ -63,9 +61,7 @@ BOOL writeLogFS(const char* formatString, ...) {
     return writeLog(str);
 }
 
-/**
- * Write string into logfile
- */
+//----------------------------------------
 BOOL writeLog(char* msg) {
     BPTR logHandle = Open((CONST_STRPTR)"ram:starlight-demo.log", MODE_OLDFILE);
     if (logHandle == ((BPTR) NULL)) {
@@ -79,10 +75,7 @@ BOOL writeLog(char* msg) {
     return TRUE;
 }
 
-/**
- * Writes msg and a character array into log file. Maybe not the most
- * performant implementation but who cares.
- */
+//----------------------------------------
 BOOL writeArrayLog(char* msg, unsigned char* array, UWORD array_length) {
     UWORD i;
 

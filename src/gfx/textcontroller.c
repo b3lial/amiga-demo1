@@ -67,9 +67,7 @@ static void saveCharacterBackground(struct TextScrollState *state);
 static void restorePreviousBackground(struct TextScrollState *state);
 static void prepareForNextCharacter(struct TextScrollState *state);
 
-/**
- * Load font and allocate scroll states
- */
+//----------------------------------------
 BOOL startTextController(struct BitMap *screen, UWORD depth, UWORD screenWidth)
 {
     UBYTE i = 0;
@@ -126,9 +124,7 @@ _error_cleanup:
     return FALSE;
 }
 
-/**
- * Free font, scroll states, and character background bitmaps
- */
+//----------------------------------------
 void exitTextController(void)
 {
     UBYTE i = 0;
@@ -162,12 +158,7 @@ void exitTextController(void)
     }
 }
 
-/**
- * Configure text strings for scrolling.
- * Must be called after startTextController() and before executeTextController().
- * Automatically resets previous state before configuring new texts.
- * pauseTime: pause duration in frames (0 = use default TEXT_PAUSE_TIME)
- */
+//----------------------------------------
 void configureTextController(struct TextConfig **configs, UWORD pauseTime)
 {
     UBYTE i = 0;
@@ -216,10 +207,7 @@ static void setStringTextController(struct TextScrollState *state)
     saveCharacterBackground(state);
 }
 
-/**
- * Execute text scroller engine. Should be called
- * for each new frame.
- */
+//----------------------------------------
 void executeTextController()
 {
     UBYTE i = 0;
@@ -322,10 +310,7 @@ static void textScrollOut(struct TextScrollState *state)
     displayCurrentCharacter(state);
 }
 
-/**
- * Returns true if every active text config
- * is in state TC_SCROLL_FINISHED
- */
+//----------------------------------------
 BOOL isFinishedTextController(void)
 {
     BOOL allFinished = TRUE;
@@ -341,10 +326,7 @@ BOOL isFinishedTextController(void)
     return allFinished;
 }
 
-/*
- * Search in text string for next non-whitespace
- * character and initialize its destination position
- */
+//----------------------------------------
 static void prepareForNextCharacter(struct TextScrollState *state)
 {
     char letter = 0;
@@ -382,11 +364,7 @@ static void prepareForNextCharacter(struct TextScrollState *state)
     saveCharacterBackground(state);
 }
 
-/**
- * Reset scroll states to initial values.
- * Does NOT deallocate anything (use exitTextController for that).
- * Internal function - called automatically by configureTextController().
- */
+//----------------------------------------
 static void resetTextController(void)
 {
     UBYTE i = 0;
@@ -398,10 +376,7 @@ static void resetTextController(void)
     }
 }
 
-/**
- * Reset text scroll state to initial values.
- * Character data is zeroed but bitmaps remain allocated.
- */
+//----------------------------------------
 static void resetTextScrollState(struct TextScrollState *state)
 {
     UBYTE i = 0;
@@ -418,10 +393,7 @@ static void resetTextScrollState(struct TextScrollState *state)
     }
 }
 
-/**
- * Print a character on screen. Return position of next
- * character
- */
+//----------------------------------------
 static UWORD displayCurrentCharacter(struct TextScrollState *state)
 {
     /*
@@ -437,10 +409,7 @@ static UWORD displayCurrentCharacter(struct TextScrollState *state)
     return (UWORD)(state->characters[state->charIndex].xPos + state->characters[state->charIndex].xSize + 5);
 }
 
-/**
- * Restore a piece which was previously stored in a TextScrollState
- * object
- */
+//----------------------------------------
 static void restorePreviousBackground(struct TextScrollState *state)
 {
     BltBitMap(CURRENT_CHAR(state).oldBackground,
@@ -450,10 +419,7 @@ static void restorePreviousBackground(struct TextScrollState *state)
               0xC0, 0xff, 0);
 }
 
-/**
- * Backup a part of the background before blitting a character
- * there to be able to restore it later
- */
+//----------------------------------------
 static void saveCharacterBackground(struct TextScrollState *state)
 {
     BltBitMap(ctx.textDestination, CURRENT_CHAR(state).xPos,
@@ -464,9 +430,7 @@ static void saveCharacterBackground(struct TextScrollState *state)
               0xff, 0);
 }
 
-/**
- * This data highly depends on the font
- */
+//----------------------------------------
 static void getCharData(char letter, struct CharBlob *charBlob)
 {
     letter = tolower(letter);

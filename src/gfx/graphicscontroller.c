@@ -57,10 +57,7 @@ struct Screen* createScreen(struct BitMap* b, BOOL hidden,
     return OpenScreenTagList(NULL, screentags);
 }
 
-/**
- * Loads a set of unsigned words from file and copies them into
- * an array to use them as input for background color registers
- */
+//----------------------------------------
 BOOL loadColorMap(char *fileName, UWORD *map, UWORD mapLength)
 {
     LONG dataRead = 0;
@@ -88,21 +85,7 @@ BOOL loadColorMap(char *fileName, UWORD *map, UWORD mapLength)
     return TRUE;
 }
 
-/**
- * Loads a colormap from file.
- *
- * input file format:
- *
- * Set of ULONG with (0,r,g,b), (0,r,g,b), ...
- *
- * map format:
- *
- * First ULONG is reserved for (colorAmount,startregister),
- * followed by (r,g,b) (each color value is a ULONG), final character in array is 0.
- * For usage with LoadRGB32(),
- * see http://amigadev.elowar.com/read/ADCD_2.1/Includes_and_Autodocs_3._guide/node02FB.html
- * for details.
- */
+//----------------------------------------
 BOOL loadColorMap32(char *fileName, ULONG *map, UWORD colorAmount)
 {
     ULONG *buffer;
@@ -154,9 +137,7 @@ BOOL loadColorMap32(char *fileName, ULONG *map, UWORD colorAmount)
     return TRUE;
 }
 
-/**
- * Load non-interlaced graphic blob from file system and copy it into bitplanes
- */
+//----------------------------------------
 struct BitMap *loadBlob(const char *fileName, UBYTE depth, UWORD width,
                         UWORD height)
 {

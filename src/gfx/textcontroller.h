@@ -43,11 +43,30 @@ struct TextConfig
 };
 
 // external APIs
+/**
+ * @brief Load font and allocate scroll states
+ */
 BOOL startTextController(struct BitMap *screen,
                         UWORD depth, UWORD screenWidth);
+
+/**
+ * @brief Configure text strings for scrolling. Must be called after startTextController() and before executeTextController(). Automatically resets previous state before configuring new texts. pauseTime: pause duration in frames (0 = use default TEXT_PAUSE_TIME)
+ */
 void configureTextController(struct TextConfig** configs, UWORD pauseTime);
+
+/**
+ * @brief Execute text scroller engine. Should be called for each new frame.
+ */
 void executeTextController(void);
+
+/**
+ * @brief Free font, scroll states, and character background bitmaps
+ */
 void exitTextController(void);
+
+/**
+ * @brief Returns true if every active text config is in state TC_SCROLL_FINISHED
+ */
 BOOL isFinishedTextController(void);
 
 

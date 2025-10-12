@@ -44,6 +44,7 @@ static struct ShowLogoContext ctx = {
 
 __far extern struct Custom custom;
 
+//----------------------------------------
 UWORD fsmShowLogo(void) {
     if (mouseClick()) {
         ctx.state = SHOWLOGO_SHUTDOWN;
@@ -70,12 +71,7 @@ UWORD fsmShowLogo(void) {
     return FSM_SHOWLOGO;
 }
 
-/* We create two bitmaps here: the bitmap which is shown on the
- * screen and the image blob. The onscreen bitmap has a size
- * of image blob + border. The image blob is blitted into
- * the middle of the oncreen bitmap. This allows rotation effects
- * without bothering any array out of bounds problems
- */
+//----------------------------------------
 UWORD initShowLogo(void) {
     UWORD i = 0;
     struct Rectangle logoClip;
@@ -180,6 +176,7 @@ __exit_init_logo:
     return FSM_ERROR;
 }
 
+//----------------------------------------
 void exitShowLogo(void) {
     WaitTOF();
     if (ctx.logoscreen0) {
@@ -212,6 +209,7 @@ void exitShowLogo(void) {
     exitRotationEngine();
 }
 
+//----------------------------------------
 UWORD fadeInFromWhite(void) {
     UWORD decrementer;
     UWORD i = 0;
@@ -248,6 +246,7 @@ UWORD fadeInFromWhite(void) {
     }
 }
 
+//----------------------------------------
 UWORD prepareRotation(void) {
     struct p2cStruct p2c = {0};
 
@@ -269,6 +268,7 @@ UWORD prepareRotation(void) {
     return SHOWLOGO_ROTATE;
 }
 
+//----------------------------------------
 UWORD performRotation() {
     static UBYTE i = 1;
     convertChunkyToBitmap(getDestBuffer(i), ctx.logoBitmap);
@@ -292,6 +292,7 @@ UWORD performRotation() {
     return SHOWLOGO_ROTATE;
 }
 
+//----------------------------------------
 void convertChunkyToBitmap(UBYTE *sourceChunky, struct BitMap *destPlanar) {
 #ifdef NATIVE_CONVERTER
     struct RastPort rastPort1 = {0};
@@ -316,6 +317,7 @@ void convertChunkyToBitmap(UBYTE *sourceChunky, struct BitMap *destPlanar) {
 #endif
 }
 
+//----------------------------------------
 void switchScreenData() {
     if (ctx.bufferSelector) {
         ctx.currentScreen = ctx.logoscreen1;

@@ -41,6 +41,9 @@ void exitRotationEngine(void);
 UBYTE* getSourceBuffer(void);
 UBYTE* getDestBuffer(UBYTE index);
 
+/**
+ * @brief Rotate the element in source buffer and store the results in destination buffer array.
+ */
 void rotateAll(void);
 
 void convertChunkyToBitmap(UBYTE* sourceChunky, struct BitMap* destPlanar);

@@ -85,6 +85,7 @@ int main(void) {
     exit(RETURN_OK);
 }
 
+//----------------------------------------
 int isAga(void) {
     short int *vposr = (short int *)0xdff004;
 

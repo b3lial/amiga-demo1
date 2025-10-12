@@ -8,9 +8,14 @@
 
 #define STAR_MAX 100
 
-/// create star array
+/**
+ * @brief create star array
+ */
 void createStars(UWORD numStars, UWORD width, UWORD height);
-/// paint the previously generated random stars on a RastPort
+
+/**
+ * @brief paint the previously generated random stars on a RastPort
+ */
 void paintStars(struct RastPort* rp, UWORD color, UWORD numStars, UWORD width, UWORD height);
 
 #endif
