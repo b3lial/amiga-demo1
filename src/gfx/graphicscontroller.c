@@ -88,7 +88,7 @@ BOOL loadColorMap(char *fileName, UWORD *map, UWORD mapLength)
 //----------------------------------------
 BOOL loadColorMap32(char *fileName, ULONG *map, UWORD colorAmount)
 {
-    ULONG *buffer;
+    ULONG *buffer = NULL;
     UWORD i;
     UBYTE r;
     UBYTE g;
@@ -99,7 +99,7 @@ BOOL loadColorMap32(char *fileName, ULONG *map, UWORD colorAmount)
     if (!buffer)
     {
         writeLog("Error: Could not allocate memory for 32 bit color table input file buffer\n");
-        return FALSE;
+        goto _error_cleanup;
     }
     writeLogFS("Allocated %d bytes for 32 bit color table input file buffer\n",
                colorAmount * sizeof(ULONG));
@@ -107,10 +107,7 @@ BOOL loadColorMap32(char *fileName, ULONG *map, UWORD colorAmount)
     //reuse loadColorMap() because as a first step we need its content in a buffer
     if (!loadColorMap(fileName, (UWORD *)buffer, colorAmount * 2))
     {
-        FreeMem(buffer, colorAmount * sizeof(ULONG));
-        writeLogFS("Freeing %d bytes of 32 bit color table input file buffer\n",
-                   colorAmount * sizeof(ULONG));
-        return FALSE;
+        goto _error_cleanup;
     }
     writeLog("Loaded 32 bit color table\n");
 
@@ -135,6 +132,15 @@ BOOL loadColorMap32(char *fileName, ULONG *map, UWORD colorAmount)
     writeLogFS("Freeing %d bytes of 32 bit color table input file buffer\n",
                colorAmount * sizeof(ULONG));
     return TRUE;
+
+_error_cleanup:
+    if (buffer)
+    {
+        FreeMem(buffer, colorAmount * sizeof(ULONG));
+        writeLogFS("Freeing %d bytes of 32 bit color table input file buffer\n",
+                   colorAmount * sizeof(ULONG));
+    }
+    return FALSE;
 }
 
 //----------------------------------------
@@ -158,7 +164,7 @@ struct BitMap *loadBlob(const char *fileName, UBYTE depth, UWORD width,
     if (!blobFileHandle)
     {
         writeLogFS("Error: Could not read %s\n", fileName);
-        return NULL;
+        goto _error_cleanup;
     }
 
     //Get file size
@@ -171,7 +177,8 @@ struct BitMap *loadBlob(const char *fileName, UBYTE depth, UWORD width,
                              BMF_DISPLAYABLE | BMF_CLEAR, NULL);
     if (blobBitMap == NULL)
     {
-        return NULL;
+        writeLog("Error: Could not allocate bitmap\n");
+        goto _error_cleanup;
     }
 
     /*
@@ -201,8 +208,7 @@ struct BitMap *loadBlob(const char *fileName, UBYTE depth, UWORD width,
             if (dataRead == -1)
             {
                 writeLog("Error: Could not read from Blob input file\n");
-                Close(blobFileHandle);
-                return NULL;
+                goto _error_cleanup;
             }
             else if (dataRead == 0)
             {
@@ -221,4 +227,15 @@ struct BitMap *loadBlob(const char *fileName, UBYTE depth, UWORD width,
 
     Close(blobFileHandle);
     return blobBitMap;
+
+_error_cleanup:
+    if (blobFileHandle)
+    {
+        Close(blobFileHandle);
+    }
+    if (blobBitMap)
+    {
+        FreeBitMap(blobBitMap);
+    }
+    return NULL;
 }
