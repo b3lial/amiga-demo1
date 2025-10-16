@@ -2,22 +2,12 @@
 
   Critical Issues:
 
-  3. Inconsistent Error Handling
-
-  - Some functions use goto-based cleanup (rotation.c:260, textscroller.c:229)
-  - Some just return FALSE without cleanup (textcontroller.c:36)
-  - No consistent error propagation strategy
-  - initRotationEngine failure paths don't free previously allocated buffers
-
   4. Hardcoded Magic Numbers
 
-  - rotation.c:221-225 - nested loop recalculates x values for every y iteration
-  - textcontroller.c:259 - "50, 50" instead of using defined constants
   - textscroller.c:35-102 - hardcoded screen positions scattered throughout state machine
 
   5. Poor Module Boundaries
 
-  - Rotation engine has global buffers but also returns pointers to them (rotation.c:308-313)
   - Text scroller logic mixed with screen management
 
   6. Fixed-Point Arithmetic Issues
@@ -35,7 +25,6 @@
   8. Resource Management
 
   - Double buffering state in showlogo.c:13-15 is fragile
-  - No clear ownership of bitmaps - who allocates vs who frees is unclear
   - Font blob loaded but never checked if already loaded
 
   9. State Machine Complexity
