@@ -16,7 +16,7 @@
 #include "gfx/graphicscontroller.h"
 
 struct TextScrollerContext {
-    WORD state;
+    enum TextScrollerState state;
     struct BitMap *spaceBlob;
     struct BitMap *textBitmap;
     ULONG *colortable1;

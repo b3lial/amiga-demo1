@@ -4,12 +4,14 @@
 #include <exec/types.h>
 #include "gfx/textcontroller.h"
 
-#define TEXTSCROLLER_INIT 0
-#define TEXTSCROLLER_MSG_1 1
-#define TEXTSCROLLER_MSG_2 2
-#define TEXTSCROLLER_MSG_3 3
-#define TEXTSCROLLER_MSG_4 4
-#define TEXTSCROLLER_FADE_WHITE 5
+enum TextScrollerState {
+    TEXTSCROLLER_INIT = 0,
+    TEXTSCROLLER_MSG_1 = 1,
+    TEXTSCROLLER_MSG_2 = 2,
+    TEXTSCROLLER_MSG_3 = 3,
+    TEXTSCROLLER_MSG_4 = 4,
+    TEXTSCROLLER_FADE_WHITE = 5
+};
 
 // reserve additional space as scroll in area
 #define TEXTSCROLLER_VIEW_TEXTSECTION_WIDTH \

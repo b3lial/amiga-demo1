@@ -1,12 +1,14 @@
 #ifndef __FSMSTATES_H__
 #define __FSMSTATES_H__
 
-#define FSM_START 0
-#define FSM_TEXTSCROLLER 1
-#define FSM_TEXTSCROLLER_FINISHED 2
-#define FSM_SHOWLOGO 3
-#define FSM_STOP  4
-#define FSM_ERROR 5
-#define FSM_QUIT  6
+enum MainFSMState {
+    FSM_START = 0,
+    FSM_TEXTSCROLLER = 1,
+    FSM_TEXTSCROLLER_FINISHED = 2,
+    FSM_SHOWLOGO = 3,
+    FSM_STOP = 4,
+    FSM_ERROR = 5,
+    FSM_QUIT = 6
+};
 
 #endif

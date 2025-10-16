@@ -15,7 +15,7 @@
 #include "gfx/chunkyconverter.h"
 
 struct ShowLogoContext {
-    WORD state;
+    enum ShowLogoState state;
     struct BitMap *logoBitmap;
     struct BitMap *screenBitmap0;
     struct BitMap *screenBitmap1;

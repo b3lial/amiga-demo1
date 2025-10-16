@@ -13,8 +13,8 @@
 #include "effects/showlogo.h"
 
 int main(void) {
-    WORD fsmCurrentState = FSM_START;
-    WORD fsmNextState = -1;
+    enum MainFSMState fsmCurrentState = FSM_START;
+    enum MainFSMState fsmNextState = FSM_ERROR;
     UWORD *emptyPointer = NULL;
     struct Screen *my_wbscreen_ptr;
 
