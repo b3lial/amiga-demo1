@@ -2,10 +2,6 @@
 
   Critical Issues:
 
-  4. Hardcoded Magic Numbers
-
-  - textscroller.c:35-102 - hardcoded screen positions scattered throughout state machine
-
   5. Poor Module Boundaries
 
   - Text scroller logic mixed with screen management
@@ -18,7 +14,6 @@
 
   7. Inefficient Algorithms
 
-  - rotation.c:216-226 - preCalcSinCos recalculates x_mult values for every y iteration unnecessarily
   - showlogo.c:244-265 - rotation performed on every frame instead of pre-calculating
   - textscroller.c:267-308 - palette fade done per-frame with no temporal coherence
 

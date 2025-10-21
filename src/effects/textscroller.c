@@ -15,6 +15,23 @@
 #include "gfx/stars.h"
 #include "gfx/graphicscontroller.h"
 
+// Text positioning constants
+#define TEXT_POS_TOP_Y      4
+#define TEXT_POS_UPPER_Y   18
+#define TEXT_POS_MIDDLE_Y  40
+#define TEXT_POS_MID_LOW_Y 44
+#define TEXT_POS_LOWER_Y   70
+#define TEXT_POS_BOTTOM_Y  84
+
+#define TEXT_POS_FAR_LEFT_X   (MAX_CHAR_WIDTH + 10)
+#define TEXT_POS_LEFT_X       (MAX_CHAR_WIDTH + 37)
+#define TEXT_POS_MID_LEFT_X   (MAX_CHAR_WIDTH + 45)
+#define TEXT_POS_CENTER_X     (MAX_CHAR_WIDTH + 70)
+#define TEXT_POS_MID_RIGHT_X  (MAX_CHAR_WIDTH + 95)
+#define TEXT_POS_RIGHT_X      (MAX_CHAR_WIDTH + 103)
+#define TEXT_POS_MID_FAR_X    (MAX_CHAR_WIDTH + 110)
+#define TEXT_POS_FAR_RIGHT_X  (MAX_CHAR_WIDTH + 133)
+
 struct TextScrollerContext {
     enum TextScrollerState state;
     struct BitMap *spaceBlob;
@@ -53,8 +70,8 @@ UWORD fsmTextScroller(void) {
         case TEXTSCROLLER_INIT:
             // configure text scroll engine
             ctx.textConfigs[0].currentText = "hi there";
-            ctx.textConfigs[0].charXPosDestination = MAX_CHAR_WIDTH + 70;
-            ctx.textConfigs[0].charYPosDestination = 40;
+            ctx.textConfigs[0].charXPosDestination = TEXT_POS_CENTER_X;
+            ctx.textConfigs[0].charYPosDestination = TEXT_POS_MIDDLE_Y;
             textList[0] = &ctx.textConfigs[0];
             textList[1] = NULL;
             configureTextController(textList, 0);  // 0 = use default pause time
@@ -68,11 +85,11 @@ UWORD fsmTextScroller(void) {
             if (isFinishedTextController()) {
                 // configure text scroll engine
                 ctx.textConfigs[0].currentText = "belial";
-                ctx.textConfigs[0].charXPosDestination = MAX_CHAR_WIDTH + 95;
-                ctx.textConfigs[0].charYPosDestination = 18;
+                ctx.textConfigs[0].charXPosDestination = TEXT_POS_MID_RIGHT_X;
+                ctx.textConfigs[0].charYPosDestination = TEXT_POS_UPPER_Y;
                 ctx.textConfigs[1].currentText = "here";
-                ctx.textConfigs[1].charXPosDestination = MAX_CHAR_WIDTH + 110;
-                ctx.textConfigs[1].charYPosDestination = 70;
+                ctx.textConfigs[1].charXPosDestination = TEXT_POS_MID_FAR_X;
+                ctx.textConfigs[1].charYPosDestination = TEXT_POS_LOWER_Y;
                 textList[0] = &ctx.textConfigs[0];
                 textList[1] = &ctx.textConfigs[1];
                 textList[2] = NULL;
@@ -88,14 +105,14 @@ UWORD fsmTextScroller(void) {
             if (isFinishedTextController()) {
                 // configure text scroll engine
                 ctx.textConfigs[0].currentText = "presenting";
-                ctx.textConfigs[0].charXPosDestination = MAX_CHAR_WIDTH + 37;
-                ctx.textConfigs[0].charYPosDestination = 4;
+                ctx.textConfigs[0].charXPosDestination = TEXT_POS_LEFT_X;
+                ctx.textConfigs[0].charYPosDestination = TEXT_POS_TOP_Y;
                 ctx.textConfigs[1].currentText = "my";
-                ctx.textConfigs[1].charXPosDestination = MAX_CHAR_WIDTH + 133;
-                ctx.textConfigs[1].charYPosDestination = 44;
+                ctx.textConfigs[1].charXPosDestination = TEXT_POS_FAR_RIGHT_X;
+                ctx.textConfigs[1].charYPosDestination = TEXT_POS_MID_LOW_Y;
                 ctx.textConfigs[2].currentText = "first";
-                ctx.textConfigs[2].charXPosDestination = MAX_CHAR_WIDTH + 103;
-                ctx.textConfigs[2].charYPosDestination = 84;
+                ctx.textConfigs[2].charXPosDestination = TEXT_POS_RIGHT_X;
+                ctx.textConfigs[2].charYPosDestination = TEXT_POS_BOTTOM_Y;
                 textList[0] = &ctx.textConfigs[0];
                 textList[1] = &ctx.textConfigs[1];
                 textList[2] = &ctx.textConfigs[2];
@@ -112,11 +129,11 @@ UWORD fsmTextScroller(void) {
             if (isFinishedTextController()) {
                 // configure text scroll engine
                 ctx.textConfigs[0].currentText = "demo";
-                ctx.textConfigs[0].charXPosDestination = MAX_CHAR_WIDTH + 10;
-                ctx.textConfigs[0].charYPosDestination = 18;
+                ctx.textConfigs[0].charXPosDestination = TEXT_POS_FAR_LEFT_X;
+                ctx.textConfigs[0].charYPosDestination = TEXT_POS_UPPER_Y;
                 ctx.textConfigs[1].currentText = "production";
-                ctx.textConfigs[1].charXPosDestination = MAX_CHAR_WIDTH + 45;
-                ctx.textConfigs[1].charYPosDestination = 70;
+                ctx.textConfigs[1].charXPosDestination = TEXT_POS_MID_LEFT_X;
+                ctx.textConfigs[1].charYPosDestination = TEXT_POS_LOWER_Y;
                 textList[0] = &ctx.textConfigs[0];
                 textList[1] = &ctx.textConfigs[1];
                 textList[2] = NULL;
