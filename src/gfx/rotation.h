@@ -18,8 +18,7 @@
 // #define NATIVE_CONVERTER
 
 // credits to: https://coronax.wordpress.com/2014/01/31/running-with-the-numbers/
-#define FIXSHIFT 8  // shift 16 bits = scale factor 65536
-#define HALFSHIFT 4
+#define FIXSHIFT 8
 // convert float to fix (and back)
 #define FLOATTOFIX(x) ((WORD)((x) * (1 << FIXSHIFT)))
 #define FIXTOFLOAT(x) ((float)(x) / (1 << FIXSHIFT))
@@ -27,8 +26,8 @@
 #define INTTOFIX(x) ((x) << FIXSHIFT)
 #define FIXTOINT(x) ((x) >> FIXSHIFT)
 // multiply and divide
-#define FIXMULT(x, y) (((x) >> HALFSHIFT) * ((y) >> HALFSHIFT))
-#define FIXDIV(x, y) (((x) / (y >> HALFSHIFT)) << HALFSHIFT)
+#define FIXMULT(x, y) (((x) * (y)) >> FIXSHIFT)
+#define FIXDIV(x, y) (((x) << FIXSHIFT) / (y))
 
 #define DEGREE_RESOLUTION 10
 #define DEST_BUFFER_SIZE 36
