@@ -77,19 +77,22 @@ BOOL startTextController(struct BitMap *screen, UWORD depth, UWORD screenWidth)
     ctx.textDestination = screen;
     ctx.pauseTime = TEXT_PAUSE_TIME;
 
-    // Load font bitmap and its colors
-    writeLog("Load font bitmap and colors\n");
-    ctx.fontBlob = loadBlob("img/charset_final.RAW", ctx.charDepth,
-                        TEXTSCROLLER_BLOB_FONT_WIDTH, TEXTSCROLLER_BLOB_FONT_HEIGHT);
+    // Load font bitmap and its colors (only if not already loaded)
     if (ctx.fontBlob == NULL)
     {
-        writeLog("Error: Could not load font blob\n");
-        goto _error_cleanup;
+        writeLog("Load font bitmap and colors\n");
+        ctx.fontBlob = loadBlob("img/charset_final.RAW", ctx.charDepth,
+                            TEXTSCROLLER_BLOB_FONT_WIDTH, TEXTSCROLLER_BLOB_FONT_HEIGHT);
+        if (ctx.fontBlob == NULL)
+        {
+            writeLog("Error: Could not load font blob\n");
+            goto _error_cleanup;
+        }
+        writeLogFS(
+            "Font BitMap: BytesPerRow: %d, Rows: %d, Flags: %d, pad: %d\n",
+            ctx.fontBlob->BytesPerRow, ctx.fontBlob->Rows, ctx.fontBlob->Flags,
+            ctx.fontBlob->pad);
     }
-    writeLogFS(
-        "Font BitMap: BytesPerRow: %d, Rows: %d, Flags: %d, pad: %d\n",
-        ctx.fontBlob->BytesPerRow, ctx.fontBlob->Rows, ctx.fontBlob->Flags,
-        ctx.fontBlob->pad);
 
     // Allocate scroll states and character background bitmaps upfront
     writeLog("Allocating scroll states and character background bitmaps\n");
