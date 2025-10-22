@@ -25,9 +25,25 @@
 // convert int to fix (and back)
 #define INTTOFIX(x) ((x) << FIXSHIFT)
 #define FIXTOINT(x) ((x) >> FIXSHIFT)
-// multiply and divide
+// multiply and divide (unsafe - use safe_fixmult/safe_fixdiv instead)
 #define FIXMULT(x, y) (((x) * (y)) >> FIXSHIFT)
 #define FIXDIV(x, y) (((x) << FIXSHIFT) / (y))
+
+// Safe fixed-point operations with overflow protection
+static inline WORD safe_fixmult(WORD x, WORD y) {
+    LONG result = ((LONG)x * (LONG)y) >> FIXSHIFT;
+    if (result > 32767) return 32767;
+    if (result < -32768) return -32768;
+    return (WORD)result;
+}
+
+static inline WORD safe_fixdiv(WORD x, WORD y) {
+    if (y == 0) return 0;  // Division by zero protection
+    LONG result = ((LONG)x << FIXSHIFT) / (LONG)y;
+    if (result > 32767) return 32767;
+    if (result < -32768) return -32768;
+    return (WORD)result;
+}
 
 #define DEGREE_RESOLUTION 10
 #define DEST_BUFFER_SIZE 36

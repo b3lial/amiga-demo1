@@ -253,15 +253,15 @@ static void preCalcSinCos(UWORD lookupIndex, WORD *sinLookupX, WORD *cosLookupX,
     // Calculate x values once
     for (x = 0; x < ctx.bitmapWidth; x++) {
         dest_x = INTTOFIX(x - ctx.halfBitmapWidth);
-        sinLookupX[x] = FIXMULT(dest_x, sinLookup[lookupIndex]);
-        cosLookupX[x] = FIXMULT(dest_x, cosLookup[lookupIndex]);
+        sinLookupX[x] = safe_fixmult(dest_x, sinLookup[lookupIndex]);
+        cosLookupX[x] = safe_fixmult(dest_x, cosLookup[lookupIndex]);
     }
 
     // Calculate y values separately
     for (y = 0; y < ctx.bitmapHeight; y++) {
         dest_y = INTTOFIX(ctx.halfBitmapHeight - y);
-        sinLookupY[y] = FIXMULT(dest_y, sinLookup[lookupIndex]);
-        cosLookupY[y] = FIXMULT(dest_y, cosLookup[lookupIndex]);
+        sinLookupY[y] = safe_fixmult(dest_y, sinLookup[lookupIndex]);
+        cosLookupY[y] = safe_fixmult(dest_y, cosLookup[lookupIndex]);
     }
     return;
 }
