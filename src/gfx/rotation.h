@@ -61,6 +61,4 @@ UBYTE* getDestBuffer(UBYTE index);
  */
 void rotateAll(void);
 
-void convertChunkyToBitmap(UBYTE* sourceChunky, struct BitMap* destPlanar);
-
 #endif  // ROTATION_H

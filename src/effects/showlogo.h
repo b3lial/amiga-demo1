@@ -34,7 +34,13 @@ UWORD initShowLogo(void);
 void exitShowLogo(void);
 UWORD fadeInFromWhite(void);
 UWORD prepareRotation(void);
+/**
+ * Convert the current rotated frame from planar to chunky and blit it on screen.
+ * The chunky2planar conversion needs to be done per frame because otherwise
+ * chip memory would be exhausted easily.
+ */
 UWORD performRotation(void);
 void switchScreenData(void);
+void convertChunkyToBitmap(UBYTE* sourceChunky, struct BitMap* destPlanar);
 
 #endif
