@@ -232,11 +232,11 @@ static void rotate(UBYTE *dest, USHORT angle) {
                         ((src_y + ctx.halfBitmapHeight) * ctx.bitmapWidth);
 
             // verify x outofbounds
-            if (src_x < -ctx.halfBitmapWidth || src_x >= ctx.halfBitmapWidth) {
+            if (src_x <= -ctx.halfBitmapWidth || src_x >= ctx.halfBitmapWidth) {
                 continue;
             }
             // verify y outofbounds
-            if (src_y <= -ctx.halfBitmapHeight || (src_y > ctx.halfBitmapHeight)) {
+            if (src_y <= -ctx.halfBitmapHeight || (src_y >= ctx.halfBitmapHeight)) {
                 continue;
             }
             dest[dest_index] = ctx.srcBuffer[src_index];
@@ -260,8 +260,8 @@ static void preCalcSinCos(UWORD lookupIndex, WORD *sinLookupX, WORD *cosLookupX,
     // Calculate y values separately
     for (y = 0; y < ctx.bitmapHeight; y++) {
         dest_y = INTTOFIX(ctx.halfBitmapHeight - y);
-        sinLookupY[y] = safe_fixmult(dest_y, sinLookup[lookupIndex]);
-        cosLookupY[y] = safe_fixmult(dest_y, cosLookup[lookupIndex]);
+        sinLookupY[y] = FIXMULT(dest_y, sinLookup[lookupIndex]);
+        cosLookupY[y] = FIXMULT(dest_y, cosLookup[lookupIndex]);
     }
     return;
 }
