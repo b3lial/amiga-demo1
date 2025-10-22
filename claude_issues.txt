@@ -6,11 +6,6 @@
 
   - Text scroller logic mixed with screen management
 
-  6. Fixed-Point Arithmetic Issues
-
-  - No overflow protection in fixed-point operations
-  - Comment says "shift 16 bits" but FIXSHIFT is 8 (rotation.h:21)
-
   7. Inefficient Algorithms
 
   - showlogo.c:244-265 - rotation performed on every frame instead of pre-calculating
