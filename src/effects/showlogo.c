@@ -52,6 +52,10 @@ UWORD fsmShowLogo(void) {
         case SHOWLOGO_PREPARE_ROTATION:
             ctx.state = prepareRotation();
             break;
+        case SHOWLOGO_DELAY:
+            Delay(100);
+            ctx.state = SHOWLOGO_ROTATE;
+            break;
         case SHOWLOGO_ROTATE:
             ctx.state = performRotation();
             break;
@@ -255,7 +259,7 @@ UWORD prepareRotation(void) {
     PlanarToChunkyAsm(&p2c);
 
     rotateAll();
-    return SHOWLOGO_ROTATE;
+    return SHOWLOGO_DELAY;
 }
 
 //----------------------------------------
