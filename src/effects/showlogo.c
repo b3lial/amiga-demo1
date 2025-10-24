@@ -4,6 +4,7 @@
 #include <clib/graphics_protos.h>
 #include <clib/exec_protos.h>
 #include <hardware/custom.h>
+#include <string.h>
 
 #include "showlogo.h"
 
@@ -53,7 +54,7 @@ UWORD fsmShowLogo(void) {
             ctx.state = prepareRotation();
             break;
         case SHOWLOGO_DELAY:
-            Delay(100);
+            Delay(THREE_SECONDS);
             ctx.state = SHOWLOGO_ROTATE;
             break;
         case SHOWLOGO_ROTATE:
@@ -265,15 +266,28 @@ UWORD prepareRotation(void) {
 //----------------------------------------
 UWORD performRotation() {
     static UBYTE i = 1;
+    UWORD p;
+    struct BitMap *bitmap;
+    ULONG bytesPerRow;
+
     convertChunkyToBitmap(getDestBuffer(i), ctx.logoBitmap);
 
     switchScreenData();
+
+    // Clear the entire screen bitmap before drawing
+    bitmap = ctx.screenBitmaps[ctx.currentBufferIndex];
+    bytesPerRow = bitmap->BytesPerRow;
+    for (p = 0; p < bitmap->Depth; p++) {
+        memset(bitmap->Planes[p], 0, bytesPerRow * (SHOWLOGO_SCREEN_HEIGHT + SHOWLOGO_SCREEN_BORDER));
+    }
+
     BltBitMap(ctx.logoBitmap, 0, 0,
               ctx.screenBitmaps[ctx.currentBufferIndex],
               SHOWLOGO_DAWN_X_POS, SHOWLOGO_DAWN_Y_POS,
               SHOWLOGO_DAWN_WIDTH, SHOWLOGO_DAWN_HEIGHT,
               0xC0, 0xff, 0);
 
+    moveStars(STAR_MAX);
     paintStars(&ctx.logoscreens[ctx.currentBufferIndex]->RastPort, 42, 70, SHOWLOGO_SCREEN_WIDTH + SHOWLOGO_SCREEN_BORDER,
                 SHOWLOGO_SCREEN_HEIGHT + SHOWLOGO_SCREEN_BORDER);
 

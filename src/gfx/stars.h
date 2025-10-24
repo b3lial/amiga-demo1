@@ -18,4 +18,9 @@ void createStars(UWORD numStars, UWORD width, UWORD height);
  */
 void paintStars(struct RastPort* rp, UWORD color, UWORD numStars, UWORD width, UWORD height);
 
+/**
+ * @brief move stars from left to right with wraparound
+ */
+void moveStars(UWORD numStars);
+
 #endif
