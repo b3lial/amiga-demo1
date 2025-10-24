@@ -30,7 +30,8 @@ enum ShowLogoState {
 #define SHOWLOGO_DAWN_Y_POS \
     (((SHOWLOGO_SCREEN_HEIGHT - SHOWLOGO_DAWN_HEIGHT) / 2) + SHOWLOGO_SCREEN_BORDER)
 
-#define THREE_SECONDS 150
+#define TWO_SECONDS 100
+#define AMOUNT_OF_STARS 70
 
 UWORD fsmShowLogo(void);
 UWORD initShowLogo(void);

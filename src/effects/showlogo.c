@@ -54,7 +54,7 @@ UWORD fsmShowLogo(void) {
             ctx.state = prepareRotation();
             break;
         case SHOWLOGO_DELAY:
-            Delay(THREE_SECONDS);
+            Delay(TWO_SECONDS);
             ctx.state = SHOWLOGO_ROTATE;
             break;
         case SHOWLOGO_ROTATE:
@@ -149,7 +149,7 @@ UWORD initShowLogo(void) {
     LoadRGB4(&ctx.logoscreens[0]->ViewPort, ctx.color0, SHOWLOGO_SCREEN_COLORS);
     LoadRGB4(&ctx.logoscreens[1]->ViewPort, ctx.color0, SHOWLOGO_SCREEN_COLORS);
 
-    createStars(70, SHOWLOGO_SCREEN_WIDTH + SHOWLOGO_SCREEN_BORDER,
+    createStars(AMOUNT_OF_STARS, SHOWLOGO_SCREEN_WIDTH + SHOWLOGO_SCREEN_BORDER,
               SHOWLOGO_SCREEN_HEIGHT + SHOWLOGO_SCREEN_BORDER);
 
     // blit logo into screenBitmap and delete old bitmap
@@ -287,7 +287,7 @@ UWORD performRotation() {
               SHOWLOGO_DAWN_WIDTH, SHOWLOGO_DAWN_HEIGHT,
               0xC0, 0xff, 0);
 
-    moveStars(STAR_MAX);
+    moveStars(AMOUNT_OF_STARS);
     paintStars(&ctx.logoscreens[ctx.currentBufferIndex]->RastPort, 42, 70, SHOWLOGO_SCREEN_WIDTH + SHOWLOGO_SCREEN_BORDER,
                 SHOWLOGO_SCREEN_HEIGHT + SHOWLOGO_SCREEN_BORDER);
 
