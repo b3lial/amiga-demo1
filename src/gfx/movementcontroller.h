@@ -1,0 +1,38 @@
+#ifndef __MOVEMENTCONTROLLER_H__
+#define __MOVEMENTCONTROLLER_H__
+
+#include "rotation.h"
+
+// Generated circle coordinates
+// Radius: 16.0 pixels, Resolution: 16 points
+struct CircleCoord {
+    WORD x;
+    WORD y;
+};
+
+static const struct CircleCoord circleCoords[16] = {
+    { FLOATTOFIX(16.000000), FLOATTOFIX(0.000000) },
+    { FLOATTOFIX(14.782073), FLOATTOFIX(6.122935) },
+    { FLOATTOFIX(11.313708), FLOATTOFIX(11.313708) },
+    { FLOATTOFIX(6.122935), FLOATTOFIX(14.782073) },
+    { FLOATTOFIX(0.000000), FLOATTOFIX(16.000000) },
+    { FLOATTOFIX(-6.122935), FLOATTOFIX(14.782073) },
+    { FLOATTOFIX(-11.313708), FLOATTOFIX(11.313708) },
+    { FLOATTOFIX(-14.782073), FLOATTOFIX(6.122935) },
+    { FLOATTOFIX(-16.000000), FLOATTOFIX(0.000000) },
+    { FLOATTOFIX(-14.782073), FLOATTOFIX(-6.122935) },
+    { FLOATTOFIX(-11.313708), FLOATTOFIX(-11.313708) },
+    { FLOATTOFIX(-6.122935), FLOATTOFIX(-14.782073) },
+    { FLOATTOFIX(-0.000000), FLOATTOFIX(-16.000000) },
+    { FLOATTOFIX(6.122935), FLOATTOFIX(-14.782073) },
+    { FLOATTOFIX(11.313708), FLOATTOFIX(-11.313708) },
+    { FLOATTOFIX(14.782073), FLOATTOFIX(-6.122935) }
+};
+
+#define CIRCLE_COORDS_COUNT 16
+
+// Function declarations
+void initMovementController(UWORD screenWidth, UWORD screenHeight);
+void getNextPosition(WORD *x, WORD *y);
+
+#endif
