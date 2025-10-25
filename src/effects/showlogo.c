@@ -153,10 +153,10 @@ UWORD initShowLogo(void) {
     createStars(AMOUNT_OF_STARS, SHOWLOGO_SCREEN_WIDTH + SHOWLOGO_SCREEN_BORDER,
               SHOWLOGO_SCREEN_HEIGHT + SHOWLOGO_SCREEN_BORDER);
 
-    // Get the coordinates to which we want to blit the logo. Since we move it circular,
-    // we use the movement controller to get the initial x/y coordinates. 
+    // Initialize circular movement controller with screen and logo dimensions.
+    // This calculates the center point and prepares the circular path coordinates.
     initMovementController(
-        SHOWLOGO_SCREEN_WIDTH + SHOWLOGO_SCREEN_BORDER, 
+        SHOWLOGO_SCREEN_WIDTH + SHOWLOGO_SCREEN_BORDER,
         SHOWLOGO_SCREEN_HEIGHT + SHOWLOGO_SCREEN_BORDER,
         SHOWLOGO_DAWN_WIDTH, SHOWLOGO_DAWN_HEIGHT
     );
@@ -292,8 +292,9 @@ UWORD performRotation() {
         memset(bitmap->Planes[p], 0, bytesPerRow * (SHOWLOGO_SCREEN_HEIGHT + SHOWLOGO_SCREEN_BORDER));
     }
 
-    // fetch the next coordinates at which we want to blit the logo
-    // we use the movement controller since to coordinates are circular
+    // Fetch next position along the circular path for the rotating logo.
+    // The movement controller returns blit coordinates (upper-left corner)
+    // so the logo's center follows the circular trajectory.
     WORD logoX, logoY;
     getNextPosition(&logoX, &logoY);
 
