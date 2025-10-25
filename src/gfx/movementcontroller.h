@@ -32,7 +32,7 @@ static const struct CircleCoord circleCoords[16] = {
 #define CIRCLE_COORDS_COUNT 16
 
 // Function declarations
-void initMovementController(UWORD screenWidth, UWORD screenHeight);
+void initMovementController(UWORD screenWidth, UWORD screenHeight, UWORD logoWidth, UWORD logoHeight);
 void getNextPosition(WORD *x, WORD *y);
 
 #endif

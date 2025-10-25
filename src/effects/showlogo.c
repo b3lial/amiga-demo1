@@ -14,6 +14,7 @@
 #include "gfx/graphicscontroller.h"
 #include "gfx/rotation.h"
 #include "gfx/chunkyconverter.h"
+#include "gfx/movementcontroller.h"
 
 struct ShowLogoContext {
     enum ShowLogoState state;
@@ -152,10 +153,20 @@ UWORD initShowLogo(void) {
     createStars(AMOUNT_OF_STARS, SHOWLOGO_SCREEN_WIDTH + SHOWLOGO_SCREEN_BORDER,
               SHOWLOGO_SCREEN_HEIGHT + SHOWLOGO_SCREEN_BORDER);
 
+    // Get the coordinates to which we want to blit the logo. Since we move it circular,
+    // we use the movement controller to get the initial x/y coordinates. 
+    initMovementController(
+        SHOWLOGO_SCREEN_WIDTH + SHOWLOGO_SCREEN_BORDER, 
+        SHOWLOGO_SCREEN_HEIGHT + SHOWLOGO_SCREEN_BORDER,
+        SHOWLOGO_DAWN_WIDTH, SHOWLOGO_DAWN_HEIGHT
+    );
+    WORD logoX, logoY;
+    getNextPosition(&logoX, &logoY);
+
     // blit logo into screenBitmap and delete old bitmap
     BltBitMap(ctx.logoBitmap, 0, 0,
               ctx.screenBitmaps[ctx.currentBufferIndex],
-              SHOWLOGO_DAWN_X_POS, SHOWLOGO_DAWN_Y_POS,
+              logoX, logoY,
               SHOWLOGO_DAWN_WIDTH, SHOWLOGO_DAWN_HEIGHT,
               0xC0, 0xff, 0);
 
@@ -281,9 +292,14 @@ UWORD performRotation() {
         memset(bitmap->Planes[p], 0, bytesPerRow * (SHOWLOGO_SCREEN_HEIGHT + SHOWLOGO_SCREEN_BORDER));
     }
 
+    // fetch the next coordinates at which we want to blit the logo
+    // we use the movement controller since to coordinates are circular
+    WORD logoX, logoY;
+    getNextPosition(&logoX, &logoY);
+
     BltBitMap(ctx.logoBitmap, 0, 0,
               ctx.screenBitmaps[ctx.currentBufferIndex],
-              SHOWLOGO_DAWN_X_POS, SHOWLOGO_DAWN_Y_POS,
+              logoX, logoY,
               SHOWLOGO_DAWN_WIDTH, SHOWLOGO_DAWN_HEIGHT,
               0xC0, 0xff, 0);
 
