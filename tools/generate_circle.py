@@ -11,21 +11,35 @@ import argparse
 
 def generate_circle_coordinates(radius, resolution):
     """
-    Generate circle coordinates with given radius and resolution.
+    Generate two circles that meet at (0,0).
+    Right circle: centered at (radius, 0), starts at (0,0), goes clockwise
+    Left circle: centered at (-radius, 0), starts at (0,0), goes counter-clockwise
 
     Args:
         radius: Circle radius in pixels
-        resolution: Number of points around the circle
+        resolution: Number of points per circle (total points = 2 * resolution)
 
     Returns:
-        List of (x, y) tuples representing circle coordinates
+        List of (x, y) tuples representing the path through both circles
     """
     coordinates = []
 
+    # Right circle: center at (radius/2, 0), circle radius is radius/2
+    # Start at (0, 0) which is at angle π (180°)
+    # Go clockwise (decreasing angle) for a full circle
+    for i in range(resolution):
+        angle = math.pi - (2 * math.pi * i) / resolution
+        x = radius/2 + (radius/2) * math.cos(angle)
+        y = (radius/2) * math.sin(angle)
+        coordinates.append((x, y))
+
+    # Left circle: center at (-radius/2, 0), circle radius is radius/2
+    # Start at (0, 0) which is at angle 0 (0°)
+    # Go counter-clockwise (negative y direction, increasing angle)
     for i in range(resolution):
         angle = (2 * math.pi * i) / resolution
-        x = radius * math.cos(angle)
-        y = radius * math.sin(angle)
+        x = -radius/2 + (radius/2) * math.cos(angle)
+        y = (radius/2) * math.sin(angle)
         coordinates.append((x, y))
 
     return coordinates
@@ -37,22 +51,22 @@ def generate_c_struct(radius, resolution, struct_name="circleCoords"):
 
     Args:
         radius: Circle radius in pixels
-        resolution: Number of points around the circle
+        resolution: Number of points per circle (total points = 2 * resolution)
         struct_name: Name of the C struct variable
     """
     coords = generate_circle_coordinates(radius, resolution)
 
     # Generate C code
     output = []
-    output.append("// Generated circle coordinates")
-    output.append(f"// Radius: {radius} pixels, Resolution: {resolution} points")
+    output.append("// Generated figure-8 path (two circles meeting at origin)")
+    output.append(f"// Radius: {radius} pixels, Resolution: {resolution} points per circle")
     output.append("")
     output.append("struct CircleCoord {")
     output.append("    WORD x;")
     output.append("    WORD y;")
     output.append("};")
     output.append("")
-    output.append(f"static const struct CircleCoord {struct_name}[{resolution}] = {{")
+    output.append(f"static const struct CircleCoord {struct_name}[{len(coords)}] = {{")
 
     for i, (x, y) in enumerate(coords):
         comma = "," if i < len(coords) - 1 else ""
@@ -60,7 +74,7 @@ def generate_c_struct(radius, resolution, struct_name="circleCoords"):
 
     output.append("};")
     output.append("")
-    output.append(f"#define CIRCLE_COORDS_COUNT {resolution}")
+    output.append(f"#define CIRCLE_COORDS_COUNT {len(coords)}")
 
     return "\n".join(output)
 
@@ -77,7 +91,7 @@ def main():
     parser.add_argument(
         "resolution",
         type=int,
-        help="Number of points around the circle"
+        help="Number of points per circle (total points = 2 * resolution)"
     )
     parser.add_argument(
         "-n", "--name",
