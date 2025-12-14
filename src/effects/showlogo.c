@@ -13,6 +13,7 @@
 #include "gfx/stars.h"
 #include "gfx/graphicscontroller.h"
 #include "gfx/rotation.h"
+#include "gfx/zoom.h"
 #include "gfx/chunkyconverter.h"
 #include "gfx/movementcontroller.h"
 
@@ -53,6 +54,9 @@ UWORD fsmShowLogo(void) {
             break;
         case SHOWLOGO_PREPARE_ROTATION:
             ctx.state = prepareRotation();
+            break;
+        case SHOWLOGO_PREPARE_ZOOM:
+            ctx.state = prepareZoom();
             break;
         case SHOWLOGO_DELAY:
             Delay(TWO_SECONDS);
@@ -271,6 +275,12 @@ UWORD prepareRotation(void) {
     PlanarToChunkyAsm(&p2c);
 
     rotateAll();
+    return SHOWLOGO_PREPARE_ZOOM;
+}
+
+//----------------------------------------
+UWORD prepareZoom(void) {
+    // TODO: Implement zoom preparation
     return SHOWLOGO_DELAY;
 }
 
