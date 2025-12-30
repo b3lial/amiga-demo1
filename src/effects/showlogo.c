@@ -273,7 +273,7 @@ UWORD prepareRotation(void) {
     p2c.startY = 0;
     p2c.width = SHOWLOGO_DAWN_WIDTH;
     p2c.height = SHOWLOGO_DAWN_HEIGHT;
-    p2c.chunkybuffer = getSourceBuffer();
+    p2c.chunkybuffer = getRotationSourceBuffer();
     PlanarToChunkyAsm(&p2c);
 
     rotateAll();
@@ -298,7 +298,7 @@ UWORD performRotation() {
     struct BitMap *bitmap;
     ULONG bytesPerRow;
 
-    convertChunkyToBitmap(getDestBuffer(i), ctx.logoBitmap);
+    convertChunkyToBitmap(getRotationDestinationBuffer(i), ctx.logoBitmap);
 
     switchScreenData();
 

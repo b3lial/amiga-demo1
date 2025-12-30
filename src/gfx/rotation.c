@@ -299,10 +299,10 @@ void exitRotationEngine(void) {
     }
 }
 
-UBYTE *getSourceBuffer(void) {
+UBYTE *getRotationSourceBuffer(void) {
     return ctx.srcBuffer;
 }
 
-UBYTE *getDestBuffer(UBYTE index) {
+UBYTE *getRotationDestinationBuffer(UBYTE index) {
     return ctx.destBuffer[index];
 }

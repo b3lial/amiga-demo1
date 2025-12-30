@@ -68,3 +68,64 @@ void exitZoomEngine(void) {
     ctx.bitmapWidth = 0;
     ctx.bitmapHeight = 0;
 }
+
+//----------------------------------------
+void zoomBitmap(UBYTE *source, WORD zoomFactor, UBYTE index) {
+    UWORD destX, destY;
+    UWORD srcX, srcY;
+    UWORD srcIndex, destIndex;
+    UWORD destWidth, destHeight;
+    UWORD destOffsetX, destOffsetY;
+    UBYTE *dest;
+    WORD invZoomFactor;
+
+    // Validate zoom factor (scale down only: 0 < zoomFactor <= 1.0 in fixed-point)
+    if (zoomFactor <= 0 || zoomFactor > INTTOFIX(1)) {
+        writeLogFS("Error: Invalid zoom factor %d (must be > 0 and <= %d)\n", zoomFactor, INTTOFIX(1));
+        return;
+    }
+
+    if (!source || index >= ctx.zoomSteps) {
+        return;
+    }
+
+    dest = ctx.destBuffer[index];
+    if (!dest) {
+        return;
+    }
+
+    // Calculate destination dimensions (scaled down) using fixed-point multiplication
+    destWidth = FIXTOINT(ctx.bitmapWidth * zoomFactor);
+    destHeight = FIXTOINT(ctx.bitmapHeight * zoomFactor);
+
+    // Calculate offset to center the zoomed image
+    destOffsetX = (ctx.bitmapWidth - destWidth) / 2;
+    destOffsetY = (ctx.bitmapHeight - destHeight) / 2;
+
+    // Calculate inverse zoom factor for mapping dest -> src
+    invZoomFactor = FIXDIV(INTTOFIX(1), zoomFactor);
+
+    // Scale down the bitmap using nearest neighbor sampling
+    for (destY = 0; destY < destHeight; destY++) {
+        for (destX = 0; destX < destWidth; destX++) {
+            // Map destination pixel back to source pixel using fixed-point
+            srcX = FIXTOINT(destX * invZoomFactor);
+            srcY = FIXTOINT(destY * invZoomFactor);
+
+            // Bounds check
+            if (srcX < ctx.bitmapWidth && srcY < ctx.bitmapHeight) {
+                srcIndex = srcX + srcY * ctx.bitmapWidth;
+                destIndex = (destX + destOffsetX) + (destY + destOffsetY) * ctx.bitmapWidth;
+                dest[destIndex] = source[srcIndex];
+            }
+        }
+    }
+}
+
+//----------------------------------------
+UBYTE* getZoomDestinationBuffer(UBYTE index) {
+    if (index >= ctx.zoomSteps) {
+        return NULL;
+    }
+    return ctx.destBuffer[index];
+}
