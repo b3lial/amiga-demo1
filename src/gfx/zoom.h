@@ -1,6 +1,9 @@
 #ifndef ZOOM_H
 #define ZOOM_H
 
-// Empty zoom header - to be implemented
+#include <exec/types.h>
+
+BOOL startZoomEngine(UBYTE zoomSteps, USHORT bitmapWidth, USHORT bitmapHeight);
+void exitZoomEngine(void);
 
 #endif  // ZOOM_H

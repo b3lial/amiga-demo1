@@ -46,7 +46,7 @@ static inline WORD safe_fixdiv(WORD x, WORD y) {
 }
 
 #define DEGREE_RESOLUTION 10
-#define DEST_BUFFER_SIZE 36
+#define MAX_ROTATION_STEPS 36
 
 #define MAX_BITMAP_WIDTH 320
 #define MAX_BITMAP_HEIGHT 256

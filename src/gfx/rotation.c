@@ -8,7 +8,7 @@
 
 struct RotationEngineContext {
     UBYTE *srcBuffer;
-    UBYTE *destBuffer[DEST_BUFFER_SIZE];
+    UBYTE *destBuffer[MAX_ROTATION_STEPS];
     UBYTE rotationSteps;
     UWORD bitmapWidth;
     UWORD bitmapHeight;
@@ -134,7 +134,7 @@ BOOL startRotationEngine(UBYTE rs, USHORT bw, USHORT bh) {
         return FALSE;
     }
 
-    if (ctx.rotationSteps == 0 || ctx.rotationSteps > DEST_BUFFER_SIZE) {
+    if (ctx.rotationSteps == 0 || ctx.rotationSteps > MAX_ROTATION_STEPS) {
         writeLogFS("Error: Invalid destination buffer size %d\n", ctx.rotationSteps);
         return FALSE;
     }
@@ -291,7 +291,7 @@ void exitRotationEngine(void) {
         ctx.srcBuffer = NULL;
     }
 
-    for (i = 0; i < DEST_BUFFER_SIZE; i++) {
+    for (i = 0; i < MAX_ROTATION_STEPS; i++) {
         if (ctx.destBuffer[i]) {
             FreeVec(ctx.destBuffer[i]);
             ctx.destBuffer[i] = NULL;

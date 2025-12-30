@@ -217,6 +217,8 @@ void exitShowLogo(void) {
     }
 
     exitRotationEngine();
+
+    exitZoomEngine();
 }
 
 //----------------------------------------
@@ -280,7 +282,12 @@ UWORD prepareRotation(void) {
 
 //----------------------------------------
 UWORD prepareZoom(void) {
-    // TODO: Implement zoom preparation
+    // allocate zoom engine buffers
+    if (!startZoomEngine(SHOWLOGO_ROTATION_STEPS, SHOWLOGO_DAWN_WIDTH, SHOWLOGO_DAWN_HEIGHT)) {
+        return SHOWLOGO_SHUTDOWN;
+    }
+
+    // TODO: Implement zoom calculation (similar to rotateAll())
     return SHOWLOGO_DELAY;
 }
 
