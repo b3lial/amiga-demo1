@@ -283,8 +283,18 @@ UWORD prepareRotation(void) {
 //----------------------------------------
 UWORD prepareZoom(void) {
     UBYTE destinationBufferIndex = 0;
-    UWORD scaleDownFactors[] = {FLOATTOFIX(1.0), FLOATTOFIX(0.9), FLOATTOFIX(0.8), FLOATTOFIX(0.7),
-        FLOATTOFIX(0.6), FLOATTOFIX(0.7), FLOATTOFIX(0.8), FLOATTOFIX(0.9)
+    UWORD scaleDownFactors[] = {
+        // Scale down (18 steps: 1.0 -> 0.3)
+        FLOATTOFIX(1.0),   FLOATTOFIX(0.96),  FLOATTOFIX(0.92),  FLOATTOFIX(0.88),
+        FLOATTOFIX(0.84),  FLOATTOFIX(0.80),  FLOATTOFIX(0.76),  FLOATTOFIX(0.72),
+        FLOATTOFIX(0.68),  FLOATTOFIX(0.64),  FLOATTOFIX(0.60),  FLOATTOFIX(0.56),
+        FLOATTOFIX(0.52),  FLOATTOFIX(0.48),  FLOATTOFIX(0.44),  FLOATTOFIX(0.40),
+        FLOATTOFIX(0.36),  FLOATTOFIX(0.32),
+        // Scale up (18 steps: 0.32 -> 1.0)
+        FLOATTOFIX(0.36),  FLOATTOFIX(0.40),  FLOATTOFIX(0.44),  FLOATTOFIX(0.48),
+        FLOATTOFIX(0.52),  FLOATTOFIX(0.56),  FLOATTOFIX(0.60),  FLOATTOFIX(0.64),
+        FLOATTOFIX(0.68),  FLOATTOFIX(0.72),  FLOATTOFIX(0.76),  FLOATTOFIX(0.80),
+        FLOATTOFIX(0.84),  FLOATTOFIX(0.88),  FLOATTOFIX(0.92),  FLOATTOFIX(0.96)
     };
     UWORD scaleDownFactor = 0;
 
