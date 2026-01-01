@@ -296,7 +296,7 @@ UWORD prepareZoom(void) {
     // apply zoom factors to the rotation image sequence
     for(; destinationBufferIndex<SHOWLOGO_ROTATION_STEPS; destinationBufferIndex++)
     {
-        scaleDownFactor = scaleDownFactors[destinationBufferIndex%sizeof(scaleDownFactors)];
+        scaleDownFactor = scaleDownFactors[destinationBufferIndex % (sizeof(scaleDownFactors) / sizeof(scaleDownFactors[0]))];
         zoomBitmap(getRotationDestinationBuffer(destinationBufferIndex), 
                 scaleDownFactor, destinationBufferIndex
         );
@@ -312,7 +312,7 @@ UWORD performRotation() {
     struct BitMap *bitmap;
     ULONG bytesPerRow;
 
-    convertChunkyToBitmap(getRotationDestinationBuffer(i), ctx.logoBitmap);
+    convertChunkyToBitmap(getZoomDestinationBuffer(i), ctx.logoBitmap);
 
     switchScreenData();
 
