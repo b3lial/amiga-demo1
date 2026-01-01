@@ -50,7 +50,7 @@ UWORD prepareZoom(void);
 UWORD performDelay(void);
 UWORD performRotation(void);
 UWORD performZoom(void);
-UWORD paint(UBYTE *sourceChunkyBuffer);
+UWORD paint(UBYTE *sourceChunkyBuffer, BOOL useStaticPosition);
 void switchScreenData(void);
 void convertChunkyToBitmap(UBYTE* sourceChunky, struct BitMap* destPlanar);
 

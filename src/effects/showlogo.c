@@ -318,13 +318,16 @@ UWORD prepareZoom(void) {
 }
 
 //----------------------------------------
-UWORD paint(UBYTE *sourceChunkyBuffer) {
+UWORD paint(UBYTE *sourceChunkyBuffer, BOOL useStaticPosition) {
     UWORD p;
     struct BitMap *bitmap;
     ULONG bytesPerRow;
     WORD logoX, logoY;
 
-    convertChunkyToBitmap(sourceChunkyBuffer, ctx.logoBitmap);
+    // Convert chunky buffer to bitmap if provided
+    if (sourceChunkyBuffer) {
+        convertChunkyToBitmap(sourceChunkyBuffer, ctx.logoBitmap);
+    }
 
     switchScreenData();
 
@@ -335,51 +338,14 @@ UWORD paint(UBYTE *sourceChunkyBuffer) {
         memset(bitmap->Planes[p], 0, bytesPerRow * (SHOWLOGO_SCREEN_HEIGHT + SHOWLOGO_SCREEN_BORDER));
     }
 
-    // Fetch next position along the circular path for the rotating logo.
-    // The movement controller returns blit coordinates (upper-left corner)
-    // so the logo's center follows the circular trajectory.
-    getNextPosition(&logoX, &logoY);
-
-    BltBitMap(ctx.logoBitmap, 0, 0,
-              ctx.screenBitmaps[ctx.currentBufferIndex],
-              logoX, logoY,
-              SHOWLOGO_DAWN_WIDTH, SHOWLOGO_DAWN_HEIGHT,
-              0xC0, 0xff, 0);
-
-    moveStars(AMOUNT_OF_STARS);
-    paintStars(&ctx.logoscreens[ctx.currentBufferIndex]->RastPort, 42, 70, SHOWLOGO_SCREEN_WIDTH + SHOWLOGO_SCREEN_BORDER,
-                SHOWLOGO_SCREEN_HEIGHT + SHOWLOGO_SCREEN_BORDER);
-
-    WaitTOF();
-    WaitTOF();
-    WaitTOF();
-    ScreenToFront(ctx.logoscreens[ctx.currentBufferIndex]);
-
-    // Return current position index after increment (from getNextPosition)
-    return getCurrentPositionIndex();
-}
-
-//----------------------------------------
-UWORD performDelay() {
-    static UWORD frameCounter = 0;
-    UWORD p;
-    struct BitMap *bitmap;
-    ULONG bytesPerRow;
-    WORD logoX, logoY;
-
-    switchScreenData();
-
-    // Clear the entire screen bitmap before drawing
-    bitmap = ctx.screenBitmaps[ctx.currentBufferIndex];
-    bytesPerRow = bitmap->BytesPerRow;
-    for (p = 0; p < bitmap->Depth; p++) {
-        memset(bitmap->Planes[p], 0, bytesPerRow * (SHOWLOGO_SCREEN_HEIGHT + SHOWLOGO_SCREEN_BORDER));
+    // Get logo position - either static (initial) or moving (next along path)
+    if (useStaticPosition) {
+        getInitialPosition(&logoX, &logoY);
+    } else {
+        getNextPosition(&logoX, &logoY);
     }
 
-    // Get the initial position from movement controller (consistent with circular path)
-    getInitialPosition(&logoX, &logoY);
-
-    // Blit the static logo
+    // Blit the logo
     BltBitMap(ctx.logoBitmap, 0, 0,
               ctx.screenBitmaps[ctx.currentBufferIndex],
               logoX, logoY,
@@ -396,6 +362,16 @@ UWORD performDelay() {
     WaitTOF();
     WaitTOF();
     ScreenToFront(ctx.logoscreens[ctx.currentBufferIndex]);
+
+    // Return current position index
+    return getCurrentPositionIndex();
+}
+
+//----------------------------------------
+UWORD performDelay() {
+    static UWORD frameCounter = 0;
+
+    paint(NULL, TRUE);
 
     frameCounter++;
 
@@ -414,7 +390,7 @@ UWORD performRotation() {
     static UWORD frameCounter = 0;
     UWORD positionIndex;
 
-    positionIndex = paint(getRotationDestinationBuffer(i));
+    positionIndex = paint(getRotationDestinationBuffer(i), FALSE);
 
     i = (i < SHOWLOGO_ROTATION_STEPS - 1) ? i + 1 : 0;
     frameCounter++;
@@ -432,7 +408,7 @@ UWORD performRotation() {
 UWORD performZoom() {
     static UBYTE i = 1;
 
-    paint(getZoomDestinationBuffer(i));
+    paint(getZoomDestinationBuffer(i), FALSE);
 
     i = (i < SHOWLOGO_ROTATION_STEPS - 1) ? i + 1 : 0;
     return SHOWLOGO_ZOOM;
