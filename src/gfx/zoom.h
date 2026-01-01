@@ -7,7 +7,8 @@
 
 BOOL startZoomEngine(UBYTE zoomSteps, USHORT bitmapWidth, USHORT bitmapHeight);
 void exitZoomEngine(void);
-void zoomBitmap(UBYTE *source, WORD zoomFactor, UBYTE index);
+// Note: fixZoomFactor is in fixed-point format (use FLOATTOFIX() or INTTOFIX() to convert)
+void zoomBitmap(UBYTE *source, WORD fixZoomFactor, UBYTE index);
 UBYTE* getZoomDestinationBuffer(UBYTE index);
 
 #endif  // ZOOM_H

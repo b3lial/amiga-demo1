@@ -282,12 +282,26 @@ UWORD prepareRotation(void) {
 
 //----------------------------------------
 UWORD prepareZoom(void) {
+    UBYTE destinationBufferIndex = 0;
+    UWORD scaleDownFactors[] = {FLOATTOFIX(1.0), FLOATTOFIX(0.9), FLOATTOFIX(0.8), FLOATTOFIX(0.7),
+        FLOATTOFIX(0.6), FLOATTOFIX(0.7), FLOATTOFIX(0.8), FLOATTOFIX(0.9)
+    };
+    UWORD scaleDownFactor = 0;
+
     // allocate zoom engine buffers
     if (!startZoomEngine(SHOWLOGO_ROTATION_STEPS, SHOWLOGO_DAWN_WIDTH, SHOWLOGO_DAWN_HEIGHT)) {
         return SHOWLOGO_SHUTDOWN;
     }
 
-    // TODO: Implement zoom calculation (similar to rotateAll())
+    // apply zoom factors to the rotation image sequence
+    for(; destinationBufferIndex<SHOWLOGO_ROTATION_STEPS; destinationBufferIndex++)
+    {
+        scaleDownFactor = scaleDownFactors[destinationBufferIndex%sizeof(scaleDownFactors)];
+        zoomBitmap(getRotationDestinationBuffer(destinationBufferIndex), 
+                scaleDownFactor, destinationBufferIndex
+        );
+    }
+
     return SHOWLOGO_DELAY;
 }
 

@@ -70,18 +70,18 @@ void exitZoomEngine(void) {
 }
 
 //----------------------------------------
-void zoomBitmap(UBYTE *source, WORD zoomFactor, UBYTE index) {
+void zoomBitmap(UBYTE *source, WORD fixZoomFactor, UBYTE index) {
     UWORD destX, destY;
     UWORD srcX, srcY;
     UWORD srcIndex, destIndex;
     UWORD destWidth, destHeight;
     UWORD destOffsetX, destOffsetY;
     UBYTE *dest;
-    WORD invZoomFactor;
+    WORD fixInvZoomFactor;
 
-    // Validate zoom factor (scale down only: 0 < zoomFactor <= 1.0 in fixed-point)
-    if (zoomFactor <= 0 || zoomFactor > INTTOFIX(1)) {
-        writeLogFS("Error: Invalid zoom factor %d (must be > 0 and <= %d)\n", zoomFactor, INTTOFIX(1));
+    // Validate zoom factor (scale down only: 0 < fixZoomFactor <= 1.0 in fixed-point)
+    if (fixZoomFactor <= 0 || fixZoomFactor > INTTOFIX(1)) {
+        writeLog("Error: Invalid zoom factor (must be > 0.0 and <= 1.0)\n");
         return;
     }
 
@@ -94,23 +94,23 @@ void zoomBitmap(UBYTE *source, WORD zoomFactor, UBYTE index) {
         return;
     }
 
-    // Calculate destination dimensions (scaled down) using fixed-point multiplication
-    destWidth = FIXTOINT(ctx.bitmapWidth * zoomFactor);
-    destHeight = FIXTOINT(ctx.bitmapHeight * zoomFactor);
+    // Calculate destination dimensions (scaled down)
+    destWidth = FIXTOINT(FIXMULT(INTTOFIX(ctx.bitmapWidth), fixZoomFactor));
+    destHeight = FIXTOINT(FIXMULT(INTTOFIX(ctx.bitmapHeight), fixZoomFactor));
 
     // Calculate offset to center the zoomed image
     destOffsetX = (ctx.bitmapWidth - destWidth) / 2;
     destOffsetY = (ctx.bitmapHeight - destHeight) / 2;
 
     // Calculate inverse zoom factor for mapping dest -> src
-    invZoomFactor = FIXDIV(INTTOFIX(1), zoomFactor);
+    fixInvZoomFactor = safe_fixdiv(INTTOFIX(1), fixZoomFactor);
 
     // Scale down the bitmap using nearest neighbor sampling
     for (destY = 0; destY < destHeight; destY++) {
         for (destX = 0; destX < destWidth; destX++) {
             // Map destination pixel back to source pixel using fixed-point
-            srcX = FIXTOINT(destX * invZoomFactor);
-            srcY = FIXTOINT(destY * invZoomFactor);
+            srcX = FIXTOINT(FIXMULT(INTTOFIX(destX), fixInvZoomFactor));
+            srcY = FIXTOINT(FIXMULT(INTTOFIX(destY), fixInvZoomFactor));
 
             // Bounds check
             if (srcX < ctx.bitmapWidth && srcY < ctx.bitmapHeight) {
