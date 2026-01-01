@@ -316,13 +316,12 @@ UWORD prepareZoom(void) {
 }
 
 //----------------------------------------
-UWORD performRotation() {
-    static UBYTE i = 1;
+void paint(UBYTE *sourceChunkyBuffer) {
     UWORD p;
     struct BitMap *bitmap;
     ULONG bytesPerRow;
 
-    convertChunkyToBitmap(getZoomDestinationBuffer(i), ctx.logoBitmap);
+    convertChunkyToBitmap(sourceChunkyBuffer, ctx.logoBitmap);
 
     switchScreenData();
 
@@ -353,6 +352,13 @@ UWORD performRotation() {
     WaitTOF();
     WaitTOF();
     ScreenToFront(ctx.logoscreens[ctx.currentBufferIndex]);
+}
+
+//----------------------------------------
+UWORD performRotation() {
+    static UBYTE i = 1;
+
+    paint(getRotationDestinationBuffer(i));
 
     i = (i < SHOWLOGO_ROTATION_STEPS - 1) ? i + 1 : 0;
     return SHOWLOGO_ROTATE;
