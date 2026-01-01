@@ -163,6 +163,7 @@ static const struct CircleCoord circleCoords[144] = {
 // Function declarations
 void initMovementController(UWORD screenWidth, UWORD screenHeight, UWORD bitmapWidth, UWORD bitmapHeight);
 void getNextPosition(WORD *x, WORD *y);
+void getInitialPosition(WORD *x, WORD *y);
 UWORD getCurrentPositionIndex(void);
 
 #endif

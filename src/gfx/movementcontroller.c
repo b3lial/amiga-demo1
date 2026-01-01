@@ -46,6 +46,18 @@ void getNextPosition(WORD *x, WORD *y) {
 }
 
 //----------------------------------------
+void getInitialPosition(WORD *x, WORD *y) {
+    // Get the initial circle coordinates (index 0)
+    WORD circleX = circleCoords[0].x;
+    WORD circleY = circleCoords[0].y;
+
+    // Convert from fixed point and add to screen center
+    // Subtract half bitmap dimensions so the bitmap center is at the circle position
+    *x = ctx.centerX + FIXTOINT(circleX) - ctx.bitmapHalfWidth;
+    *y = ctx.centerY - FIXTOINT(circleY) - ctx.bitmapHalfHeight;
+}
+
+//----------------------------------------
 UWORD getCurrentPositionIndex(void) {
     return ctx.currentIndex;
 }

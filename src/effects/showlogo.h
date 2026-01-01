@@ -47,6 +47,7 @@ UWORD prepareZoom(void);
  * The chunky2planar conversion needs to be done per frame because otherwise
  * chip memory would be exhausted easily.
  */
+UWORD performDelay(void);
 UWORD performRotation(void);
 UWORD performZoom(void);
 UWORD paint(UBYTE *sourceChunkyBuffer);

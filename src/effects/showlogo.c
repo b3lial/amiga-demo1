@@ -59,8 +59,7 @@ UWORD fsmShowLogo(void) {
             ctx.state = prepareZoom();
             break;
         case SHOWLOGO_DELAY:
-            Delay(TWO_SECONDS);
-            ctx.state = SHOWLOGO_ROTATE;
+            ctx.state = performDelay();
             break;
         case SHOWLOGO_ROTATE:
             ctx.state = performRotation();
@@ -358,6 +357,55 @@ UWORD paint(UBYTE *sourceChunkyBuffer) {
 
     // Return current position index after increment (from getNextPosition)
     return getCurrentPositionIndex();
+}
+
+//----------------------------------------
+UWORD performDelay() {
+    static UWORD frameCounter = 0;
+    UWORD p;
+    struct BitMap *bitmap;
+    ULONG bytesPerRow;
+    WORD logoX, logoY;
+
+    switchScreenData();
+
+    // Clear the entire screen bitmap before drawing
+    bitmap = ctx.screenBitmaps[ctx.currentBufferIndex];
+    bytesPerRow = bitmap->BytesPerRow;
+    for (p = 0; p < bitmap->Depth; p++) {
+        memset(bitmap->Planes[p], 0, bytesPerRow * (SHOWLOGO_SCREEN_HEIGHT + SHOWLOGO_SCREEN_BORDER));
+    }
+
+    // Get the initial position from movement controller (consistent with circular path)
+    getInitialPosition(&logoX, &logoY);
+
+    // Blit the static logo
+    BltBitMap(ctx.logoBitmap, 0, 0,
+              ctx.screenBitmaps[ctx.currentBufferIndex],
+              logoX, logoY,
+              SHOWLOGO_DAWN_WIDTH, SHOWLOGO_DAWN_HEIGHT,
+              0xC0, 0xff, 0);
+
+    // Animate the starfield background
+    moveStars(AMOUNT_OF_STARS);
+    paintStars(&ctx.logoscreens[ctx.currentBufferIndex]->RastPort, 42, 70,
+               SHOWLOGO_SCREEN_WIDTH + SHOWLOGO_SCREEN_BORDER,
+               SHOWLOGO_SCREEN_HEIGHT + SHOWLOGO_SCREEN_BORDER);
+
+    WaitTOF();
+    WaitTOF();
+    WaitTOF();
+    ScreenToFront(ctx.logoscreens[ctx.currentBufferIndex]);
+
+    frameCounter++;
+
+    // After 1 second, transition to rotation
+    if (frameCounter >= ONE_SECOND) {
+        frameCounter = 0;
+        return SHOWLOGO_ROTATE;
+    }
+
+    return SHOWLOGO_DELAY;
 }
 
 //----------------------------------------
