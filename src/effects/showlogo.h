@@ -10,7 +10,8 @@ enum ShowLogoState {
     SHOWLOGO_PREPARE_ZOOM = 3,
     SHOWLOGO_DELAY = 4,
     SHOWLOGO_ROTATE = 5,
-    SHOWLOGO_SHUTDOWN = 6
+    SHOWLOGO_ZOOM = 6,
+    SHOWLOGO_SHUTDOWN = 7
 };
 
 #define SHOWLOGO_ROTATION_STEPS 36
@@ -31,6 +32,7 @@ enum ShowLogoState {
 #define SHOWLOGO_DAWN_Y_POS \
     (((SHOWLOGO_SCREEN_HEIGHT - SHOWLOGO_DAWN_HEIGHT) / 2) + SHOWLOGO_SCREEN_BORDER)
 
+#define ONE_SECOND 50
 #define TWO_SECONDS 100
 #define AMOUNT_OF_STARS 70
 
@@ -46,6 +48,8 @@ UWORD prepareZoom(void);
  * chip memory would be exhausted easily.
  */
 UWORD performRotation(void);
+UWORD performZoom(void);
+UWORD paint(UBYTE *sourceChunkyBuffer);
 void switchScreenData(void);
 void convertChunkyToBitmap(UBYTE* sourceChunky, struct BitMap* destPlanar);
 

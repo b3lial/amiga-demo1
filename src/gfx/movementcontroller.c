@@ -45,3 +45,8 @@ void getNextPosition(WORD *x, WORD *y) {
     ctx.currentIndex = (ctx.currentIndex + 1) % CIRCLE_COORDS_COUNT;
 }
 
+//----------------------------------------
+UWORD getCurrentPositionIndex(void) {
+    return ctx.currentIndex;
+}
+

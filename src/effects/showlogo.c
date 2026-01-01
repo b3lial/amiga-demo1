@@ -65,6 +65,9 @@ UWORD fsmShowLogo(void) {
         case SHOWLOGO_ROTATE:
             ctx.state = performRotation();
             break;
+        case SHOWLOGO_ZOOM:
+            ctx.state = performZoom();
+            break;
         case SHOWLOGO_SHUTDOWN:
             exitShowLogo();
             return FSM_STOP;
@@ -284,13 +287,13 @@ UWORD prepareRotation(void) {
 UWORD prepareZoom(void) {
     UBYTE destinationBufferIndex = 0;
     UWORD scaleDownFactors[] = {
-        // Scale down (18 steps: 1.0 -> 0.3)
+        // Scale down (18 steps: 1.0 -> 0.36)
         FLOATTOFIX(1.0),   FLOATTOFIX(0.96),  FLOATTOFIX(0.92),  FLOATTOFIX(0.88),
         FLOATTOFIX(0.84),  FLOATTOFIX(0.80),  FLOATTOFIX(0.76),  FLOATTOFIX(0.72),
         FLOATTOFIX(0.68),  FLOATTOFIX(0.64),  FLOATTOFIX(0.60),  FLOATTOFIX(0.56),
         FLOATTOFIX(0.52),  FLOATTOFIX(0.48),  FLOATTOFIX(0.44),  FLOATTOFIX(0.40),
-        FLOATTOFIX(0.36),  FLOATTOFIX(0.32),
-        // Scale up (18 steps: 0.32 -> 1.0)
+        FLOATTOFIX(0.36),  FLOATTOFIX(0.36),
+        // Scale up (18 steps: 0.36 -> 1.0)
         FLOATTOFIX(0.36),  FLOATTOFIX(0.40),  FLOATTOFIX(0.44),  FLOATTOFIX(0.48),
         FLOATTOFIX(0.52),  FLOATTOFIX(0.56),  FLOATTOFIX(0.60),  FLOATTOFIX(0.64),
         FLOATTOFIX(0.68),  FLOATTOFIX(0.72),  FLOATTOFIX(0.76),  FLOATTOFIX(0.80),
@@ -316,10 +319,11 @@ UWORD prepareZoom(void) {
 }
 
 //----------------------------------------
-void paint(UBYTE *sourceChunkyBuffer) {
+UWORD paint(UBYTE *sourceChunkyBuffer) {
     UWORD p;
     struct BitMap *bitmap;
     ULONG bytesPerRow;
+    WORD logoX, logoY;
 
     convertChunkyToBitmap(sourceChunkyBuffer, ctx.logoBitmap);
 
@@ -335,7 +339,6 @@ void paint(UBYTE *sourceChunkyBuffer) {
     // Fetch next position along the circular path for the rotating logo.
     // The movement controller returns blit coordinates (upper-left corner)
     // so the logo's center follows the circular trajectory.
-    WORD logoX, logoY;
     getNextPosition(&logoX, &logoY);
 
     BltBitMap(ctx.logoBitmap, 0, 0,
@@ -352,16 +355,39 @@ void paint(UBYTE *sourceChunkyBuffer) {
     WaitTOF();
     WaitTOF();
     ScreenToFront(ctx.logoscreens[ctx.currentBufferIndex]);
+
+    // Return current position index after increment (from getNextPosition)
+    return getCurrentPositionIndex();
 }
 
 //----------------------------------------
 UWORD performRotation() {
     static UBYTE i = 1;
+    static UWORD frameCounter = 0;
+    UWORD positionIndex;
 
-    paint(getRotationDestinationBuffer(i));
+    positionIndex = paint(getRotationDestinationBuffer(i));
 
     i = (i < SHOWLOGO_ROTATION_STEPS - 1) ? i + 1 : 0;
+    frameCounter++;
+
+    // After a few seconds of rotation AND when back at starting position, switch to zoom
+    if ((frameCounter >= ONE_SECOND * 2) && (positionIndex == 0)) {
+        frameCounter = 0;
+        return SHOWLOGO_ZOOM;
+    }
+
     return SHOWLOGO_ROTATE;
+}
+
+//----------------------------------------
+UWORD performZoom() {
+    static UBYTE i = 1;
+
+    paint(getZoomDestinationBuffer(i));
+
+    i = (i < SHOWLOGO_ROTATION_STEPS - 1) ? i + 1 : 0;
+    return SHOWLOGO_ZOOM;
 }
 
 //----------------------------------------
