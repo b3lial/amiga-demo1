@@ -26,7 +26,7 @@ struct ShowLogoContext {
     UWORD *color0;
     UBYTE currentBufferIndex;  // 0 or 1
     struct Task *mainTask;     // Main task pointer for signaling
-    struct Task *bgTask;       // Background preparation task
+    struct Task *bgTask;       // Background rotation and zoom preparation task
 };
 
 static struct ShowLogoContext ctx = {
@@ -46,8 +46,14 @@ __far extern struct Custom custom;
 #define SIGF_PREPARATION_DONE (1L << 16)  // Signal bit for background task completion
 
 //----------------------------------------
-// Background task entry point for preparing rotation and zoom
-static void preparationTask(void) {
+/**
+ * Background task entry point for preparing rotation and zoom
+ * - Allocates memory for rotation bitmaps 
+ * - Allocates memory for zoom bitmaps
+ * - Generate bitmaps which contain the rotating logo
+ * - Generate bitmaps which contain the rotating and scaled bitmaps 
+ */ 
+static void prepareRotationAndZoomTask(void) {
     struct p2cStruct p2c = {0};
     UBYTE destinationBufferIndex = 0;
     UWORD scaleDownFactors[] = {
@@ -68,13 +74,12 @@ static void preparationTask(void) {
     // Lower our priority to ensure main task gets preferential CPU time
     SetTaskPri(FindTask(NULL), -5);
 
-    // Step 1: Prepare rotation
+    //--------- Step 1: Prepare rotation ---------
     if (!startRotationEngine(SHOWLOGO_ROTATION_STEPS, SHOWLOGO_DAWN_WIDTH, SHOWLOGO_DAWN_HEIGHT)) {
-        Signal(ctx.mainTask, SIGF_PREPARATION_DONE);
-        return;
+        goto __exit_prepare_rotation_and_zoom_task;
     }
 
-    // Convert planar buffer to chunky
+    // Convert vanilla planar logo to chunky representation
     p2c.bmap = ctx.logoBitmap;
     p2c.startX = 0;
     p2c.startY = 0;
@@ -83,12 +88,12 @@ static void preparationTask(void) {
     p2c.chunkybuffer = getRotationSourceBuffer();
     PlanarToChunkyAsm(&p2c);
 
+    // Now that we have the vanilla logo in its chunky format, we can use it to generate rotated versions
     rotateAll();
 
-    // Step 2: Prepare zoom
+    //--------- Step 2: Prepare zoom ---------
     if (!startZoomEngine(SHOWLOGO_ROTATION_STEPS, SHOWLOGO_DAWN_WIDTH, SHOWLOGO_DAWN_HEIGHT)) {
-        Signal(ctx.mainTask, SIGF_PREPARATION_DONE);
-        return;
+        goto __exit_prepare_rotation_and_zoom_task;
     }
 
     // Apply zoom factors to the rotation image sequence
@@ -103,7 +108,8 @@ static void preparationTask(void) {
         }
     }
 
-    // Signal completion to main task
+__exit_prepare_rotation_and_zoom_task:
+    // Signal completion to main task (whether successful or failed)
     Signal(ctx.mainTask, SIGF_PREPARATION_DONE);
 }
 
@@ -120,11 +126,8 @@ UWORD fsmShowLogo(void) {
         case SHOWLOGO_STATIC:
             ctx.state = fadeInFromWhite();
             break;
-        case SHOWLOGO_PREPARE_ROTATION:
-            ctx.state = prepareRotation();
-            break;
-        case SHOWLOGO_PREPARE_ZOOM:
-            ctx.state = prepareZoom();
+        case SHOWLOGO_PREPARE_ROTATION_AND_ZOOM:
+            ctx.state = prepareRotationAndZoom();
             break;
         case SHOWLOGO_DELAY:
             ctx.state = performDelay();
@@ -261,13 +264,13 @@ void exitShowLogo(void) {
     UBYTE i;
     ULONG receivedSignals;
 
-    // Wait for background task to complete if it's still running
+    // Wait for background task to complete if it has been succesfully started
     if (ctx.bgTask) {
         // Check if signal already received (non-blocking check)
         receivedSignals = SetSignal(0, 0);
         if (!(receivedSignals & SIGF_PREPARATION_DONE)) {
             // Signal not yet received, wait for it
-            writeLog("Waiting for background preparation task to complete...\n");
+            writeLog("Waiting for background rotation and zoom task to complete...\n");
             Wait(SIGF_PREPARATION_DONE);
             // Clear the signal since the background process has terminated and we dont need it anymore
             SetSignal(0, SIGF_PREPARATION_DONE);
@@ -338,36 +341,29 @@ UWORD fadeInFromWhite(void) {
     LoadRGB4(&ctx.logoscreens[1]->ViewPort, ctx.color0, SHOWLOGO_SCREEN_COLORS);
 
     if (!fade) {
-        return SHOWLOGO_PREPARE_ROTATION;
+        return SHOWLOGO_PREPARE_ROTATION_AND_ZOOM;
     } else {
         return SHOWLOGO_STATIC;
     }
 }
 
 //----------------------------------------
-UWORD prepareRotation(void) {
+UWORD prepareRotationAndZoom(void) {
     // Get main task pointer for signaling
     ctx.mainTask = FindTask(NULL);
 
-    // Clear any pending preparation signal
+    // Clear any pending rotation and zoom preparation signal
     SetSignal(0, SIGF_PREPARATION_DONE);
 
     // Create background task for rotation and zoom preparation
-    ctx.bgTask = (struct Task *)CreateTask("PreparationTask", 0, (APTR)preparationTask, 4096);
+    ctx.bgTask = (struct Task *)CreateTask("PrepareRotationAndZoom", 0, (APTR)prepareRotationAndZoomTask, 4096);
 
     if (!ctx.bgTask) {
-        writeLog("Error: Could not create background preparation task\n");
+        writeLog("Error: Could not create background rotation and zoom task\n");
         return SHOWLOGO_SHUTDOWN;
     }
 
     // Transition to delay state where we'll wait for background task
-    return SHOWLOGO_DELAY;
-}
-
-//----------------------------------------
-UWORD prepareZoom(void) {
-    // This function is obsolete - preparation now happens in background task
-    // Keep it as a stub for compatibility with the state enum
     return SHOWLOGO_DELAY;
 }
 
@@ -431,7 +427,7 @@ UWORD performDelay() {
 
     frameCounter++;
 
-    // Check if background preparation task has completed (non-blocking)
+    // Check if background rotation and zoom task has completed (non-blocking)
     receivedSignals = SetSignal(0, 0);  // Read current signals without changing them
     if (receivedSignals & SIGF_PREPARATION_DONE) {
         // Background task finished - transition to rotation after delay

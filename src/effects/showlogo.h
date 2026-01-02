@@ -6,12 +6,11 @@
 enum ShowLogoState {
     SHOWLOGO_INIT = 0,
     SHOWLOGO_STATIC = 1,
-    SHOWLOGO_PREPARE_ROTATION = 2,
-    SHOWLOGO_PREPARE_ZOOM = 3,
-    SHOWLOGO_DELAY = 4,
-    SHOWLOGO_ROTATE = 5,
-    SHOWLOGO_ZOOM = 6,
-    SHOWLOGO_SHUTDOWN = 7
+    SHOWLOGO_PREPARE_ROTATION_AND_ZOOM = 2,
+    SHOWLOGO_DELAY = 3,
+    SHOWLOGO_ROTATE = 4,
+    SHOWLOGO_ZOOM = 5,
+    SHOWLOGO_SHUTDOWN = 6
 };
 
 #define SHOWLOGO_ROTATION_STEPS 36
@@ -40,8 +39,7 @@ UWORD fsmShowLogo(void);
 UWORD initShowLogo(void);
 void exitShowLogo(void);
 UWORD fadeInFromWhite(void);
-UWORD prepareRotation(void);
-UWORD prepareZoom(void);
+UWORD prepareRotationAndZoom(void);
 /**
  * Convert the current rotated frame from planar to chunky and blit it on screen.
  * The chunky2planar conversion needs to be done per frame because otherwise
