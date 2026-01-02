@@ -356,7 +356,7 @@ UWORD prepareRotationAndZoom(void) {
     SetSignal(0, SIGF_PREPARATION_DONE);
 
     // Create background task for rotation and zoom preparation
-    ctx.bgTask = (struct Task *)CreateTask("PrepareRotationAndZoom", 0, (APTR)prepareRotationAndZoomTask, 4096);
+    ctx.bgTask = (struct Task *)CreateTask((CONST_STRPTR)"PrepareRotationAndZoom", 0, (APTR)prepareRotationAndZoomTask, 4096);
 
     if (!ctx.bgTask) {
         writeLog("Error: Could not create background rotation and zoom task\n");
