@@ -143,7 +143,7 @@ UWORD fsmShowLogo(void) {
             break;
         case SHOWLOGO_SHUTDOWN:
             exitShowLogo();
-            return FSM_STOP;
+            return FSM_SHOWLOGO_FINISHED;
     }
 
     return FSM_SHOWLOGO;

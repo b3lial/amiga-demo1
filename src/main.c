@@ -11,6 +11,7 @@
 #include "utils/utils.h"
 #include "effects/textscroller.h"
 #include "effects/showlogo.h"
+#include "effects/rotatingcube.h"
 
 int main(void) {
     enum MainFSMState fsmCurrentState = FSM_START;
@@ -55,8 +56,17 @@ int main(void) {
                 fsmNextState = fsmShowLogo();
                 break;
 
-            case FSM_STOP:
+            case FSM_SHOWLOGO_FINISHED:
+                fsmNextState = initRotatingCube();
                 exitShowLogo();
+                break;
+
+            case FSM_ROTATINGCUBE:
+                fsmNextState = fsmRotatingCube();
+                break;
+
+            case FSM_STOP:
+                exitRotatingCube();
                 fsmNextState = FSM_QUIT;
                 break;
 
