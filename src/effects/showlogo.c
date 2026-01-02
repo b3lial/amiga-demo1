@@ -48,10 +48,13 @@ __far extern struct Custom custom;
 //----------------------------------------
 /**
  * Background task entry point for preparing rotation and zoom
+ *
  * - Allocates memory for rotation bitmaps 
  * - Allocates memory for zoom bitmaps
  * - Generate bitmaps which contain the rotating logo
- * - Generate bitmaps which contain the rotating and scaled bitmaps 
+ * - Generate bitmaps which contain the rotating and scaled bitmaps
+ *
+ * TODO: Evaluate whether __saveds and -fbaserel is neccessary
  */ 
 static void prepareRotationAndZoomTask(void) {
     struct p2cStruct p2c = {0};
