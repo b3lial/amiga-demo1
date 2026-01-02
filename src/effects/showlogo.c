@@ -25,6 +25,8 @@ struct ShowLogoContext {
     UWORD dawnPaletteRGB4[256];
     UWORD *color0;
     UBYTE currentBufferIndex;  // 0 or 1
+    struct Task *mainTask;     // Main task pointer for signaling
+    struct Task *bgTask;       // Background preparation task
 };
 
 static struct ShowLogoContext ctx = {
@@ -34,10 +36,76 @@ static struct ShowLogoContext ctx = {
     .logoscreens = {NULL, NULL},
     .dawnPaletteRGB4 = {0},
     .color0 = NULL,
-    .currentBufferIndex = 0
+    .currentBufferIndex = 0,
+    .mainTask = NULL,
+    .bgTask = NULL
 };
 
 __far extern struct Custom custom;
+
+#define SIGF_PREPARATION_DONE (1L << 16)  // Signal bit for background task completion
+
+//----------------------------------------
+// Background task entry point for preparing rotation and zoom
+static void preparationTask(void) {
+    struct p2cStruct p2c = {0};
+    UBYTE destinationBufferIndex = 0;
+    UWORD scaleDownFactors[] = {
+        // Scale down (18 steps: 1.0 -> 0.36)
+        FLOATTOFIX(1.0),   FLOATTOFIX(0.96),  FLOATTOFIX(0.92),  FLOATTOFIX(0.88),
+        FLOATTOFIX(0.84),  FLOATTOFIX(0.80),  FLOATTOFIX(0.76),  FLOATTOFIX(0.72),
+        FLOATTOFIX(0.68),  FLOATTOFIX(0.64),  FLOATTOFIX(0.60),  FLOATTOFIX(0.56),
+        FLOATTOFIX(0.52),  FLOATTOFIX(0.48),  FLOATTOFIX(0.44),  FLOATTOFIX(0.40),
+        FLOATTOFIX(0.36),  FLOATTOFIX(0.36),
+        // Scale up (18 steps: 0.36 -> 1.0)
+        FLOATTOFIX(0.36),  FLOATTOFIX(0.40),  FLOATTOFIX(0.44),  FLOATTOFIX(0.48),
+        FLOATTOFIX(0.52),  FLOATTOFIX(0.56),  FLOATTOFIX(0.60),  FLOATTOFIX(0.64),
+        FLOATTOFIX(0.68),  FLOATTOFIX(0.72),  FLOATTOFIX(0.76),  FLOATTOFIX(0.80),
+        FLOATTOFIX(0.84),  FLOATTOFIX(0.88),  FLOATTOFIX(0.92),  FLOATTOFIX(0.96)
+    };
+    UWORD scaleDownFactor = 0;
+
+    // Lower our priority to ensure main task gets preferential CPU time
+    SetTaskPri(FindTask(NULL), -5);
+
+    // Step 1: Prepare rotation
+    if (!startRotationEngine(SHOWLOGO_ROTATION_STEPS, SHOWLOGO_DAWN_WIDTH, SHOWLOGO_DAWN_HEIGHT)) {
+        Signal(ctx.mainTask, SIGF_PREPARATION_DONE);
+        return;
+    }
+
+    // Convert planar buffer to chunky
+    p2c.bmap = ctx.logoBitmap;
+    p2c.startX = 0;
+    p2c.startY = 0;
+    p2c.width = SHOWLOGO_DAWN_WIDTH;
+    p2c.height = SHOWLOGO_DAWN_HEIGHT;
+    p2c.chunkybuffer = getRotationSourceBuffer();
+    PlanarToChunkyAsm(&p2c);
+
+    rotateAll();
+
+    // Step 2: Prepare zoom
+    if (!startZoomEngine(SHOWLOGO_ROTATION_STEPS, SHOWLOGO_DAWN_WIDTH, SHOWLOGO_DAWN_HEIGHT)) {
+        Signal(ctx.mainTask, SIGF_PREPARATION_DONE);
+        return;
+    }
+
+    // Apply zoom factors to the rotation image sequence
+    for (; destinationBufferIndex < SHOWLOGO_ROTATION_STEPS; destinationBufferIndex++) {
+        scaleDownFactor = scaleDownFactors[destinationBufferIndex % (sizeof(scaleDownFactors) / sizeof(scaleDownFactors[0]))];
+        zoomBitmap(getRotationDestinationBuffer(destinationBufferIndex),
+                   scaleDownFactor, destinationBufferIndex);
+
+        // Yield CPU every 4 zoom operations to keep main task responsive
+        if ((destinationBufferIndex & 3) == 0) {
+            Delay(0);
+        }
+    }
+
+    // Signal completion to main task
+    Signal(ctx.mainTask, SIGF_PREPARATION_DONE);
+}
 
 //----------------------------------------
 UWORD fsmShowLogo(void) {
@@ -191,6 +259,22 @@ __exit_init_logo:
 //----------------------------------------
 void exitShowLogo(void) {
     UBYTE i;
+    ULONG receivedSignals;
+
+    // Wait for background task to complete if it's still running
+    if (ctx.bgTask) {
+        // Check if signal already received (non-blocking check)
+        receivedSignals = SetSignal(0, 0);
+        if (!(receivedSignals & SIGF_PREPARATION_DONE)) {
+            // Signal not yet received, wait for it
+            writeLog("Waiting for background preparation task to complete...\n");
+            Wait(SIGF_PREPARATION_DONE);
+            // Clear the signal since the background process has terminated and we dont need it anymore
+            SetSignal(0, SIGF_PREPARATION_DONE);
+        }
+        // Task will terminate itself after signaling, just clear the pointer
+        ctx.bgTask = NULL;
+    }
 
     WaitTOF();
     for (i = 0; i < 2; i++) {
@@ -262,58 +346,28 @@ UWORD fadeInFromWhite(void) {
 
 //----------------------------------------
 UWORD prepareRotation(void) {
-    struct p2cStruct p2c = {0};
+    // Get main task pointer for signaling
+    ctx.mainTask = FindTask(NULL);
 
-    // allocate source buffer and destination buffer array
-    if (!startRotationEngine(SHOWLOGO_ROTATION_STEPS, SHOWLOGO_DAWN_WIDTH, SHOWLOGO_DAWN_HEIGHT)) {
+    // Clear any pending preparation signal
+    SetSignal(0, SIGF_PREPARATION_DONE);
+
+    // Create background task for rotation and zoom preparation
+    ctx.bgTask = (struct Task *)CreateTask("PreparationTask", 0, (APTR)preparationTask, 4096);
+
+    if (!ctx.bgTask) {
+        writeLog("Error: Could not create background preparation task\n");
         return SHOWLOGO_SHUTDOWN;
     }
 
-    // convert planar buffer to chunky
-    p2c.bmap = ctx.logoBitmap;
-    p2c.startX = 0;
-    p2c.startY = 0;
-    p2c.width = SHOWLOGO_DAWN_WIDTH;
-    p2c.height = SHOWLOGO_DAWN_HEIGHT;
-    p2c.chunkybuffer = getRotationSourceBuffer();
-    PlanarToChunkyAsm(&p2c);
-
-    rotateAll();
-    return SHOWLOGO_PREPARE_ZOOM;
+    // Transition to delay state where we'll wait for background task
+    return SHOWLOGO_DELAY;
 }
 
 //----------------------------------------
 UWORD prepareZoom(void) {
-    UBYTE destinationBufferIndex = 0;
-    UWORD scaleDownFactors[] = {
-        // Scale down (18 steps: 1.0 -> 0.36)
-        FLOATTOFIX(1.0),   FLOATTOFIX(0.96),  FLOATTOFIX(0.92),  FLOATTOFIX(0.88),
-        FLOATTOFIX(0.84),  FLOATTOFIX(0.80),  FLOATTOFIX(0.76),  FLOATTOFIX(0.72),
-        FLOATTOFIX(0.68),  FLOATTOFIX(0.64),  FLOATTOFIX(0.60),  FLOATTOFIX(0.56),
-        FLOATTOFIX(0.52),  FLOATTOFIX(0.48),  FLOATTOFIX(0.44),  FLOATTOFIX(0.40),
-        FLOATTOFIX(0.36),  FLOATTOFIX(0.36),
-        // Scale up (18 steps: 0.36 -> 1.0)
-        FLOATTOFIX(0.36),  FLOATTOFIX(0.40),  FLOATTOFIX(0.44),  FLOATTOFIX(0.48),
-        FLOATTOFIX(0.52),  FLOATTOFIX(0.56),  FLOATTOFIX(0.60),  FLOATTOFIX(0.64),
-        FLOATTOFIX(0.68),  FLOATTOFIX(0.72),  FLOATTOFIX(0.76),  FLOATTOFIX(0.80),
-        FLOATTOFIX(0.84),  FLOATTOFIX(0.88),  FLOATTOFIX(0.92),  FLOATTOFIX(0.96)
-    };
-    UWORD scaleDownFactor = 0;
-
-    // allocate zoom engine buffers
-    if (!startZoomEngine(SHOWLOGO_ROTATION_STEPS, SHOWLOGO_DAWN_WIDTH, SHOWLOGO_DAWN_HEIGHT)) {
-        return SHOWLOGO_SHUTDOWN;
-    }
-
-    // apply zoom factors to the rotation image sequence
-    for(; destinationBufferIndex<SHOWLOGO_ROTATION_STEPS; destinationBufferIndex++)
-    {
-        scaleDownFactor = scaleDownFactors[destinationBufferIndex % (sizeof(scaleDownFactors) / sizeof(scaleDownFactors[0]))];
-        zoomBitmap(getRotationDestinationBuffer(destinationBufferIndex), 
-                scaleDownFactor, destinationBufferIndex
-        );
-    }
-
+    // This function is obsolete - preparation now happens in background task
+    // Keep it as a stub for compatibility with the state enum
     return SHOWLOGO_DELAY;
 }
 
@@ -370,16 +424,23 @@ UWORD paint(UBYTE *sourceChunkyBuffer, BOOL useStaticPosition) {
 //----------------------------------------
 UWORD performDelay() {
     static UWORD frameCounter = 0;
+    ULONG receivedSignals;
 
+    // Continue painting the static logo and animating stars
     paint(NULL, TRUE);
 
     frameCounter++;
 
-    // After 1 second, transition to rotation
-    if (frameCounter >= ONE_SECOND) {
-        frameCounter = 0;
-        return SHOWLOGO_ROTATE;
+    // Check if background preparation task has completed (non-blocking)
+    receivedSignals = SetSignal(0, 0);  // Read current signals without changing them
+    if (receivedSignals & SIGF_PREPARATION_DONE) {
+        // Background task finished - transition to rotation after delay
+        if (frameCounter >= ONE_SECOND) {
+            frameCounter = 0;
+            return SHOWLOGO_ROTATE;
+        }
     }
+    // If background task is still running, just keep waiting and animating
 
     return SHOWLOGO_DELAY;
 }

@@ -1,6 +1,7 @@
 #include <exec/types.h>
 #include <exec/memory.h>
 #include <clib/exec_protos.h>
+#include <devices/timer.h>
 
 #include "rotation.h"
 
@@ -192,6 +193,11 @@ void rotateAll() {
     for (i = 0; i < ctx.rotationSteps; i++) {
         rotate(ctx.destBuffer[i], angle);
         angle += (360 / ctx.rotationSteps);  // 360 degrees / number of steps == rotation degree
+
+        // Yield CPU every 2 rotations to keep other tasks responsive
+        if ((i & 1) == 0) {
+            Delay(0);
+        }
     }
     return;
 }
