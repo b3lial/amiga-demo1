@@ -466,10 +466,20 @@ UWORD performRotation() {
 //----------------------------------------
 UWORD performZoom() {
     static UBYTE i = 1;
+    static UWORD frameCounter = 0;
+    UWORD positionIndex;
 
-    paint(getZoomDestinationBuffer(i), FALSE);
+    positionIndex = paint(getZoomDestinationBuffer(i), FALSE);
 
     i = (i < SHOWLOGO_ROTATION_STEPS - 1) ? i + 1 : 0;
+    frameCounter++;
+
+    // After a few seconds of rotation AND when back at starting position, switch to zoom
+    if ((frameCounter >= ONE_SECOND * 2) && (positionIndex == 0)) {
+        frameCounter = 0;
+        return SHOWLOGO_SHUTDOWN;
+    }
+
     return SHOWLOGO_ZOOM;
 }
 
