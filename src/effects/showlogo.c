@@ -142,7 +142,6 @@ UWORD fsmShowLogo(void) {
             ctx.state = performZoom();
             break;
         case SHOWLOGO_SHUTDOWN:
-            exitShowLogo();
             return FSM_SHOWLOGO_FINISHED;
     }
 
