@@ -9,6 +9,7 @@
 
 #include "fsmstates.h"
 #include "utils/utils.h"
+#include "utils/timecontroller.h"
 #include "effects/textscroller.h"
 #include "effects/showlogo.h"
 #include "effects/rotatingcube.h"
@@ -18,16 +19,19 @@ int main(void) {
     enum MainFSMState fsmNextState = FSM_ERROR;
     UWORD *emptyPointer = NULL;
     struct Screen *my_wbscreen_ptr;
+    int returnValue = RETURN_OK;
 
     // requires aga for 8 bitplanes 24 bit colors
     if (!isAga()) {
-        exit(RETURN_ERROR);
+        returnValue = RETURN_ERROR;
+        goto __exit_demo;
     }
 
     // hide mouse
     emptyPointer = AllocVec(22 * sizeof(UWORD), MEMF_CHIP | MEMF_CLEAR);
     if(emptyPointer == NULL) {
-        exit(RETURN_ERROR);
+        returnValue = RETURN_ERROR;
+        goto __exit_demo;
     }
     my_wbscreen_ptr = LockPubScreen((CONST_STRPTR)"Workbench");
     SetPointer(my_wbscreen_ptr->FirstWindow, emptyPointer, 8, 8, -6, 0);
@@ -35,6 +39,13 @@ int main(void) {
 
     // write logfile to ram: if debug is enabled
     initLog();
+
+    // open timer device
+    if (!openTimer()) {
+        writeLogFS("Error: Failed to open timer\n");
+        returnValue = RETURN_ERROR;
+        goto __cleanup_demo;
+    }
 
     // main loop which inits screens and executes effects
     while (fsmCurrentState != FSM_QUIT) {
@@ -86,13 +97,18 @@ int main(void) {
         fsmCurrentState = fsmNextState;
     }
 
+__cleanup_demo:
+    // close timer device
+    closeTimer();
+
     // restore mouse on every window
     my_wbscreen_ptr = LockPubScreen((CONST_STRPTR)"Workbench");
     ClearPointer(my_wbscreen_ptr->FirstWindow);
     UnlockPubScreen(NULL, my_wbscreen_ptr);
     FreeVec(emptyPointer);
 
-    exit(RETURN_OK);
+__exit_demo:
+    exit(returnValue);
 }
 
 //----------------------------------------
