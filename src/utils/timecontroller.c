@@ -44,3 +44,18 @@ void closeTimer(void) {
         timerPort = NULL;
     }
 }
+
+ULONG getSystemTime(void) {
+    struct timeval currentTime;
+
+    if (timerReq == NULL) {
+        return 0;
+    }
+
+    timerReq->tr_node.io_Command = TR_GETSYSTIME;
+    DoIO((struct IORequest *)timerReq);
+
+    currentTime = timerReq->tr_time;
+
+    return currentTime.tv_secs;
+}

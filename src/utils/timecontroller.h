@@ -13,4 +13,10 @@ BOOL openTimer(void);
  */
 void closeTimer(void);
 
+/**
+ * @brief Get the current system time in seconds
+ * @return Current system time in seconds since system boot
+ */
+ULONG getSystemTime(void);
+
 #endif
