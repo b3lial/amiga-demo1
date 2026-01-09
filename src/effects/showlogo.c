@@ -10,6 +10,7 @@
 
 #include "fsmstates.h"
 #include "utils/utils.h"
+#include "utils/timecontroller.h"
 #include "gfx/stars.h"
 #include "gfx/graphicscontroller.h"
 #include "gfx/rotation.h"
@@ -421,24 +422,32 @@ UWORD paint(UBYTE *sourceChunkyBuffer, BOOL useStaticPosition) {
 
 //----------------------------------------
 UWORD performDelay() {
-    static UWORD frameCounter = 0;
+    static ULONG startTime = 0;
+    ULONG currentTime = 0;
+    BOOL effectCanBeAborted = FALSE;
     ULONG receivedSignals;
+
+    // measure system time when this function is called for the first time 
+    // since we want to abort this effect after three seconds
+    if(startTime == 0)
+    {
+        startTime = getSystemTime();
+    }
+    else 
+    {  
+        // true after 3 seconds
+        currentTime = getSystemTime();
+        effectCanBeAborted = ((currentTime - startTime) > 3);
+    }
 
     // Continue painting the static logo and animating stars
     paint(NULL, TRUE);
 
-    frameCounter++;
-
-    // Check if background rotation and zoom task has completed (non-blocking)
+    // Check if background rotation and zoom task has completed (non-blocking) after three seconds
     receivedSignals = SetSignal(0, 0);  // Read current signals without changing them
-    if (receivedSignals & SIGF_PREPARATION_DONE) {
-        // Background task finished - transition to rotation after delay
-        if (frameCounter >= ONE_SECOND) {
-            frameCounter = 0;
-            return SHOWLOGO_ROTATE;
-        }
+    if ((receivedSignals & SIGF_PREPARATION_DONE) && effectCanBeAborted) {
+        return SHOWLOGO_ROTATE;
     }
-    // If background task is still running, just keep waiting and animating
 
     return SHOWLOGO_DELAY;
 }
@@ -446,17 +455,21 @@ UWORD performDelay() {
 //----------------------------------------
 UWORD performRotation() {
     static UBYTE i = 1;
-    static UWORD frameCounter = 0;
+    static UBYTE loopCounter = 0;
     UWORD positionIndex;
 
     positionIndex = paint(getRotationDestinationBuffer(i), FALSE);
 
-    i = (i < SHOWLOGO_ROTATION_STEPS - 1) ? i + 1 : 0;
-    frameCounter++;
+    if(positionIndex == 0)
+    {
+        loopCounter++;
+    }
 
-    // After a few seconds of rotation AND when back at starting position, switch to zoom
-    if ((frameCounter >= ONE_SECOND * 2) && (positionIndex == 0)) {
-        frameCounter = 0;
+    i = (i < SHOWLOGO_ROTATION_STEPS - 1) ? i + 1 : 0;
+
+    // After two iterations of rotation AND when back at starting position, switch to zoom
+    if ((loopCounter >= 2) && (positionIndex == 0))
+    {
         return SHOWLOGO_ZOOM;
     }
 
@@ -466,17 +479,21 @@ UWORD performRotation() {
 //----------------------------------------
 UWORD performZoom() {
     static UBYTE i = 1;
-    static UWORD frameCounter = 0;
+    static UBYTE loopCounter = 0;
     UWORD positionIndex;
 
     positionIndex = paint(getZoomDestinationBuffer(i), FALSE);
 
-    i = (i < SHOWLOGO_ROTATION_STEPS - 1) ? i + 1 : 0;
-    frameCounter++;
+    if(positionIndex == 0)
+    {
+        loopCounter++;
+    }
 
-    // After a few seconds of rotation AND when back at starting position, switch to zoom
-    if ((frameCounter >= ONE_SECOND * 2) && (positionIndex == 0)) {
-        frameCounter = 0;
+    i = (i < SHOWLOGO_ROTATION_STEPS - 1) ? i + 1 : 0;
+
+    // After two iterations of rotation AND when back at starting position, switch to zoom
+    if ((loopCounter >= 2) && (positionIndex == 0))
+    {
         return SHOWLOGO_SHUTDOWN;
     }
 

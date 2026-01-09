@@ -31,8 +31,6 @@ enum ShowLogoState {
 #define SHOWLOGO_DAWN_Y_POS \
     (((SHOWLOGO_SCREEN_HEIGHT - SHOWLOGO_DAWN_HEIGHT) / 2) + SHOWLOGO_SCREEN_BORDER)
 
-#define ONE_SECOND 50
-#define TWO_SECONDS 100
 #define AMOUNT_OF_STARS 70
 
 UWORD fsmShowLogo(void);
@@ -40,15 +38,18 @@ UWORD initShowLogo(void);
 void exitShowLogo(void);
 UWORD fadeInFromWhite(void);
 UWORD prepareRotationAndZoom(void);
+
+UWORD performDelay(void);
+UWORD performRotation(void);
+UWORD performZoom(void);
+
 /**
  * Convert the current rotated frame from planar to chunky and blit it on screen.
  * The chunky2planar conversion needs to be done per frame because otherwise
  * chip memory would be exhausted easily.
  */
-UWORD performDelay(void);
-UWORD performRotation(void);
-UWORD performZoom(void);
 UWORD paint(UBYTE *sourceChunkyBuffer, BOOL useStaticPosition);
+
 void switchScreenData(void);
 void convertChunkyToBitmap(UBYTE* sourceChunky, struct BitMap* destPlanar);
 
