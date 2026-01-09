@@ -46,6 +46,17 @@ __far extern struct Custom custom;
 
 #define SIGF_PREPARATION_DONE (1L << 16)  // Signal bit for background task completion
 
+// Forward declarations for internal functions
+static UWORD fadeInFromWhite(void);
+static UWORD prepareRotationAndZoom(void);
+static UWORD performDelay(void);
+static UWORD performRotation(void);
+static UWORD performZoom(void);
+static UWORD performFadeOut(void);
+static UWORD paint(UBYTE *sourceChunkyBuffer, BOOL useStaticPosition);
+static void switchScreenData(void);
+static void convertChunkyToBitmap(UBYTE *sourceChunky, struct BitMap *destPlanar);
+
 //----------------------------------------
 /**
  * Background task entry point for preparing rotation and zoom
@@ -141,6 +152,9 @@ UWORD fsmShowLogo(void) {
             break;
         case SHOWLOGO_ZOOM:
             ctx.state = performZoom();
+            break;
+        case SHOWLOGO_FADEOUT:
+            ctx.state = performFadeOut();
             break;
         case SHOWLOGO_SHUTDOWN:
             return FSM_SHOWLOGO_FINISHED;
@@ -314,7 +328,7 @@ void exitShowLogo(void) {
 }
 
 //----------------------------------------
-UWORD fadeInFromWhite(void) {
+static UWORD fadeInFromWhite(void) {
     UWORD decrementer;
     UWORD i = 0;
     BOOL fade = FALSE;
@@ -351,7 +365,7 @@ UWORD fadeInFromWhite(void) {
 }
 
 //----------------------------------------
-UWORD prepareRotationAndZoom(void) {
+static UWORD prepareRotationAndZoom(void) {
     // Get main task pointer for signaling
     ctx.mainTask = FindTask(NULL);
 
@@ -371,7 +385,7 @@ UWORD prepareRotationAndZoom(void) {
 }
 
 //----------------------------------------
-UWORD paint(UBYTE *sourceChunkyBuffer, BOOL useStaticPosition) {
+static UWORD paint(UBYTE *sourceChunkyBuffer, BOOL useStaticPosition) {
     UWORD p;
     struct BitMap *bitmap;
     ULONG bytesPerRow;
@@ -421,7 +435,7 @@ UWORD paint(UBYTE *sourceChunkyBuffer, BOOL useStaticPosition) {
 }
 
 //----------------------------------------
-UWORD performDelay() {
+static UWORD performDelay(void) {
     static ULONG startTime = 0;
     ULONG currentTime = 0;
     BOOL effectCanBeAborted = FALSE;
@@ -453,7 +467,7 @@ UWORD performDelay() {
 }
 
 //----------------------------------------
-UWORD performRotation() {
+static UWORD performRotation(void) {
     static UBYTE i = 1;
     static UBYTE loopCounter = 0;
     UWORD positionIndex;
@@ -477,7 +491,7 @@ UWORD performRotation() {
 }
 
 //----------------------------------------
-UWORD performZoom() {
+static UWORD performZoom(void) {
     static UBYTE i = 1;
     static UBYTE loopCounter = 0;
     UWORD positionIndex;
@@ -491,17 +505,39 @@ UWORD performZoom() {
 
     i = (i < SHOWLOGO_ROTATION_STEPS - 1) ? i + 1 : 0;
 
-    // After two iterations of rotation AND when back at starting position, switch to zoom
+    // After two iterations of zoom AND when back at starting position, switch to fade out
     if ((loopCounter >= 2) && (positionIndex == 0))
     {
-        return SHOWLOGO_SHUTDOWN;
+        UBYTE otherBufferIndex = 1 - ctx.currentBufferIndex;
+
+        // Copy current buffer to the other buffer to ensure both buffers have identical content
+        // This is necessary for smooth double buffering during fade out
+        BltBitMap(ctx.screenBitmaps[ctx.currentBufferIndex], 0, 0,
+                  ctx.screenBitmaps[otherBufferIndex], 0, 0,
+                  SHOWLOGO_SCREEN_WIDTH + SHOWLOGO_SCREEN_BORDER,
+                  SHOWLOGO_SCREEN_HEIGHT + SHOWLOGO_SCREEN_BORDER,
+                  0xC0, 0xff, 0);
+
+        return SHOWLOGO_FADEOUT;
     }
 
     return SHOWLOGO_ZOOM;
 }
 
 //----------------------------------------
-void convertChunkyToBitmap(UBYTE *sourceChunky, struct BitMap *destPlanar) {
+static UWORD performFadeOut(void) {
+    // Switch to the other buffer and display it
+    switchScreenData();
+    WaitTOF();
+    WaitTOF();
+    WaitTOF();
+    ScreenToFront(ctx.logoscreens[ctx.currentBufferIndex]);
+
+    return SHOWLOGO_SHUTDOWN;
+}
+
+//----------------------------------------
+static void convertChunkyToBitmap(UBYTE *sourceChunky, struct BitMap *destPlanar) {
 #ifdef NATIVE_CONVERTER
     struct RastPort rastPort1 = {0};
     struct RastPort rastPort2 = {0};
@@ -526,7 +562,7 @@ void convertChunkyToBitmap(UBYTE *sourceChunky, struct BitMap *destPlanar) {
 }
 
 //----------------------------------------
-void switchScreenData() {
+static void switchScreenData(void) {
     // Flip between buffer 0 and 1
     ctx.currentBufferIndex = 1 - ctx.currentBufferIndex;
 }
