@@ -47,6 +47,14 @@ int main(void) {
         goto __cleanup_demo;
     }
 
+    // test time to make sure its really working
+    if(getSystemTime() == 0)
+    {
+        writeLogFS("Current time is 0. RTC seems not to work\n");
+        returnValue = RETURN_ERROR;
+        goto __cleanup_demo;
+    }
+
     // main loop which inits screens and executes effects
     while (fsmCurrentState != FSM_QUIT) {
         switch (fsmCurrentState) {
