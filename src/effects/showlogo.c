@@ -526,14 +526,48 @@ static UWORD performZoom(void) {
 
 //----------------------------------------
 static UWORD performFadeOut(void) {
-    // Switch to the other buffer and display it
+    static UWORD step = 0;
+    UBYTE section;
+    WORD srcY, srcX, destX;
+    UBYTE sourceBufferIndex = ctx.currentBufferIndex;
+
+    // Divide screen into 8 horizontal sections (320x32 each)
+    #define NUM_SECTIONS 8
+    #define SECTION_HEIGHT (SHOWLOGO_SCREEN_HEIGHT / NUM_SECTIONS)
+
+    // Switch to the other buffer for rendering
     switchScreenData();
-    WaitTOF();
-    WaitTOF();
+
+    // Blit each section with alternating left/right displacement
+    for (section = 0; section < NUM_SECTIONS; section++) {
+        srcY = SHOWLOGO_SCREEN_BORDER + (section * SECTION_HEIGHT);
+
+        // Alternate: even sections shift left, odd sections shift right
+        if (section & 1) {
+            srcX = SHOWLOGO_SCREEN_BORDER - 1;
+            destX = SHOWLOGO_SCREEN_BORDER;  // Shift right by 1 pixel
+        } else {
+            srcX = SHOWLOGO_SCREEN_BORDER;
+            destX = SHOWLOGO_SCREEN_BORDER - 1; // Shift left by 1 pixel (into border area)
+        }
+
+        BltBitMap(ctx.screenBitmaps[sourceBufferIndex], srcX, srcY,
+                  ctx.screenBitmaps[ctx.currentBufferIndex], destX, srcY,
+                  SHOWLOGO_SCREEN_WIDTH + 1, SECTION_HEIGHT,
+                  0xC0, 0xff, 0);
+    }
+
     WaitTOF();
     ScreenToFront(ctx.logoscreens[ctx.currentBufferIndex]);
 
-    return SHOWLOGO_SHUTDOWN;
+    step++;
+
+    // Continue effect for a few iterations, then shutdown
+    if (step > SHOWLOGO_SCREEN_WIDTH) {
+        return SHOWLOGO_SHUTDOWN;
+    }
+
+    return SHOWLOGO_FADEOUT;
 }
 
 //----------------------------------------
