@@ -534,6 +534,7 @@ static UWORD performFadeOut(void) {
     // Divide screen into 8 horizontal sections (320x32 each)
     #define NUM_SECTIONS 8
     #define SECTION_HEIGHT (SHOWLOGO_SCREEN_HEIGHT / NUM_SECTIONS)
+    #define STEP_SIZE 2
 
     // Switch to the other buffer for rendering
     switchScreenData();
@@ -544,16 +545,16 @@ static UWORD performFadeOut(void) {
 
         // Alternate: even sections shift left, odd sections shift right
         if (section & 1) {
-            srcX = SHOWLOGO_SCREEN_BORDER - 1;
+            srcX = SHOWLOGO_SCREEN_BORDER - STEP_SIZE;
             destX = SHOWLOGO_SCREEN_BORDER;  // Shift right by 1 pixel
         } else {
             srcX = SHOWLOGO_SCREEN_BORDER;
-            destX = SHOWLOGO_SCREEN_BORDER - 1; // Shift left by 1 pixel (into border area)
+            destX = SHOWLOGO_SCREEN_BORDER - STEP_SIZE; // Shift left by 1 pixel (into border area)
         }
 
         BltBitMap(ctx.screenBitmaps[sourceBufferIndex], srcX, srcY,
                   ctx.screenBitmaps[ctx.currentBufferIndex], destX, srcY,
-                  SHOWLOGO_SCREEN_WIDTH + 1, SECTION_HEIGHT,
+                  SHOWLOGO_SCREEN_WIDTH + STEP_SIZE, SECTION_HEIGHT,
                   0xC0, 0xff, 0);
     }
 
