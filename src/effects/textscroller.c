@@ -221,9 +221,8 @@ UWORD initTextScroller(void) {
     }
     LoadRGB4(&ctx.textScrollerScreen0->ViewPort, ctx.colortable0, TEXTSCROLLER_BLOB_FONT_COLORS);
 
-    createStars(50, TEXTSCROLLER_VIEW_TEXTSECTION_WIDTH, TEXTSCROLLER_VIEW_TEXTSECTION_HEIGHT);
-    paintStars(&ctx.textScrollerScreen0->RastPort, 6, 50, TEXTSCROLLER_VIEW_TEXTSECTION_WIDTH,
-                TEXTSCROLLER_VIEW_TEXTSECTION_HEIGHT);
+    createStars(50, TEXTSCROLLER_VIEW_TEXTSECTION_WIDTH, TEXTSCROLLER_VIEW_TEXTSECTION_HEIGHT, MAX_CHAR_WIDTH, 0);
+    paintStars(&ctx.textScrollerScreen0->RastPort, 6, 50);
 
     // static space image screen
     ctx.textScrollerscreen1 = createScreen(ctx.spaceBlob, TRUE,

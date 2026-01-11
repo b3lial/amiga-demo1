@@ -245,7 +245,8 @@ UWORD initShowLogo(void) {
     LoadRGB4(&ctx.logoscreens[1]->ViewPort, ctx.color0, SHOWLOGO_SCREEN_COLORS);
 
     createStars(AMOUNT_OF_STARS, SHOWLOGO_SCREEN_WIDTH + SHOWLOGO_SCREEN_BORDER,
-              SHOWLOGO_SCREEN_HEIGHT + SHOWLOGO_SCREEN_BORDER);
+              SHOWLOGO_SCREEN_HEIGHT + SHOWLOGO_SCREEN_BORDER,
+              SHOWLOGO_SCREEN_BORDER, SHOWLOGO_SCREEN_BORDER);
 
     // Initialize circular movement controller with screen and logo dimensions.
     // This calculates the center point and prepares the circular path coordinates.
@@ -264,8 +265,7 @@ UWORD initShowLogo(void) {
               SHOWLOGO_DAWN_WIDTH, SHOWLOGO_DAWN_HEIGHT,
               0xC0, 0xff, 0);
 
-    paintStars(&ctx.logoscreens[ctx.currentBufferIndex]->RastPort, 42, 70, SHOWLOGO_SCREEN_WIDTH + SHOWLOGO_SCREEN_BORDER,
-                SHOWLOGO_SCREEN_HEIGHT + SHOWLOGO_SCREEN_BORDER);
+    paintStars(&ctx.logoscreens[ctx.currentBufferIndex]->RastPort, 42, 70);
 
     // make screen great again ;)
     ScreenToFront(ctx.logoscreens[ctx.currentBufferIndex]);
@@ -421,9 +421,7 @@ static UWORD paint(UBYTE *sourceChunkyBuffer, BOOL useStaticPosition) {
 
     // Animate the starfield background
     moveStars(AMOUNT_OF_STARS);
-    paintStars(&ctx.logoscreens[ctx.currentBufferIndex]->RastPort, 42, 70,
-               SHOWLOGO_SCREEN_WIDTH + SHOWLOGO_SCREEN_BORDER,
-               SHOWLOGO_SCREEN_HEIGHT + SHOWLOGO_SCREEN_BORDER);
+    paintStars(&ctx.logoscreens[ctx.currentBufferIndex]->RastPort, 42, 70);
 
     WaitTOF();
     WaitTOF();

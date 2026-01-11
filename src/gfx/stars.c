@@ -13,6 +13,8 @@ struct StarsContext {
     UWORD xSpeed[STAR_MAX];  // movement pixels per tick (0, 1, or 2)
     UWORD width;
     UWORD height;
+    UWORD borderX;
+    UWORD borderY;
 };
 
 static struct StarsContext ctx = {
@@ -20,28 +22,39 @@ static struct StarsContext ctx = {
     .yStars = {0},
     .xSpeed = {0},
     .width = 0,
-    .height = 0
+    .height = 0,
+    .borderX = 0,
+    .borderY = 0
 };
 
 //----------------------------------------
-void createStars(UWORD numStars, UWORD width, UWORD height) {
+void createStars(UWORD numStars, UWORD width, UWORD height, UWORD borderX, UWORD borderY) {
     UWORD i;
+    UWORD visibleWidth, visibleHeight;
+
     writeLogFS("initStars with numStars==%d\n", numStars);
 
     // Store dimensions in context
     ctx.width = width;
     ctx.height = height;
+    ctx.borderX = borderX;
+    ctx.borderY = borderY;
+
+    // Calculate visible area (excluding borders)
+    visibleWidth = width - (2 * borderX);
+    visibleHeight = height - (2 * borderY);
 
     for (i = 0; i < numStars; i++) {
-        ctx.xStars[i] = RangeRand(width);
-        ctx.yStars[i] = RangeRand(height);
+        // Create stars only in visible area (offset by border)
+        ctx.xStars[i] = borderX + RangeRand(visibleWidth);
+        ctx.yStars[i] = borderY + RangeRand(visibleHeight);
         // Random movement speed: 1, or 2 pixels per tick
         ctx.xSpeed[i] = 1 + RangeRand(2);
     }
 }
 
 //----------------------------------------
-void paintStars(struct RastPort* rp, UWORD color, UWORD numStars, UWORD width, UWORD height) {
+void paintStars(struct RastPort* rp, UWORD color, UWORD numStars) {
     UWORD i;
     ULONG currentColor;
 
@@ -57,16 +70,22 @@ void paintStars(struct RastPort* rp, UWORD color, UWORD numStars, UWORD width, U
 //----------------------------------------
 void moveStars(UWORD numStars) {
     UWORD i;
+    UWORD visibleWidth, visibleHeight;
+    UWORD maxX;
+
+    visibleWidth = ctx.width - (2 * ctx.borderX);
+    visibleHeight = ctx.height - (2 * ctx.borderY);
+    maxX = ctx.borderX + visibleWidth;
 
     for (i = 0; i < numStars; i++) {
         // Move star to the right by its speed
         ctx.xStars[i] += ctx.xSpeed[i];
 
-        // Wrap around when star reaches right border
-        if (ctx.xStars[i] >= ctx.width) {
-            ctx.xStars[i] = 0;
-            // Optionally randomize y position when wrapping
-            ctx.yStars[i] = RangeRand(ctx.height);
+        // Wrap around when star reaches right edge of visible area
+        if (ctx.xStars[i] >= maxX) {
+            ctx.xStars[i] = ctx.borderX;
+            // Randomize y position within visible area when wrapping
+            ctx.yStars[i] = ctx.borderY + RangeRand(visibleHeight);
         }
     }
 }
