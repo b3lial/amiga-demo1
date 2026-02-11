@@ -4,6 +4,7 @@
 #include <clib/graphics_protos.h>
 #include <clib/intuition_protos.h>
 #include <clib/exec_protos.h>
+#include <clib/dos_protos.h>
 
 #include "rotatingcube.h"
 
@@ -20,6 +21,7 @@ struct RotatingCubeContext {
     UBYTE currentBufferIndex;  // 0 or 1
     RayDirection *rayDirections;  // Dynamically allocated array of ray directions
     struct Vec3 rayOrigin;  // Shared origin for all rays (camera position)
+    UBYTE *rotationBuffers[ROTATION_STEPS];  // Chunky buffers for each rotation step
 };
 
 static struct RotatingCubeContext ctx = {
@@ -29,7 +31,8 @@ static struct RotatingCubeContext ctx = {
     .colorTable = {0},
     .currentBufferIndex = 0,
     .rayDirections = NULL,
-    .rayOrigin = {0, 0, 0}  // Will be set to cube object space in generate_screen_rays()
+    .rayOrigin = {0, 0, 0},  // Will be set to cube object space in generate_screen_rays()
+    .rotationBuffers = {NULL}  // Will be allocated in initRotatingCube()
 };
 
 //----------------------------------------
@@ -74,23 +77,37 @@ static void generate_ray_direction(UWORD px, UWORD py, UWORD width, UWORD height
 }
 
 //----------------------------------------
+// Render all rotation steps of the cube into chunky buffers
+// Each step rotates the cube by DEGREE_RESOLUTION degrees
+static void render_all_rotation_steps(void) {
+    UBYTE step;
+    USHORT angle;
+
+    writeLog("Rendering all rotation steps...\n");
+
+    for (step = 0; step < ROTATION_STEPS; step++) {
+        angle = step * DEGREE_RESOLUTION;
+        writeLogFS("Rendering rotation step %d (angle: %d degrees)...\n", step, angle);
+
+        // TODO: Implement raytracing for this rotation angle
+        // - Apply rotation matrix to ray directions (or inverse to cube)
+        // - Raytrace cube into ctx.rotationBuffers[step]
+
+        // Yield CPU every few steps to keep system responsive
+        if ((step & 3) == 0) {
+            Delay(0);
+        }
+    }
+
+    writeLogFS("Successfully rendered %d rotation steps\n", ROTATION_STEPS);
+}
+
+//----------------------------------------
 // Generate ray directions for all screen pixels
 // Transforms rays from world space into cube object space
-// Returns TRUE on success, FALSE on memory allocation failure
-static BOOL generate_screen_rays(UWORD width, UWORD height) {
-    ULONG total_rays = (ULONG)width * height;
+static void generate_screen_rays(UWORD width, UWORD height) {
     ULONG ray_index = 0;
     UWORD px, py;
-
-    writeLogFS("Allocating memory for %lu ray directions (%lu bytes)\n",
-               total_rays, total_rays * sizeof(RayDirection));
-
-    // Allocate memory for ray direction array
-    ctx.rayDirections = AllocVec(total_rays * sizeof(RayDirection), MEMF_ANY);
-    if (!ctx.rayDirections) {
-        writeLog("Error: Could not allocate memory for ray directions\n");
-        return FALSE;
-    }
 
     writeLog("Generating ray directions for each screen pixel...\n");
 
@@ -112,9 +129,7 @@ static BOOL generate_screen_rays(UWORD width, UWORD height) {
 
     writeLogFS("Ray origin in cube object space: (%d, %d, %d) [fixed-point]\n",
                ctx.rayOrigin.x, ctx.rayOrigin.y, ctx.rayOrigin.z);
-    writeLogFS("Successfully generated %lu ray directions\n", total_rays);
-
-    return TRUE;
+    writeLogFS("Successfully generated %lu ray directions\n", (ULONG)width * height);
 }
 
 //----------------------------------------
@@ -126,13 +141,10 @@ UWORD fsmRotatingCube(void) {
     switch (ctx.state) {
         case ROTATINGCUBE_INIT:
             // Generate rays for raytracing
-            writeLog("Generating rays for raytracing...\n");
-            if (!generate_screen_rays(ROTATINGCUBE_SCREEN_WIDTH, ROTATINGCUBE_SCREEN_HEIGHT)) {
-                writeLog("Error: Failed to generate rays\n");
-                ctx.state = ROTATINGCUBE_SHUTDOWN;
-            } else {
-                ctx.state = ROTATINGCUBE_RUNNING;
-            }
+            generate_screen_rays(ROTATINGCUBE_SCREEN_WIDTH, ROTATINGCUBE_SCREEN_HEIGHT);
+            // Render all rotation steps into chunky buffers
+            render_all_rotation_steps();
+            ctx.state = ROTATINGCUBE_RUNNING;
             break;
         case ROTATINGCUBE_RUNNING:
             // TODO: Implement cube rotation logic
@@ -182,6 +194,31 @@ UWORD initRotatingCube(void) {
         ctx.colorTable[i] = (intensity << 8) | (intensity << 4) | intensity;
     }
 
+    // Allocate memory for ray direction array
+    {
+        ULONG total_rays = (ULONG)ROTATINGCUBE_SCREEN_WIDTH * ROTATINGCUBE_SCREEN_HEIGHT;
+        writeLogFS("Allocating memory for %lu ray directions (%lu bytes)\n",
+                   total_rays, total_rays * sizeof(RayDirection));
+        ctx.rayDirections = AllocVec(total_rays * sizeof(RayDirection), MEMF_ANY);
+        if (!ctx.rayDirections) {
+            writeLog("Error: Could not allocate memory for ray directions\n");
+            goto __exit_init_cube;
+        }
+    }
+
+    // Allocate chunky buffers for each rotation step
+    writeLogFS("Allocating %d chunky buffers for rotation steps...\n", ROTATION_STEPS);
+    for (i = 0; i < ROTATION_STEPS; i++) {
+        ULONG bufferSize = (ULONG)ROTATINGCUBE_SCREEN_WIDTH * ROTATINGCUBE_SCREEN_HEIGHT;
+        ctx.rotationBuffers[i] = AllocVec(bufferSize, MEMF_FAST | MEMF_CLEAR);
+        if (!ctx.rotationBuffers[i]) {
+            writeLogFS("Error: Could not allocate chunky buffer %d (%lu bytes)\n", i, bufferSize);
+            goto __exit_init_cube;
+        }
+    }
+    writeLogFS("Successfully allocated %d chunky buffers (%lu bytes each)\n",
+               ROTATION_STEPS, (ULONG)ROTATINGCUBE_SCREEN_WIDTH * ROTATINGCUBE_SCREEN_HEIGHT);
+
     // Create first screen
     ctx.cubeScreens[0] = createScreen(ctx.screenBitmaps[0], TRUE,
                                       0, 0,
@@ -224,6 +261,14 @@ __exit_init_cube:
 void exitRotatingCube(void) {
     UBYTE i;
     writeLog("\n== exitRotatingCube() ==\n");
+
+    // Free chunky rotation buffers
+    for (i = 0; i < ROTATION_STEPS; i++) {
+        if (ctx.rotationBuffers[i]) {
+            FreeVec(ctx.rotationBuffers[i]);
+            ctx.rotationBuffers[i] = NULL;
+        }
+    }
 
     // Free ray direction array
     if (ctx.rayDirections) {
