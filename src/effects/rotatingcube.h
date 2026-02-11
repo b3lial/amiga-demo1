@@ -29,11 +29,10 @@ struct Vec3 {
     WORD z;
 };
 
-// Ray with origin and direction
-struct Ray {
-    struct Vec3 origin;
-    struct Vec3 direction;
-};
+// Ray direction vector (origin is shared across all rays, stored in context)
+// NOTE: Direction vectors are NOT normalized (for performance)
+// Ray intersection code must handle unnormalized directions
+typedef struct Vec3 RayDirection;
 
 UWORD fsmRotatingCube(void);
 UWORD initRotatingCube(void);

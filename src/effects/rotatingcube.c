@@ -18,7 +18,8 @@ struct RotatingCubeContext {
     struct Screen *cubeScreens[2];
     UWORD colorTable[ROTATINGCUBE_SCREEN_COLORS];
     UBYTE currentBufferIndex;  // 0 or 1
-    struct Ray *rays;  // Dynamically allocated ray array
+    RayDirection *rayDirections;  // Dynamically allocated array of ray directions
+    struct Vec3 rayOrigin;  // Shared origin for all rays (camera position)
 };
 
 static struct RotatingCubeContext ctx = {
@@ -27,68 +28,9 @@ static struct RotatingCubeContext ctx = {
     .cubeScreens = {NULL, NULL},
     .colorTable = {0},
     .currentBufferIndex = 0,
-    .rays = NULL
+    .rayDirections = NULL,
+    .rayOrigin = {0, 0, 0}  // Camera at origin
 };
-
-//----------------------------------------
-// Fast inverse square root using integer approximation
-// Adapted from Quake III for fixed-point arithmetic
-// Returns 1/sqrt(x) in fixed-point format
-static WORD fast_inv_sqrt_fix(LONG x) {
-    LONG i;
-    LONG x2, y;
-    const LONG threehalfs = FLOATTOFIX(1.5);
-
-    // Prevent division by zero or negative values
-    if (x <= 0) {
-        return FLOATTOFIX(1.0);
-    }
-
-    x2 = x >> 1;  // x2 = x / 2
-
-    // Initial guess using bit manipulation
-    // This is a simplified version for 32-bit integers
-    i = x;
-    i = 0x5f3759df - (i >> 1);  // Magic number from Quake III
-    y = i;
-
-    // Newton-Raphson iteration: y = y * (1.5 - (x2 * y * y))
-    // One iteration is usually enough for our precision needs
-    {
-        LONG y_squared = (y * y) >> FIXSHIFT;
-        LONG product = (x2 * y_squared) >> FIXSHIFT;
-        LONG factor = threehalfs - product;
-        y = (y * factor) >> FIXSHIFT;
-    }
-
-    return (WORD)y;
-}
-
-//----------------------------------------
-// Normalize a 3D vector to unit length using fast inverse sqrt
-static void normalize_vec3(struct Vec3 *v) {
-    LONG len_squared;
-    WORD inv_len;
-
-    // Calculate length squared (x^2 + y^2 + z^2)
-    len_squared = ((LONG)v->x * v->x) + ((LONG)v->y * v->y) + ((LONG)v->z * v->z);
-
-    // Skip normalization if vector is too small
-    if (len_squared < 16) {  // Threshold to avoid division issues
-        v->x = 0;
-        v->y = 0;
-        v->z = FLOATTOFIX(1.0);
-        return;
-    }
-
-    // Get inverse length using fast approximation
-    inv_len = fast_inv_sqrt_fix(len_squared);
-
-    // Multiply each component by inverse length
-    v->x = safe_fixmult(v->x, inv_len);
-    v->y = safe_fixmult(v->y, inv_len);
-    v->z = safe_fixmult(v->z, inv_len);
-}
 
 //----------------------------------------
 // Convert pixel coordinates to normalized device coordinates [-1, 1]
@@ -114,57 +56,52 @@ static void pixel_to_ndc(UWORD px, UWORD py, UWORD width, UWORD height,
 }
 
 //----------------------------------------
-// Generate a single ray from camera through a pixel
-static void generate_ray(UWORD px, UWORD py, UWORD width, UWORD height,
-                        struct Ray *ray) {
+// Generate a single ray direction from camera through a pixel
+// Note: Direction vectors are NOT normalized - handle this in intersection code
+static void generate_ray_direction(UWORD px, UWORD py, UWORD width, UWORD height,
+                                   RayDirection *direction) {
     WORD ndc_x, ndc_y;
-
-    // Camera origin at (0, 0, 0)
-    ray->origin.x = 0;
-    ray->origin.y = 0;
-    ray->origin.z = 0;
 
     // Convert pixel to NDC
     pixel_to_ndc(px, py, width, height, &ndc_x, &ndc_y);
 
     // Point on screen plane at z = 1.0
-    ray->direction.x = ndc_x;
-    ray->direction.y = ndc_y;
-    ray->direction.z = SCREEN_PLANE_Z;
-
-    // Normalize direction vector
-    normalize_vec3(&ray->direction);
+    // Direction vector from origin (0,0,0) to point on screen plane
+    // NOT normalized - saves 81,920 sqrt operations!
+    direction->x = ndc_x;
+    direction->y = ndc_y;
+    direction->z = SCREEN_PLANE_Z;
 }
 
 //----------------------------------------
-// Generate rays for all screen pixels
+// Generate ray directions for all screen pixels
 // Returns TRUE on success, FALSE on memory allocation failure
 static BOOL generate_screen_rays(UWORD width, UWORD height) {
     ULONG total_rays = (ULONG)width * height;
     ULONG ray_index = 0;
     UWORD px, py;
 
-    writeLogFS("Allocating memory for %lu rays (%lu bytes)\n",
-               total_rays, total_rays * sizeof(struct Ray));
+    writeLogFS("Allocating memory for %lu ray directions (%lu bytes)\n",
+               total_rays, total_rays * sizeof(RayDirection));
 
-    // Allocate memory for ray array
-    ctx.rays = AllocVec(total_rays * sizeof(struct Ray), MEMF_ANY);
-    if (!ctx.rays) {
-        writeLog("Error: Could not allocate memory for ray array\n");
+    // Allocate memory for ray direction array
+    ctx.rayDirections = AllocVec(total_rays * sizeof(RayDirection), MEMF_ANY);
+    if (!ctx.rayDirections) {
+        writeLog("Error: Could not allocate memory for ray directions\n");
         return FALSE;
     }
 
-    writeLog("Generating rays for each screen pixel...\n");
+    writeLog("Generating ray directions for each screen pixel...\n");
 
-    // Generate ray for each pixel
+    // Generate ray direction for each pixel
     for (py = 0; py < height; py++) {
         for (px = 0; px < width; px++) {
-            generate_ray(px, py, width, height, &ctx.rays[ray_index]);
+            generate_ray_direction(px, py, width, height, &ctx.rayDirections[ray_index]);
             ray_index++;
         }
     }
 
-    writeLogFS("Successfully generated %lu rays\n", total_rays);
+    writeLogFS("Successfully generated %lu ray directions\n", total_rays);
     return TRUE;
 }
 
@@ -276,11 +213,11 @@ void exitRotatingCube(void) {
     UBYTE i;
     writeLog("\n== exitRotatingCube() ==\n");
 
-    // Free ray array
-    if (ctx.rays) {
-        writeLog("Freeing ray array\n");
-        FreeVec(ctx.rays);
-        ctx.rays = NULL;
+    // Free ray direction array
+    if (ctx.rayDirections) {
+        writeLog("Freeing ray direction array\n");
+        FreeVec(ctx.rayDirections);
+        ctx.rayDirections = NULL;
     }
 
     WaitTOF();
