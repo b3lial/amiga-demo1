@@ -75,6 +75,7 @@ static void generate_ray_direction(UWORD px, UWORD py, UWORD width, UWORD height
 
 //----------------------------------------
 // Generate ray directions for all screen pixels
+// Transforms rays from world space into cube object space
 // Returns TRUE on success, FALSE on memory allocation failure
 static BOOL generate_screen_rays(UWORD width, UWORD height) {
     ULONG total_rays = (ULONG)width * height;
@@ -93,7 +94,7 @@ static BOOL generate_screen_rays(UWORD width, UWORD height) {
 
     writeLog("Generating ray directions for each screen pixel...\n");
 
-    // Generate ray direction for each pixel
+    // Generate ray direction for each pixel (in world space)
     for (py = 0; py < height; py++) {
         for (px = 0; px < width; px++) {
             generate_ray_direction(px, py, width, height, &ctx.rayDirections[ray_index]);
@@ -101,7 +102,18 @@ static BOOL generate_screen_rays(UWORD width, UWORD height) {
         }
     }
 
+    // Transform ray origin from world space to cube object space
+    // World space origin: (0, 0, 0)
+    // Cube center: (CUBE_CENTER_X, CUBE_CENTER_Y, CUBE_CENTER_Z)
+    // Object space origin = world_origin - cube_center
+    ctx.rayOrigin.x = 0 - CUBE_CENTER_X;  // 0 - 0 = 0
+    ctx.rayOrigin.y = 0 - CUBE_CENTER_Y;  // 0 - 0 = 0
+    ctx.rayOrigin.z = 0 - CUBE_CENTER_Z;  // 0 - 3 = -3
+
+    writeLogFS("Ray origin in cube object space: (%d, %d, %d) [fixed-point]\n",
+               ctx.rayOrigin.x, ctx.rayOrigin.y, ctx.rayOrigin.z);
     writeLogFS("Successfully generated %lu ray directions\n", total_rays);
+
     return TRUE;
 }
 
