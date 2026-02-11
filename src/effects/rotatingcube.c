@@ -29,7 +29,7 @@ static struct RotatingCubeContext ctx = {
     .colorTable = {0},
     .currentBufferIndex = 0,
     .rayDirections = NULL,
-    .rayOrigin = {0, 0, 0}  // Camera at origin
+    .rayOrigin = {0, 0, 0}  // Will be set to cube object space in generate_screen_rays()
 };
 
 //----------------------------------------
