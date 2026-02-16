@@ -35,4 +35,16 @@ UBYTE* getRotationDestinationBuffer(UBYTE index);
  */
 void rotateAll(void);
 
+/**
+ * @brief Get pointer to the sin lookup table (36 entries, 10-degree resolution)
+ * @return Pointer to sin lookup table in fixed-point format
+ */
+WORD* getSinLookup(void);
+
+/**
+ * @brief Get pointer to the cos lookup table (36 entries, 10-degree resolution)
+ * @return Pointer to cos lookup table in fixed-point format
+ */
+WORD* getCosLookup(void);
+
 #endif  // ROTATION_H

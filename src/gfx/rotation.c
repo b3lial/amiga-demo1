@@ -272,6 +272,7 @@ static void preCalcSinCos(UWORD lookupIndex, WORD *sinLookupX, WORD *cosLookupX,
     return;
 }
 
+//----------------------------------------
 void exitRotationEngine(void) {
     BYTE i = 0;
 
@@ -305,10 +306,22 @@ void exitRotationEngine(void) {
     }
 }
 
+//----------------------------------------
 UBYTE *getRotationSourceBuffer(void) {
     return ctx.srcBuffer;
 }
 
+//----------------------------------------
 UBYTE *getRotationDestinationBuffer(UBYTE index) {
     return ctx.destBuffer[index];
+}
+
+//----------------------------------------
+WORD* getSinLookup(void) {
+    return sinLookup;
+}
+
+//----------------------------------------
+WORD* getCosLookup(void) {
+    return cosLookup;
 }

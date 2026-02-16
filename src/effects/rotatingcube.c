@@ -12,6 +12,12 @@
 #include "utils/utils.h"
 #include "gfx/graphicscontroller.h"
 #include "gfx/fixedpoint.h"
+#include "gfx/rotation.h"
+
+// 3x3 rotation matrix (fixed-point)
+struct RotationMatrix {
+    WORD m[3][3];
+};
 
 struct RotatingCubeContext {
     enum RotatingCubeState state;
@@ -77,26 +83,54 @@ static void generate_ray_direction(UWORD px, UWORD py, UWORD width, UWORD height
 }
 
 //----------------------------------------
+// Create rotation matrix for rotating around Y-axis
+// Matrix rotates a point around Y-axis by the given angle
+static void create_rotation_matrix_y(struct RotationMatrix *matrix, UWORD lookupIndex) {
+    WORD *sinLookup = getSinLookup();
+    WORD *cosLookup = getCosLookup();
+    WORD sinVal = sinLookup[lookupIndex];
+    WORD cosVal = cosLookup[lookupIndex];
+
+    // Rotation matrix around Y-axis:
+    // | cos(θ)   0   sin(θ) |
+    // |   0      1     0    |
+    // | -sin(θ)  0   cos(θ) |
+
+    matrix->m[0][0] = cosVal;              // cos(θ)
+    matrix->m[0][1] = 0;                   // 0
+    matrix->m[0][2] = sinVal;              // sin(θ)
+
+    matrix->m[1][0] = 0;                   // 0
+    matrix->m[1][1] = FLOATTOFIX(1.0);     // 1
+    matrix->m[1][2] = 0;                   // 0
+
+    matrix->m[2][0] = -sinVal;             // -sin(θ)
+    matrix->m[2][1] = 0;                   // 0
+    matrix->m[2][2] = cosVal;              // cos(θ)
+}
+
+//----------------------------------------
 // Render all rotation steps of the cube into chunky buffers
 // Each step rotates the cube by DEGREE_RESOLUTION degrees
 static void render_all_rotation_steps(void) {
     UBYTE step;
     USHORT angle;
+    struct RotationMatrix rotMatrix;
 
     writeLog("Rendering all rotation steps...\n");
 
     for (step = 0; step < ROTATION_STEPS; step++) {
         angle = step * DEGREE_RESOLUTION;
-        writeLogFS("Rendering rotation step %d (angle: %d degrees)...\n", step, angle);
+
+        writeLogFS("Rendering rotation step %d (angle: %d degrees, lookup index: %d)...\n",
+                   step, angle, step);
+
+        // Create rotation matrix for this angle
+        create_rotation_matrix_y(&rotMatrix, step);
 
         // TODO: Implement raytracing for this rotation angle
-        // - Apply rotation matrix to ray directions (or inverse to cube)
+        // - Transform ray directions using rotMatrix (or use inverse for cube)
         // - Raytrace cube into ctx.rotationBuffers[step]
-
-        // Yield CPU every few steps to keep system responsive
-        if ((step & 3) == 0) {
-            Delay(0);
-        }
     }
 
     writeLogFS("Successfully rendered %d rotation steps\n", ROTATION_STEPS);
