@@ -83,6 +83,29 @@ static void generate_ray_direction(UWORD px, UWORD py, UWORD width, UWORD height
 }
 
 //----------------------------------------
+// Multiply a 3D vector by an inverse Y-axis rotation matrix (optimized)
+// Optimized for Y-axis rotation which has many zeros and ones
+// Inverse Y-axis rotation matrix:
+// | cos(θ)   0  -sin(θ) |
+// |   0      1     0    |
+// | sin(θ)   0   cos(θ) |
+static void multiply_inverse_rotation_y(WORD cosVal, WORD sinVal,
+                                       const struct Vec3 *vector,
+                                       struct Vec3 *result) {
+    // result.x = cos(θ)*v.x + 0*v.y - sin(θ)*v.z
+    //          = cos(θ)*v.x - sin(θ)*v.z
+    result->x = safe_fixmult(cosVal, vector->x) - safe_fixmult(sinVal, vector->z);
+
+    // result.y = 0*v.x + 1*v.y + 0*v.z
+    //          = v.y
+    result->y = vector->y;
+
+    // result.z = sin(θ)*v.x + 0*v.y + cos(θ)*v.z
+    //          = sin(θ)*v.x + cos(θ)*v.z
+    result->z = safe_fixmult(sinVal, vector->x) + safe_fixmult(cosVal, vector->z);
+}
+
+//----------------------------------------
 // Create inverse rotation matrix for rotating around Y-axis
 // This transforms rays from world space into the rotated cube's object space
 // Inverse of rotation matrix = transpose of rotation matrix
@@ -91,11 +114,6 @@ static void create_inverse_rotation_matrix_y(struct RotationMatrix *matrix, UWOR
     WORD *cosLookup = getCosLookup();
     WORD sinVal = sinLookup[lookupIndex];
     WORD cosVal = cosLookup[lookupIndex];
-
-    // Standard rotation matrix around Y-axis:
-    // | cos(θ)   0   sin(θ) |
-    // |   0      1     0    |
-    // | -sin(θ)  0   cos(θ) |
 
     // Inverse (transpose) rotation matrix around Y-axis:
     // | cos(θ)   0  -sin(θ) |
