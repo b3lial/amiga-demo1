@@ -106,56 +106,46 @@ static void multiply_inverse_rotation_y(WORD cosVal, WORD sinVal,
 }
 
 //----------------------------------------
-// Create inverse rotation matrix for rotating around Y-axis
-// This transforms rays from world space into the rotated cube's object space
-// Inverse of rotation matrix = transpose of rotation matrix
-static void create_inverse_rotation_matrix_y(struct RotationMatrix *matrix, UWORD lookupIndex) {
-    WORD *sinLookup = getSinLookup();
-    WORD *cosLookup = getCosLookup();
-    WORD sinVal = sinLookup[lookupIndex];
-    WORD cosVal = cosLookup[lookupIndex];
-
-    // Inverse (transpose) rotation matrix around Y-axis:
-    // | cos(θ)   0  -sin(θ) |
-    // |   0      1     0    |
-    // | sin(θ)   0   cos(θ) |
-
-    matrix->m[0][0] = cosVal;              // cos(θ)
-    matrix->m[0][1] = 0;                   // 0
-    matrix->m[0][2] = -sinVal;             // -sin(θ)  (negated from original)
-
-    matrix->m[1][0] = 0;                   // 0
-    matrix->m[1][1] = FLOATTOFIX(1.0);     // 1
-    matrix->m[1][2] = 0;                   // 0
-
-    matrix->m[2][0] = sinVal;              // sin(θ)   (negated from original)
-    matrix->m[2][1] = 0;                   // 0
-    matrix->m[2][2] = cosVal;              // cos(θ)
-}
-
-//----------------------------------------
 // Render all rotation steps of the cube into chunky buffers
 // Each step rotates the cube by DEGREE_RESOLUTION degrees
 static void render_all_rotation_steps(void) {
     UBYTE step;
     USHORT angle;
-    struct RotationMatrix rotMatrix;
+    WORD *sinLookup = getSinLookup();
+    WORD *cosLookup = getCosLookup();
+    ULONG total_rays = (ULONG)ROTATINGCUBE_SCREEN_WIDTH * ROTATINGCUBE_SCREEN_HEIGHT;
 
     writeLog("Rendering all rotation steps...\n");
 
     for (step = 0; step < ROTATION_STEPS; step++) {
+        WORD sinVal, cosVal;
+        struct Vec3 rotatedOrigin;
+        RayDirection rotatedDirection;
+        ULONG ray_index;
+
         angle = step * DEGREE_RESOLUTION;
+        sinVal = sinLookup[step];
+        cosVal = cosLookup[step];
 
-        writeLogFS("Rendering rotation step %d (angle: %d degrees, lookup index: %d)...\n",
-                   step, angle, step);
+        writeLogFS("Rendering rotation step %d (angle: %d degrees)...\n", step, angle);
 
-        // Create inverse rotation matrix for this angle
-        // Transforms rays from world space into the rotated cube's object space
-        create_inverse_rotation_matrix_y(&rotMatrix, step);
+        // Transform ray origin with inverse rotation matrix
+        multiply_inverse_rotation_y(cosVal, sinVal, &ctx.rayOrigin, &rotatedOrigin);
 
-        // TODO: Implement raytracing for this rotation angle
-        // - Transform ray directions using inverse rotMatrix
-        // - Raytrace cube into ctx.rotationBuffers[step]
+        // Transform all ray directions with inverse rotation matrix
+        for (ray_index = 0; ray_index < total_rays; ray_index++) {
+            multiply_inverse_rotation_y(cosVal, sinVal,
+                                       &ctx.rayDirections[ray_index],
+                                       &rotatedDirection);
+
+            // TODO: Raytrace cube with rotatedOrigin and rotatedDirection
+            // Store result in ctx.rotationBuffers[step][ray_index]
+        }
+
+        // Yield CPU every few steps to keep system responsive
+        if ((step & 3) == 0) {
+            Delay(0);
+        }
     }
 
     writeLogFS("Successfully rendered %d rotation steps\n", ROTATION_STEPS);
