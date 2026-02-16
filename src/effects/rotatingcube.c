@@ -83,28 +83,34 @@ static void generate_ray_direction(UWORD px, UWORD py, UWORD width, UWORD height
 }
 
 //----------------------------------------
-// Create rotation matrix for rotating around Y-axis
-// Matrix rotates a point around Y-axis by the given angle
-static void create_rotation_matrix_y(struct RotationMatrix *matrix, UWORD lookupIndex) {
+// Create inverse rotation matrix for rotating around Y-axis
+// This transforms rays from world space into the rotated cube's object space
+// Inverse of rotation matrix = transpose of rotation matrix
+static void create_inverse_rotation_matrix_y(struct RotationMatrix *matrix, UWORD lookupIndex) {
     WORD *sinLookup = getSinLookup();
     WORD *cosLookup = getCosLookup();
     WORD sinVal = sinLookup[lookupIndex];
     WORD cosVal = cosLookup[lookupIndex];
 
-    // Rotation matrix around Y-axis:
+    // Standard rotation matrix around Y-axis:
     // | cos(θ)   0   sin(θ) |
     // |   0      1     0    |
     // | -sin(θ)  0   cos(θ) |
 
+    // Inverse (transpose) rotation matrix around Y-axis:
+    // | cos(θ)   0  -sin(θ) |
+    // |   0      1     0    |
+    // | sin(θ)   0   cos(θ) |
+
     matrix->m[0][0] = cosVal;              // cos(θ)
     matrix->m[0][1] = 0;                   // 0
-    matrix->m[0][2] = sinVal;              // sin(θ)
+    matrix->m[0][2] = -sinVal;             // -sin(θ)  (negated from original)
 
     matrix->m[1][0] = 0;                   // 0
     matrix->m[1][1] = FLOATTOFIX(1.0);     // 1
     matrix->m[1][2] = 0;                   // 0
 
-    matrix->m[2][0] = -sinVal;             // -sin(θ)
+    matrix->m[2][0] = sinVal;              // sin(θ)   (negated from original)
     matrix->m[2][1] = 0;                   // 0
     matrix->m[2][2] = cosVal;              // cos(θ)
 }
@@ -125,11 +131,12 @@ static void render_all_rotation_steps(void) {
         writeLogFS("Rendering rotation step %d (angle: %d degrees, lookup index: %d)...\n",
                    step, angle, step);
 
-        // Create rotation matrix for this angle
-        create_rotation_matrix_y(&rotMatrix, step);
+        // Create inverse rotation matrix for this angle
+        // Transforms rays from world space into the rotated cube's object space
+        create_inverse_rotation_matrix_y(&rotMatrix, step);
 
         // TODO: Implement raytracing for this rotation angle
-        // - Transform ray directions using rotMatrix (or use inverse for cube)
+        // - Transform ray directions using inverse rotMatrix
         // - Raytrace cube into ctx.rotationBuffers[step]
     }
 
