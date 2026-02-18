@@ -14,11 +14,6 @@
 #include "gfx/fixedpoint.h"
 #include "gfx/rotation.h"
 
-// 3x3 rotation matrix (fixed-point)
-struct RotationMatrix {
-    WORD m[3][3];
-};
-
 struct RotatingCubeContext {
     enum RotatingCubeState state;
     struct BitMap *screenBitmaps[2];
@@ -44,7 +39,7 @@ static struct RotatingCubeContext ctx = {
 //----------------------------------------
 // Convert pixel coordinates to normalized device coordinates [-1, 1]
 // with aspect ratio correction
-static void pixel_to_ndc(UWORD px, UWORD py, UWORD width, UWORD height,
+static void calcPixelNDC(UWORD px, UWORD py, UWORD width, UWORD height,
                         WORD *ndc_x, WORD *ndc_y) {
     WORD aspect;
 
@@ -68,12 +63,12 @@ static void pixel_to_ndc(UWORD px, UWORD py, UWORD width, UWORD height,
 //----------------------------------------
 // Generate a single ray direction from camera through a pixel
 // Note: Direction vectors are NOT normalized - handle this in intersection code
-static void generate_ray_direction(UWORD px, UWORD py, UWORD width, UWORD height,
-                                   RayDirection *direction) {
+static void calcRayDirection(UWORD px, UWORD py, UWORD width, UWORD height,
+                             RayDirection *direction) {
     WORD ndc_x, ndc_y;
 
     // Convert pixel to NDC
-    pixel_to_ndc(px, py, width, height, &ndc_x, &ndc_y);
+    calcPixelNDC(px, py, width, height, &ndc_x, &ndc_y);
 
     // Point on screen plane at z = 1.0
     // Direction vector from origin (0,0,0) to point on screen plane
@@ -90,9 +85,9 @@ static void generate_ray_direction(UWORD px, UWORD py, UWORD width, UWORD height
 // | cos(θ)   0  -sin(θ) |
 // |   0      1     0    |
 // | sin(θ)   0   cos(θ) |
-static void multiply_inverse_rotation_y(WORD cosVal, WORD sinVal,
-                                       const struct Vec3 *vector,
-                                       struct Vec3 *result) {
+static void multiplyInverseRotationY(WORD cosVal, WORD sinVal,
+                                     const struct Vec3 *vector,
+                                     struct Vec3 *result) {
     // result.x = cos(θ)*v.x + 0*v.y - sin(θ)*v.z
     //          = cos(θ)*v.x - sin(θ)*v.z
     result->x = safe_fixmult(cosVal, vector->x) - safe_fixmult(sinVal, vector->z);
@@ -109,7 +104,7 @@ static void multiply_inverse_rotation_y(WORD cosVal, WORD sinVal,
 //----------------------------------------
 // Render all rotation steps of the cube into chunky buffers
 // Each step rotates the cube by DEGREE_RESOLUTION degrees
-static void render_all_rotation_steps(void) {
+static void renderAllRotationSteps(void) {
     UBYTE step;
     USHORT angle;
     WORD *sinLookup = getSinLookup();
@@ -131,7 +126,7 @@ static void render_all_rotation_steps(void) {
         writeLogFS("Rendering rotation step %d (angle: %d degrees)...\n", step, angle);
 
         // Transform ray origin with inverse rotation matrix
-        multiply_inverse_rotation_y(cosVal, sinVal, &ctx.rayOrigin, &rotatedOrigin);
+        multiplyInverseRotationY(cosVal, sinVal, &ctx.rayOrigin, &rotatedOrigin);
 
         // Transform all ray directions with inverse rotation matrix and raytrace
         for (ray_index = 0; ray_index < total_rays; ray_index++) {
@@ -139,9 +134,9 @@ static void render_all_rotation_steps(void) {
             WORD tx_min, tx_max, ty_min, ty_max, tz_min, tz_max;
             UBYTE color;
 
-            multiply_inverse_rotation_y(cosVal, sinVal,
-                                       &ctx.rayDirections[ray_index],
-                                       &rotatedDirection);
+            multiplyInverseRotationY(cosVal, sinVal,
+                                     &ctx.rayDirections[ray_index],
+                                     &rotatedDirection);
 
             // Ray-AABB intersection using slab method
             // Cube bounds in object space: [-CUBE_HALF_SIZE, CUBE_HALF_SIZE] on each axis
@@ -216,7 +211,7 @@ static void render_all_rotation_steps(void) {
 //----------------------------------------
 // Generate ray directions for all screen pixels
 // Transforms rays from world space into cube object space
-static void generate_screen_rays(UWORD width, UWORD height) {
+static void calcScreenRays(UWORD width, UWORD height) {
     ULONG ray_index = 0;
     UWORD px, py;
 
@@ -225,7 +220,7 @@ static void generate_screen_rays(UWORD width, UWORD height) {
     // Generate ray direction for each pixel (in world space)
     for (py = 0; py < height; py++) {
         for (px = 0; px < width; px++) {
-            generate_ray_direction(px, py, width, height, &ctx.rayDirections[ray_index]);
+            calcRayDirection(px, py, width, height, &ctx.rayDirections[ray_index]);
             ray_index++;
         }
     }
@@ -252,9 +247,9 @@ UWORD fsmRotatingCube(void) {
     switch (ctx.state) {
         case ROTATINGCUBE_INIT:
             // Generate rays for raytracing
-            generate_screen_rays(ROTATINGCUBE_SCREEN_WIDTH, ROTATINGCUBE_SCREEN_HEIGHT);
+            calcScreenRays(ROTATINGCUBE_SCREEN_WIDTH, ROTATINGCUBE_SCREEN_HEIGHT);
             // Render all rotation steps into chunky buffers
-            render_all_rotation_steps();
+            renderAllRotationSteps();
             ctx.state = ROTATINGCUBE_RUNNING;
             break;
         case ROTATINGCUBE_RUNNING:
