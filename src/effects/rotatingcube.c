@@ -13,6 +13,7 @@
 #include "gfx/graphicscontroller.h"
 #include "gfx/fixedpoint.h"
 #include "gfx/rotation.h"
+#include "gfx/chunkyconverter.h"
 
 struct RotatingCubeContext {
     enum RotatingCubeState state;
@@ -99,6 +100,19 @@ static void multiplyInverseRotationY(WORD cosVal, WORD sinVal,
     // result.z = sin(θ)*v.x + 0*v.y + cos(θ)*v.z
     //          = sin(θ)*v.x + cos(θ)*v.z
     result->z = safe_fixmult(sinVal, vector->x) + safe_fixmult(cosVal, vector->z);
+}
+
+//----------------------------------------
+// Convert a chunky buffer to planar bitmap format
+static void convertChunkyToBitmap(UBYTE *sourceChunky, struct BitMap *destPlanar) {
+    struct c2pStruct c2p;
+    c2p.bmap = destPlanar;
+    c2p.startX = 0;
+    c2p.startY = 0;
+    c2p.width = ROTATINGCUBE_SCREEN_WIDTH;
+    c2p.height = ROTATINGCUBE_SCREEN_HEIGHT;
+    c2p.chunkybuffer = sourceChunky;
+    ChunkyToPlanarAsm(&c2p);
 }
 
 //----------------------------------------
@@ -198,11 +212,6 @@ static void renderAllRotationSteps(void) {
 
             ctx.rotationBuffers[step][ray_index] = color;
         }
-
-        // Yield CPU every few steps to keep system responsive
-        if ((step & 3) == 0) {
-            Delay(0);
-        }
     }
 
     writeLogFS("Successfully rendered %d rotation steps\n", ROTATION_STEPS);
@@ -253,12 +262,22 @@ UWORD fsmRotatingCube(void) {
             ctx.state = ROTATINGCUBE_RUNNING;
             break;
         case ROTATINGCUBE_RUNNING:
-            // TODO: Implement cube rotation logic
-            WaitTOF();
+        {
+            static UBYTE stepIndex = 0;
             // Switch buffers
             ctx.currentBufferIndex = 1 - ctx.currentBufferIndex;
+
+            // Convert current chunky buffer to planar bitmap of the back buffer
+            convertChunkyToBitmap(ctx.rotationBuffers[stepIndex],
+                                  ctx.screenBitmaps[ctx.currentBufferIndex]);
+
+            // Advance to next rotation step (wraps around)
+            stepIndex = (stepIndex < ROTATION_STEPS - 1) ? stepIndex + 1 : 0;
+
+            WaitTOF();
             ScreenToFront(ctx.cubeScreens[ctx.currentBufferIndex]);
             break;
+        }
         case ROTATINGCUBE_SHUTDOWN:
             exitRotatingCube();
             return FSM_STOP;
