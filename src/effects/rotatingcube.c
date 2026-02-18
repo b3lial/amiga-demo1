@@ -48,16 +48,17 @@ static void pixel_to_ndc(UWORD px, UWORD py, UWORD width, UWORD height,
                         WORD *ndc_x, WORD *ndc_y) {
     WORD aspect;
 
-    // Convert to [0, 1] range, then to [-1, 1]
-    // Add 0.5 to sample at pixel center
+    // Convert to NDC [-1.0, 1.0] with 0.5 offset to sample pixel center
     // Formula: ((px + 0.5) / width) * 2.0 - 1.0
+    *ndc_x = safe_fixmult(safe_fixdiv(INTTOFIX(px) + FLOATTOFIX(0.5),
+                                      INTTOFIX(width)),
+                          FLOATTOFIX(2.0)) - FLOATTOFIX(1.0);
 
-    // For fixed-point: ((px * 256 + 128) * 2 * 256 / width) - 256
-    *ndc_x = (WORD)(((((LONG)px << FIXSHIFT) + (1 << (FIXSHIFT - 1))) * (2 << FIXSHIFT)) / width) - (1 << FIXSHIFT);
-
-    // Flip Y axis (screen Y goes down, we want up)
+    // Flip Y axis: screen Y goes down, world Y goes up
     // Formula: 1.0 - ((py + 0.5) / height) * 2.0
-    *ndc_y = (1 << FIXSHIFT) - (WORD)(((((LONG)py << FIXSHIFT) + (1 << (FIXSHIFT - 1))) * (2 << FIXSHIFT)) / height);
+    *ndc_y = FLOATTOFIX(1.0) - safe_fixmult(safe_fixdiv(INTTOFIX(py) + FLOATTOFIX(0.5),
+                                                         INTTOFIX(height)),
+                                             FLOATTOFIX(2.0));
 
     // Apply aspect ratio correction (width/height)
     aspect = safe_fixdiv(INTTOFIX(width), INTTOFIX(height));
@@ -132,14 +133,75 @@ static void render_all_rotation_steps(void) {
         // Transform ray origin with inverse rotation matrix
         multiply_inverse_rotation_y(cosVal, sinVal, &ctx.rayOrigin, &rotatedOrigin);
 
-        // Transform all ray directions with inverse rotation matrix
+        // Transform all ray directions with inverse rotation matrix and raytrace
         for (ray_index = 0; ray_index < total_rays; ray_index++) {
+            WORD t_min, t_max, t;
+            WORD tx_min, tx_max, ty_min, ty_max, tz_min, tz_max;
+            UBYTE color;
+
             multiply_inverse_rotation_y(cosVal, sinVal,
                                        &ctx.rayDirections[ray_index],
                                        &rotatedDirection);
 
-            // TODO: Raytrace cube with rotatedOrigin and rotatedDirection
-            // Store result in ctx.rotationBuffers[step][ray_index]
+            // Ray-AABB intersection using slab method
+            // Cube bounds in object space: [-CUBE_HALF_SIZE, CUBE_HALF_SIZE] on each axis
+            // t = (bound - origin) / direction
+
+            // X slabs
+            if (rotatedDirection.x != 0) {
+                tx_min = safe_fixdiv(-CUBE_HALF_SIZE - rotatedOrigin.x, rotatedDirection.x);
+                tx_max = safe_fixdiv( CUBE_HALF_SIZE - rotatedOrigin.x, rotatedDirection.x);
+                if (tx_min > tx_max) { WORD tmp = tx_min; tx_min = tx_max; tx_max = tmp; }
+            } else {
+                // Ray parallel to X slabs: check if origin is inside
+                tx_min = -32768;
+                tx_max =  32767;
+            }
+
+            // Y slabs
+            if (rotatedDirection.y != 0) {
+                ty_min = safe_fixdiv(-CUBE_HALF_SIZE - rotatedOrigin.y, rotatedDirection.y);
+                ty_max = safe_fixdiv( CUBE_HALF_SIZE - rotatedOrigin.y, rotatedDirection.y);
+                if (ty_min > ty_max) { WORD tmp = ty_min; ty_min = ty_max; ty_max = tmp; }
+            } else {
+                ty_min = -32768;
+                ty_max =  32767;
+            }
+
+            // Z slabs
+            if (rotatedDirection.z != 0) {
+                tz_min = safe_fixdiv(-CUBE_HALF_SIZE - rotatedOrigin.z, rotatedDirection.z);
+                tz_max = safe_fixdiv( CUBE_HALF_SIZE - rotatedOrigin.z, rotatedDirection.z);
+                if (tz_min > tz_max) { WORD tmp = tz_min; tz_min = tz_max; tz_max = tmp; }
+            } else {
+                tz_min = -32768;
+                tz_max =  32767;
+            }
+
+            // Intersect all slabs
+            t_min = tx_min > ty_min ? tx_min : ty_min;
+            t_min = t_min  > tz_min ? t_min  : tz_min;
+            t_max = tx_max < ty_max ? tx_max : ty_max;
+            t_max = t_max  < tz_max ? t_max  : tz_max;
+
+            // Hit if t_min <= t_max and intersection is in front of camera
+            if (t_min <= t_max && t_max > 0) {
+                // t is the entry point (or exit if behind camera)
+                t = t_min > 0 ? t_min : t_max;
+
+                // Map distance to color index (closer = brighter)
+                // t ranges roughly from 1 to 6 in our scene
+                // Map to palette index 1..15 (0 reserved for background)
+                color = (UBYTE)(ROTATINGCUBE_SCREEN_COLORS - 1 -
+                        (FIXTOINT(t) * (ROTATINGCUBE_SCREEN_COLORS - 2) / 6));
+                if (color < 1) color = 1;
+                if (color > ROTATINGCUBE_SCREEN_COLORS - 1)
+                    color = ROTATINGCUBE_SCREEN_COLORS - 1;
+            } else {
+                color = 0;  // Background
+            }
+
+            ctx.rotationBuffers[step][ray_index] = color;
         }
 
         // Yield CPU every few steps to keep system responsive
