@@ -243,7 +243,7 @@ static void calcScreenRays(UWORD width, UWORD height) {
     ctx.rayOrigin.z = 0 - CUBE_CENTER_Z;  // 0 - 3 = -3
 
     writeLogFS("Ray origin in cube object space: (%d, %d, %d) [fixed-point]\n",
-               ctx.rayOrigin.x, ctx.rayOrigin.y, ctx.rayOrigin.z);
+               FIXTOINT(ctx.rayOrigin.x), FIXTOINT(ctx.rayOrigin.y), FIXTOINT(ctx.rayOrigin.z));
     writeLogFS("Successfully generated %lu ray directions\n", (ULONG)width * height);
 }
 
