@@ -42,23 +42,33 @@ static struct RotatingCubeContext ctx = {
 // with aspect ratio correction
 static void calcPixelNDC(UWORD px, UWORD py, UWORD width, UWORD height,
                         WORD *ndc_x, WORD *ndc_y) {
+    LONG temp_x, temp_y;
     WORD aspect;
 
     // Convert to NDC [-1.0, 1.0] with 0.5 offset to sample pixel center
     // Formula: ((px + 0.5) / width) * 2.0 - 1.0
-    *ndc_x = safe_fixmult(safe_fixdiv(INTTOFIX(px) + FLOATTOFIX(0.5),
-                                      INTTOFIX(width)),
-                          FLOATTOFIX(2.0)) - FLOATTOFIX(1.0);
+    // Use LONG to avoid overflow (px can be up to 320, which overflows WORD when shifted)
+    temp_x = ((LONG)px << FIXSHIFT) + FLOATTOFIX(0.5);
+    temp_x = (temp_x << FIXSHIFT) / ((LONG)width << FIXSHIFT);  // Division
+    temp_x = (temp_x * FLOATTOFIX(2.0)) >> FIXSHIFT;  // Multiply by 2.0
+    *ndc_x = (WORD)(temp_x - FLOATTOFIX(1.0));
 
     // Flip Y axis: screen Y goes down, world Y goes up
     // Formula: 1.0 - ((py + 0.5) / height) * 2.0
-    *ndc_y = FLOATTOFIX(1.0) - safe_fixmult(safe_fixdiv(INTTOFIX(py) + FLOATTOFIX(0.5),
-                                                         INTTOFIX(height)),
-                                             FLOATTOFIX(2.0));
+    temp_y = ((LONG)py << FIXSHIFT) + FLOATTOFIX(0.5);
+    temp_y = (temp_y << FIXSHIFT) / ((LONG)height << FIXSHIFT);  // Division
+    temp_y = (temp_y * FLOATTOFIX(2.0)) >> FIXSHIFT;  // Multiply by 2.0
+    *ndc_y = (WORD)(FLOATTOFIX(1.0) - temp_y);
 
     // Apply aspect ratio correction (width/height)
-    aspect = safe_fixdiv(INTTOFIX(width), INTTOFIX(height));
-    *ndc_x = safe_fixmult(*ndc_x, aspect);
+    aspect = (WORD)(((LONG)width << FIXSHIFT) / (LONG)height);
+    *ndc_x = (WORD)(((LONG)*ndc_x * (LONG)aspect) >> FIXSHIFT);
+
+    // Clamp to valid range
+    if (*ndc_x > 32767) *ndc_x = 32767;
+    if (*ndc_x < -32768) *ndc_x = -32768;
+    if (*ndc_y > 32767) *ndc_y = 32767;
+    if (*ndc_y < -32768) *ndc_y = -32768;
 }
 
 //----------------------------------------
@@ -211,8 +221,15 @@ static void renderAllRotationSteps(void) {
                 if (tx_min > tx_max) { WORD tmp = tx_min; tx_min = tx_max; tx_max = tmp; }
             } else {
                 // Ray parallel to X slabs: check if origin is inside
-                tx_min = -32768;
-                tx_max =  32767;
+                if (rotatedOrigin.x < -CUBE_HALF_SIZE || rotatedOrigin.x > CUBE_HALF_SIZE) {
+                    // Origin outside cube bounds - no intersection possible
+                    tx_min = INTTOFIX(1);
+                    tx_max = INTTOFIX(0);  // tx_min > tx_max will cause miss
+                } else {
+                    // Origin inside - ray passes through entire range
+                    tx_min = -32768;  // -128.0 in 8.8 fixed-point
+                    tx_max = 32512;   // +127.0 in 8.8 fixed-point (127 << 8)
+                }
             }
 
             // Y slabs
@@ -221,8 +238,13 @@ static void renderAllRotationSteps(void) {
                 ty_max = safe_fixdiv( CUBE_HALF_SIZE - rotatedOrigin.y, rotatedDirection.y);
                 if (ty_min > ty_max) { WORD tmp = ty_min; ty_min = ty_max; ty_max = tmp; }
             } else {
-                ty_min = -32768;
-                ty_max =  32767;
+                if (rotatedOrigin.y < -CUBE_HALF_SIZE || rotatedOrigin.y > CUBE_HALF_SIZE) {
+                    ty_min = INTTOFIX(1);
+                    ty_max = INTTOFIX(0);
+                } else {
+                    ty_min = -32768;  // -128.0 in 8.8 fixed-point
+                    ty_max = 32512;   // +127.0 in 8.8 fixed-point
+                }
             }
 
             // Z slabs
@@ -231,8 +253,13 @@ static void renderAllRotationSteps(void) {
                 tz_max = safe_fixdiv( CUBE_HALF_SIZE - rotatedOrigin.z, rotatedDirection.z);
                 if (tz_min > tz_max) { WORD tmp = tz_min; tz_min = tz_max; tz_max = tmp; }
             } else {
-                tz_min = -32768;
-                tz_max =  32767;
+                if (rotatedOrigin.z < -CUBE_HALF_SIZE || rotatedOrigin.z > CUBE_HALF_SIZE) {
+                    tz_min = INTTOFIX(1);
+                    tz_max = INTTOFIX(0);
+                } else {
+                    tz_min = -32768;  // -128.0 in 8.8 fixed-point
+                    tz_max = 32512;   // +127.0 in 8.8 fixed-point
+                }
             }
 
             // Intersect all slabs
@@ -247,13 +274,21 @@ static void renderAllRotationSteps(void) {
                 t = t_min > 0 ? t_min : t_max;
 
                 // Map distance to color index (closer = brighter)
-                // t ranges roughly from 1 to 6 in our scene
+                // t ranges from ~2.0 (front face) to ~4.0 (back face) in fixed-point
                 // Map to palette index 1..15 (0 reserved for background)
-                color = (UBYTE)(ROTATINGCUBE_SCREEN_COLORS - 1 -
-                        (FIXTOINT(t) * (ROTATINGCUBE_SCREEN_COLORS - 2) / 6));
-                if (color < 1) color = 1;
-                if (color > ROTATINGCUBE_SCREEN_COLORS - 1)
-                    color = ROTATINGCUBE_SCREEN_COLORS - 1;
+                // Use fixed-point arithmetic to preserve precision
+                {
+                    WORD colorValue;
+                    // Map t from range [2.0, 4.0] to color [15, 1]
+                    // Formula: 15 - ((t - 2.0) * 14 / 2.0)
+                    colorValue = t - FLOATTOFIX(2.0);  // Offset to 0
+                    if (colorValue < 0) colorValue = 0;
+                    // Scale by 14/2.0 = 7.0
+                    colorValue = (colorValue * 7) >> FIXSHIFT;
+                    color = (UBYTE)(15 - colorValue);
+                    if (color < 1) color = 1;
+                    if (color > 15) color = 15;
+                }
             } else {
                 color = 0;  // Background
             }
@@ -263,8 +298,13 @@ static void renderAllRotationSteps(void) {
             // Debug: Log center pixel at step 0 (should definitely hit the cube)
             if (step == 0 && ray_index == (ROTATINGCUBE_SCREEN_WIDTH / 2 +
                                             (ROTATINGCUBE_SCREEN_HEIGHT / 2) * ROTATINGCUBE_SCREEN_WIDTH)) {
+                char buf1[12], buf2[12], buf3[12];
                 writeLogFS("\n=== CENTER PIXEL DEBUG (step 0, pixel %d,%d) ===\n",
                            ROTATINGCUBE_SCREEN_WIDTH / 2, ROTATINGCUBE_SCREEN_HEIGHT / 2);
+                writeLogFS("ORIGINAL direction: (%s, %s, %s)\n",
+                           fixToStr(ctx.rayDirections[ray_index].x, buf1),
+                           fixToStr(ctx.rayDirections[ray_index].y, buf2),
+                           fixToStr(ctx.rayDirections[ray_index].z, buf3));
                 logRayIntersection(ray_index, &rotatedOrigin, &rotatedDirection,
                                    tx_min, tx_max, ty_min, ty_max, tz_min, tz_max,
                                    t_min, t_max, t, color);
@@ -323,6 +363,8 @@ UWORD fsmRotatingCube(void) {
         case ROTATINGCUBE_RUNNING:
         {
             static UBYTE stepIndex = 0;
+            static UBYTE frameCounter = 0;
+
             // Switch buffers
             ctx.currentBufferIndex = 1 - ctx.currentBufferIndex;
 
@@ -330,8 +372,12 @@ UWORD fsmRotatingCube(void) {
             convertChunkyToBitmap(ctx.rotationBuffers[stepIndex],
                                   ctx.screenBitmaps[ctx.currentBufferIndex]);
 
-            // Advance to next rotation step (wraps around)
-            stepIndex = (stepIndex < ROTATION_STEPS - 1) ? stepIndex + 1 : 0;
+            // Advance to next rotation step every 3 frames (slower rotation)
+            frameCounter++;
+            if (frameCounter >= 3) {
+                frameCounter = 0;
+                stepIndex = (stepIndex < ROTATION_STEPS - 1) ? stepIndex + 1 : 0;
+            }
 
             WaitTOF();
             ScreenToFront(ctx.cubeScreens[ctx.currentBufferIndex]);
