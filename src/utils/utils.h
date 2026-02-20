@@ -25,4 +25,12 @@ BOOL initLog(void);
  */
 BOOL writeLog(char*);
 
+/**
+ * @brief Convert fixed-point WORD to string representation
+ * @param fixedVal The fixed-point value (8.8 format)
+ * @param buffer Output buffer (must be at least 12 bytes)
+ * @return Pointer to the buffer
+ */
+char* fixToStr(WORD fixedVal, char* buffer);
+
 #endif

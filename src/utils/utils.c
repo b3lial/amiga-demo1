@@ -114,3 +114,33 @@ BOOL writeArrayLog(char* msg, unsigned char* array, UWORD array_length) {
     return TRUE;
 }
 #endif
+
+//----------------------------------------
+char* fixToStr(WORD fixedVal, char* buffer) {
+    LONG intPart;
+    ULONG fracPart;
+    BOOL negative = FALSE;
+
+    // Handle negative values
+    if (fixedVal < 0) {
+        negative = TRUE;
+        fixedVal = -fixedVal;
+    }
+
+    // Extract integer and fractional parts (8.8 fixed-point)
+    intPart = fixedVal >> 8;  // Upper 8 bits = integer part
+    fracPart = fixedVal & 0xFF;  // Lower 8 bits = fractional part
+
+    // Convert fractional part to 3 decimal places
+    // 0xFF = 255/256 ≈ 0.996, so scale by 1000/256 ≈ 3.906
+    fracPart = (fracPart * 1000) >> 8;
+
+    // Format as string
+    if (negative) {
+        sprintf(buffer, "-%ld.%03lu", (long)intPart, (unsigned long)fracPart);
+    } else {
+        sprintf(buffer, "%ld.%03lu", (long)intPart, (unsigned long)fracPart);
+    }
+
+    return buffer;
+}

@@ -276,6 +276,7 @@ UWORD fsmRotatingCube(void) {
 
             WaitTOF();
             ScreenToFront(ctx.cubeScreens[ctx.currentBufferIndex]);
+            ctx.state = ROTATINGCUBE_RUNNING;
             break;
         }
         case ROTATINGCUBE_SHUTDOWN:
