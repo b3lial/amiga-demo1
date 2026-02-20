@@ -112,8 +112,7 @@ static void logRayIntersection(ULONG ray_index,
                                 WORD tz_min, WORD tz_max,
                                 WORD t_min, WORD t_max,
                                 WORD t, UBYTE color) {
-    char buf1[12], buf2[12], buf3[12], buf4[12], buf5[12], buf6[12];
-    char buf7[12], buf8[12], buf9[12], buf10[12], buf11[12], buf12[12];
+    char buf1[12], buf2[12], buf3[12];
 
     writeLogFS("Ray %lu:\n", ray_index);
 
@@ -193,7 +192,7 @@ static void renderAllRotationSteps(void) {
 
         // Transform all ray directions with inverse rotation matrix and raytrace
         for (ray_index = 0; ray_index < total_rays; ray_index++) {
-            WORD t_min, t_max, t;
+            WORD t_min, t_max, t = 0;
             WORD tx_min, tx_max, ty_min, ty_max, tz_min, tz_max;
             UBYTE color;
 
