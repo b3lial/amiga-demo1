@@ -103,6 +103,55 @@ static void multiplyInverseRotationY(WORD cosVal, WORD sinVal,
 }
 
 //----------------------------------------
+// Debug function to log ray intersection values
+static void logRayIntersection(ULONG ray_index,
+                                const struct Vec3 *rotatedOrigin,
+                                const RayDirection *rotatedDirection,
+                                WORD tx_min, WORD tx_max,
+                                WORD ty_min, WORD ty_max,
+                                WORD tz_min, WORD tz_max,
+                                WORD t_min, WORD t_max,
+                                WORD t, UBYTE color) {
+    char buf1[12], buf2[12], buf3[12], buf4[12], buf5[12], buf6[12];
+    char buf7[12], buf8[12], buf9[12], buf10[12], buf11[12], buf12[12];
+
+    writeLogFS("Ray %lu:\n", ray_index);
+
+    // Log origin
+    fixToStr(rotatedOrigin->x, buf1);
+    fixToStr(rotatedOrigin->y, buf2);
+    fixToStr(rotatedOrigin->z, buf3);
+    writeLogFS("  Origin: (%s, %s, %s)\n", buf1, buf2, buf3);
+
+    // Log direction
+    fixToStr(rotatedDirection->x, buf1);
+    fixToStr(rotatedDirection->y, buf2);
+    fixToStr(rotatedDirection->z, buf3);
+    writeLogFS("  Direction: (%s, %s, %s)\n", buf1, buf2, buf3);
+
+    // Log X slabs
+    fixToStr(tx_min, buf1);
+    fixToStr(tx_max, buf2);
+    writeLogFS("  X slabs: tx_min=%s, tx_max=%s\n", buf1, buf2);
+
+    // Log Y slabs
+    fixToStr(ty_min, buf1);
+    fixToStr(ty_max, buf2);
+    writeLogFS("  Y slabs: ty_min=%s, ty_max=%s\n", buf1, buf2);
+
+    // Log Z slabs
+    fixToStr(tz_min, buf1);
+    fixToStr(tz_max, buf2);
+    writeLogFS("  Z slabs: tz_min=%s, tz_max=%s\n", buf1, buf2);
+
+    // Log final intersection
+    fixToStr(t_min, buf1);
+    fixToStr(t_max, buf2);
+    fixToStr(t, buf3);
+    writeLogFS("  Final: t_min=%s, t_max=%s, t=%s, color=%d\n", buf1, buf2, buf3, (int)color);
+}
+
+//----------------------------------------
 // Convert a chunky buffer to planar bitmap format
 static void convertChunkyToBitmap(UBYTE *sourceChunky, struct BitMap *destPlanar) {
     struct c2pStruct c2p;
@@ -211,6 +260,17 @@ static void renderAllRotationSteps(void) {
             }
 
             ctx.rotationBuffers[step][ray_index] = color;
+
+            // Debug: Log center pixel at step 0 (should definitely hit the cube)
+            if (step == 0 && ray_index == (ROTATINGCUBE_SCREEN_WIDTH / 2 +
+                                            (ROTATINGCUBE_SCREEN_HEIGHT / 2) * ROTATINGCUBE_SCREEN_WIDTH)) {
+                writeLogFS("\n=== CENTER PIXEL DEBUG (step 0, pixel %d,%d) ===\n",
+                           ROTATINGCUBE_SCREEN_WIDTH / 2, ROTATINGCUBE_SCREEN_HEIGHT / 2);
+                logRayIntersection(ray_index, &rotatedOrigin, &rotatedDirection,
+                                   tx_min, tx_max, ty_min, ty_max, tz_min, tz_max,
+                                   t_min, t_max, t, color);
+                writeLog("=== END CENTER PIXEL DEBUG ===\n\n");
+            }
         }
     }
 
