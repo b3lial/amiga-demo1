@@ -143,7 +143,7 @@ UBYTE calculateColor(WORD t_min, WORD t_max)
         color = (UBYTE) FIXTOINT(safe_fixdiv(distanceDiff, step));
         color = 14 - color;
         color++;
-        color = ((color > 15) ? 15 : color);
+        color = ((color > 15) ? 0 : color);
     } 
     else 
     {
