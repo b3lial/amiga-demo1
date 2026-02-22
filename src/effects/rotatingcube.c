@@ -154,6 +154,69 @@ UBYTE calculateColor(WORD t_min, WORD t_max)
 } 
 
 //----------------------------------------
+// Ray-AABB intersection using slab method
+// Cube bounds in object space: [-CUBE_HALF_SIZE, CUBE_HALF_SIZE] on each axis
+// t = (bound - origin) / direction
+void rayIntersectionWithSlab(struct Vec3 *rotatedOrigin, RayDirection *rotatedDirection, WORD *t_min, WORD *t_max)
+{
+    WORD tx_min, tx_max, ty_min, ty_max, tz_min, tz_max;
+
+    // X slabs
+    if (rotatedDirection->x != 0) {
+        tx_min = safe_fixdiv(-CUBE_HALF_SIZE - rotatedOrigin->x, rotatedDirection->x);
+        tx_max = safe_fixdiv( CUBE_HALF_SIZE - rotatedOrigin->x, rotatedDirection->x);
+        if (tx_min > tx_max) { WORD tmp = tx_min; tx_min = tx_max; tx_max = tmp; }
+    } else {
+        // Ray parallel to X slabs: check if origin is inside
+        if (rotatedOrigin->x < -CUBE_HALF_SIZE || rotatedOrigin->x > CUBE_HALF_SIZE) {
+            // Origin outside cube bounds - no intersection possible
+            tx_min = INTTOFIX(1);
+            tx_max = INTTOFIX(0);  // tx_min > tx_max will cause miss
+        } else {
+            // Origin inside - ray passes through entire range
+            tx_min = -32768;  // -128.0 in 8.8 fixed-point
+            tx_max = 32512;   // +127.0 in 8.8 fixed-point (127 << 8)
+        }
+    }
+
+    // Y slabs
+    if (rotatedDirection->y != 0) {
+        ty_min = safe_fixdiv(-CUBE_HALF_SIZE - rotatedOrigin->y, rotatedDirection->y);
+        ty_max = safe_fixdiv( CUBE_HALF_SIZE - rotatedOrigin->y, rotatedDirection->y);
+        if (ty_min > ty_max) { WORD tmp = ty_min; ty_min = ty_max; ty_max = tmp; }
+    } else {
+        if (rotatedOrigin->y < -CUBE_HALF_SIZE || rotatedOrigin->y > CUBE_HALF_SIZE) {
+            ty_min = INTTOFIX(1);
+            ty_max = INTTOFIX(0);
+        } else {
+            ty_min = -32768;  // -128.0 in 8.8 fixed-point
+            ty_max = 32512;   // +127.0 in 8.8 fixed-point
+        }
+    }
+
+    // Z slabs
+    if (rotatedDirection->z != 0) {
+        tz_min = safe_fixdiv(-CUBE_HALF_SIZE - rotatedOrigin->z, rotatedDirection->z);
+        tz_max = safe_fixdiv( CUBE_HALF_SIZE - rotatedOrigin->z, rotatedDirection->z);
+        if (tz_min > tz_max) { WORD tmp = tz_min; tz_min = tz_max; tz_max = tmp; }
+    } else {
+        if (rotatedOrigin->z < -CUBE_HALF_SIZE || rotatedOrigin->z > CUBE_HALF_SIZE) {
+            tz_min = INTTOFIX(1);
+            tz_max = INTTOFIX(0);
+        } else {
+            tz_min = -32768;  // -128.0 in 8.8 fixed-point
+            tz_max = 32512;   // +127.0 in 8.8 fixed-point
+        }
+    }
+
+    // Intersect all slabs
+    *t_min = tx_min > ty_min ? tx_min : ty_min;
+    *t_min = *t_min  > tz_min ? *t_min  : tz_min;
+    *t_max = tx_max < ty_max ? tx_max : ty_max;
+    *t_max = *t_max  < tz_max ? *t_max  : tz_max;
+}
+
+//----------------------------------------
 // Render all rotation steps of the cube into chunky buffers
 // Each step rotates the cube by DEGREE_RESOLUTION degrees
 static void renderAllRotationSteps(void) {
@@ -183,69 +246,15 @@ static void renderAllRotationSteps(void) {
         // Transform all ray directions with inverse rotation matrix and raytrace
         for (ray_index = 0; ray_index < total_rays; ray_index++) {
             WORD t_min, t_max;
-            WORD tx_min, tx_max, ty_min, ty_max, tz_min, tz_max;
-
+            
             multiplyInverseRotationY(cosVal, sinVal,
                                      &ctx.rayDirections[ray_index],
                                      &rotatedDirection);
 
             // Ray-AABB intersection using slab method
-            // Cube bounds in object space: [-CUBE_HALF_SIZE, CUBE_HALF_SIZE] on each axis
-            // t = (bound - origin) / direction
-
-            // X slabs
-            if (rotatedDirection.x != 0) {
-                tx_min = safe_fixdiv(-CUBE_HALF_SIZE - rotatedOrigin.x, rotatedDirection.x);
-                tx_max = safe_fixdiv( CUBE_HALF_SIZE - rotatedOrigin.x, rotatedDirection.x);
-                if (tx_min > tx_max) { WORD tmp = tx_min; tx_min = tx_max; tx_max = tmp; }
-            } else {
-                // Ray parallel to X slabs: check if origin is inside
-                if (rotatedOrigin.x < -CUBE_HALF_SIZE || rotatedOrigin.x > CUBE_HALF_SIZE) {
-                    // Origin outside cube bounds - no intersection possible
-                    tx_min = INTTOFIX(1);
-                    tx_max = INTTOFIX(0);  // tx_min > tx_max will cause miss
-                } else {
-                    // Origin inside - ray passes through entire range
-                    tx_min = -32768;  // -128.0 in 8.8 fixed-point
-                    tx_max = 32512;   // +127.0 in 8.8 fixed-point (127 << 8)
-                }
-            }
-
-            // Y slabs
-            if (rotatedDirection.y != 0) {
-                ty_min = safe_fixdiv(-CUBE_HALF_SIZE - rotatedOrigin.y, rotatedDirection.y);
-                ty_max = safe_fixdiv( CUBE_HALF_SIZE - rotatedOrigin.y, rotatedDirection.y);
-                if (ty_min > ty_max) { WORD tmp = ty_min; ty_min = ty_max; ty_max = tmp; }
-            } else {
-                if (rotatedOrigin.y < -CUBE_HALF_SIZE || rotatedOrigin.y > CUBE_HALF_SIZE) {
-                    ty_min = INTTOFIX(1);
-                    ty_max = INTTOFIX(0);
-                } else {
-                    ty_min = -32768;  // -128.0 in 8.8 fixed-point
-                    ty_max = 32512;   // +127.0 in 8.8 fixed-point
-                }
-            }
-
-            // Z slabs
-            if (rotatedDirection.z != 0) {
-                tz_min = safe_fixdiv(-CUBE_HALF_SIZE - rotatedOrigin.z, rotatedDirection.z);
-                tz_max = safe_fixdiv( CUBE_HALF_SIZE - rotatedOrigin.z, rotatedDirection.z);
-                if (tz_min > tz_max) { WORD tmp = tz_min; tz_min = tz_max; tz_max = tmp; }
-            } else {
-                if (rotatedOrigin.z < -CUBE_HALF_SIZE || rotatedOrigin.z > CUBE_HALF_SIZE) {
-                    tz_min = INTTOFIX(1);
-                    tz_max = INTTOFIX(0);
-                } else {
-                    tz_min = -32768;  // -128.0 in 8.8 fixed-point
-                    tz_max = 32512;   // +127.0 in 8.8 fixed-point
-                }
-            }
-
-            // Intersect all slabs
-            t_min = tx_min > ty_min ? tx_min : ty_min;
-            t_min = t_min  > tz_min ? t_min  : tz_min;
-            t_max = tx_max < ty_max ? tx_max : ty_max;
-            t_max = t_max  < tz_max ? t_max  : tz_max;
+            rayIntersectionWithSlab(&rotatedOrigin, &rotatedDirection, 
+                &t_min, &t_max
+            );
 
             // calculate pixel color based on intersection distance
             ctx.rotationBuffers[step][ray_index] = calculateColor(t_min, t_max);
