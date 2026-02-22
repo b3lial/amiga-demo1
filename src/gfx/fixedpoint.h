@@ -20,6 +20,10 @@
 #define FIXMULT(x, y) (((x) * (y)) >> FIXSHIFT)
 #define FIXDIV(x, y) (((x) << FIXSHIFT) / (y))
 
+// Fixed-point range limits for signed WORD in 8.8 format
+#define FIX_MIN_INFINITY -32768  // -128.0 in 8.8 fixed-point (minimum WORD value)
+#define FIX_MAX_INFINITY  32512  // +127.0 in 8.8 fixed-point (127 << 8)
+
 // Safe fixed-point operations with overflow protection
 static inline WORD safe_fixmult(WORD x, WORD y) {
     LONG result = ((LONG)x * (LONG)y) >> FIXSHIFT;

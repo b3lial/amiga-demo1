@@ -156,7 +156,6 @@ UBYTE calculateColor(WORD t_min, WORD t_max)
 //----------------------------------------
 // Ray-AABB intersection using slab method
 // Cube bounds in object space: [-CUBE_HALF_SIZE, CUBE_HALF_SIZE] on each axis
-// t = (bound - origin) / direction
 void rayIntersectionWithSlab(struct Vec3 *rotatedOrigin, RayDirection *rotatedDirection, WORD *t_min, WORD *t_max)
 {
     WORD tx_min, tx_max, ty_min, ty_max, tz_min, tz_max;
@@ -174,8 +173,8 @@ void rayIntersectionWithSlab(struct Vec3 *rotatedOrigin, RayDirection *rotatedDi
             tx_max = INTTOFIX(0);  // tx_min > tx_max will cause miss
         } else {
             // Origin inside - ray passes through entire range
-            tx_min = -32768;  // -128.0 in 8.8 fixed-point
-            tx_max = 32512;   // +127.0 in 8.8 fixed-point (127 << 8)
+            tx_min = FIX_MIN_INFINITY;
+            tx_max = FIX_MAX_INFINITY;
         }
     }
 
@@ -189,8 +188,8 @@ void rayIntersectionWithSlab(struct Vec3 *rotatedOrigin, RayDirection *rotatedDi
             ty_min = INTTOFIX(1);
             ty_max = INTTOFIX(0);
         } else {
-            ty_min = -32768;  // -128.0 in 8.8 fixed-point
-            ty_max = 32512;   // +127.0 in 8.8 fixed-point
+            ty_min = FIX_MIN_INFINITY;
+            ty_max = FIX_MAX_INFINITY;
         }
     }
 
@@ -204,8 +203,8 @@ void rayIntersectionWithSlab(struct Vec3 *rotatedOrigin, RayDirection *rotatedDi
             tz_min = INTTOFIX(1);
             tz_max = INTTOFIX(0);
         } else {
-            tz_min = -32768;  // -128.0 in 8.8 fixed-point
-            tz_max = 32512;   // +127.0 in 8.8 fixed-point
+            tz_min = FIX_MIN_INFINITY;
+            tz_max = FIX_MAX_INFINITY;
         }
     }
 
