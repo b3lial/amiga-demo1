@@ -113,54 +113,6 @@ static void multiplyInverseRotationY(WORD cosVal, WORD sinVal,
 }
 
 //----------------------------------------
-// Debug function to log ray intersection values
-static void logRayIntersection(ULONG ray_index,
-                                const struct Vec3 *rotatedOrigin,
-                                const RayDirection *rotatedDirection,
-                                WORD tx_min, WORD tx_max,
-                                WORD ty_min, WORD ty_max,
-                                WORD tz_min, WORD tz_max,
-                                WORD t_min, WORD t_max,
-                                WORD t, UBYTE color) {
-    char buf1[12], buf2[12], buf3[12];
-
-    writeLogFS("Ray %lu:\n", ray_index);
-
-    // Log origin
-    fixToStr(rotatedOrigin->x, buf1);
-    fixToStr(rotatedOrigin->y, buf2);
-    fixToStr(rotatedOrigin->z, buf3);
-    writeLogFS("  Origin: (%s, %s, %s)\n", buf1, buf2, buf3);
-
-    // Log direction
-    fixToStr(rotatedDirection->x, buf1);
-    fixToStr(rotatedDirection->y, buf2);
-    fixToStr(rotatedDirection->z, buf3);
-    writeLogFS("  Direction: (%s, %s, %s)\n", buf1, buf2, buf3);
-
-    // Log X slabs
-    fixToStr(tx_min, buf1);
-    fixToStr(tx_max, buf2);
-    writeLogFS("  X slabs: tx_min=%s, tx_max=%s\n", buf1, buf2);
-
-    // Log Y slabs
-    fixToStr(ty_min, buf1);
-    fixToStr(ty_max, buf2);
-    writeLogFS("  Y slabs: ty_min=%s, ty_max=%s\n", buf1, buf2);
-
-    // Log Z slabs
-    fixToStr(tz_min, buf1);
-    fixToStr(tz_max, buf2);
-    writeLogFS("  Z slabs: tz_min=%s, tz_max=%s\n", buf1, buf2);
-
-    // Log final intersection
-    fixToStr(t_min, buf1);
-    fixToStr(t_max, buf2);
-    fixToStr(t, buf3);
-    writeLogFS("  Final: t_min=%s, t_max=%s, t=%s, color=%d\n", buf1, buf2, buf3, (int)color);
-}
-
-//----------------------------------------
 // Convert a chunky buffer to planar bitmap format
 static void convertChunkyToBitmap(UBYTE *sourceChunky, struct BitMap *destPlanar) {
     struct c2pStruct c2p;
@@ -172,6 +124,50 @@ static void convertChunkyToBitmap(UBYTE *sourceChunky, struct BitMap *destPlanar
     c2p.chunkybuffer = sourceChunky;
     ChunkyToPlanarAsm(&c2p);
 }
+
+//----------------------------------------
+// Calculate pixel color based on distance to cube
+UBYTE calculateColor(WORD t_min, WORD t_max)
+{
+    UBYTE color = 0;
+    WORD t;
+
+    // Hit if t_min <= t_max and intersection is in front of camera
+    if (t_min <= t_max && t_max > 0) {
+        // t is the entry point (or exit if behind camera)
+        t = t_min > 0 ? t_min : t_max;
+
+        // Debug: Log distance of a single line of the cube to the camera
+        // if(step == 5 && (ray_index >= (ROTATINGCUBE_SCREEN_HEIGHT / 2) * ROTATINGCUBE_SCREEN_WIDTH) && (ray_index < ((ROTATINGCUBE_SCREEN_HEIGHT / 2) * ROTATINGCUBE_SCREEN_WIDTH) + ROTATINGCUBE_SCREEN_WIDTH))
+        // {
+        //    char buf1[12];
+        //     writeLogFS("\n Distance: %s ", fixToStr(t, buf1));
+        // }
+
+        // Map distance to color index (closer = brighter)
+        // t ranges from ~2.0 (front face) to ~4.0 (back face) in fixed-point
+        // Map to palette index 1..15 (0 reserved for background)
+        // Use fixed-point arithmetic to preserve precision
+        {
+            WORD colorValue;
+            // Map t from range [2.0, 4.0] to color [15, 1]
+            // Formula: 15 - ((t - 2.0) * 14 / 2.0)
+            colorValue = t - FLOATTOFIX(2.0);  // Offset to 0
+            if (colorValue < 0) colorValue = 0;
+            // Scale by 14/2.0 = 7.0
+            colorValue = (colorValue * 7) >> FIXSHIFT;
+            color = (UBYTE)(15 - colorValue);
+            if (color < 1) color = 1;
+            if (color > 15) color = 15;
+        }
+    } 
+    else 
+    {
+        color = 0;  // Background
+    }
+
+    return color;
+} 
 
 //----------------------------------------
 // Render all rotation steps of the cube into chunky buffers
@@ -202,9 +198,8 @@ static void renderAllRotationSteps(void) {
 
         // Transform all ray directions with inverse rotation matrix and raytrace
         for (ray_index = 0; ray_index < total_rays; ray_index++) {
-            WORD t_min, t_max, t = 0;
+            WORD t_min, t_max;
             WORD tx_min, tx_max, ty_min, ty_max, tz_min, tz_max;
-            UBYTE color;
 
             multiplyInverseRotationY(cosVal, sinVal,
                                      &ctx.rayDirections[ray_index],
@@ -268,48 +263,8 @@ static void renderAllRotationSteps(void) {
             t_max = tx_max < ty_max ? tx_max : ty_max;
             t_max = t_max  < tz_max ? t_max  : tz_max;
 
-            // Hit if t_min <= t_max and intersection is in front of camera
-            if (t_min <= t_max && t_max > 0) {
-                // t is the entry point (or exit if behind camera)
-                t = t_min > 0 ? t_min : t_max;
-
-                // Map distance to color index (closer = brighter)
-                // t ranges from ~2.0 (front face) to ~4.0 (back face) in fixed-point
-                // Map to palette index 1..15 (0 reserved for background)
-                // Use fixed-point arithmetic to preserve precision
-                {
-                    WORD colorValue;
-                    // Map t from range [2.0, 4.0] to color [15, 1]
-                    // Formula: 15 - ((t - 2.0) * 14 / 2.0)
-                    colorValue = t - FLOATTOFIX(2.0);  // Offset to 0
-                    if (colorValue < 0) colorValue = 0;
-                    // Scale by 14/2.0 = 7.0
-                    colorValue = (colorValue * 7) >> FIXSHIFT;
-                    color = (UBYTE)(15 - colorValue);
-                    if (color < 1) color = 1;
-                    if (color > 15) color = 15;
-                }
-            } else {
-                color = 0;  // Background
-            }
-
-            ctx.rotationBuffers[step][ray_index] = color;
-
-            // Debug: Log center pixel at step 0 (should definitely hit the cube)
-            if (step == 0 && ray_index == (ROTATINGCUBE_SCREEN_WIDTH / 2 +
-                                            (ROTATINGCUBE_SCREEN_HEIGHT / 2) * ROTATINGCUBE_SCREEN_WIDTH)) {
-                char buf1[12], buf2[12], buf3[12];
-                writeLogFS("\n=== CENTER PIXEL DEBUG (step 0, pixel %d,%d) ===\n",
-                           ROTATINGCUBE_SCREEN_WIDTH / 2, ROTATINGCUBE_SCREEN_HEIGHT / 2);
-                writeLogFS("ORIGINAL direction: (%s, %s, %s)\n",
-                           fixToStr(ctx.rayDirections[ray_index].x, buf1),
-                           fixToStr(ctx.rayDirections[ray_index].y, buf2),
-                           fixToStr(ctx.rayDirections[ray_index].z, buf3));
-                logRayIntersection(ray_index, &rotatedOrigin, &rotatedDirection,
-                                   tx_min, tx_max, ty_min, ty_max, tz_min, tz_max,
-                                   t_min, t_max, t, color);
-                writeLog("=== END CENTER PIXEL DEBUG ===\n\n");
-            }
+            // calculate pixel color based on intersection distance
+            ctx.rotationBuffers[step][ray_index] = calculateColor(t_min, t_max);
         }
     }
 

@@ -60,7 +60,7 @@ Ray 41120:
   X slabs: tx_min=--128.000, tx_max=127.000
   Y slabs: ty_min=--128.000, ty_max=127.000
   Z slabs: tz_min=2.000, tz_max=4.000
-  Final: t_min=2.000, t_max=4.000, t=2.000, color=11
+  Final: t_min=2.000, t_max=4.000, t=2.000, color=15
 === END CENTER PIXEL DEBUG ===
 
 Rendering rotation step 1 (angle: 10 degrees)...
@@ -68,7 +68,127 @@ Rendering rotation step 2 (angle: 20 degrees)...
 Rendering rotation step 3 (angle: 30 degrees)...
 Rendering rotation step 4 (angle: 40 degrees)...
 Rendering rotation step 5 (angle: 50 degrees)...
-Rendering rotation step 6 (angle: 60 degrees)...
+
+ Distance: 3.062 
+ Distance: 2.984 
+ Distance: 2.910 
+ Distance: 2.839 
+ Distance: 2.839 
+ Distance: 2.773 
+ Distance: 2.710 
+ Distance: 2.679 
+ Distance: 2.589 
+ Distance: 2.589 
+ Distance: 2.562 
+ Distance: 2.480 
+ Distance: 2.457 
+ Distance: 2.406 
+ Distance: 2.406 
+ Distance: 2.359 
+ Distance: 2.312 
+ Distance: 2.265 
+ Distance: 2.222 
+ Distance: 2.222 
+ Distance: 2.183 
+ Distance: 2.144 
+ Distance: 2.125 
+ Distance: 2.066 
+ Distance: 2.066 
+ Distance: 2.050 
+ Distance: 2.000 
+ Distance: 1.980 
+ Distance: 1.949 
+ Distance: 1.949 
+ Distance: 1.917 
+ Distance: 1.886 
+ Distance: 1.855 
+ Distance: 1.828 
+ Distance: 1.828 
+ Distance: 1.800 
+ Distance: 1.773 
+ Distance: 1.757 
+ Distance: 1.718 
+ Distance: 1.718 
+ Distance: 1.707 
+ Distance: 1.671 
+ Distance: 1.660 
+ Distance: 1.636 
+ Distance: 1.636 
+ Distance: 1.613 
+ Distance: 1.593 
+ Distance: 1.593 
+ Distance: 1.609 
+ Distance: 1.609 
+ Distance: 1.617 
+ Distance: 1.632 
+ Distance: 1.640 
+ Distance: 1.656 
+ Distance: 1.656 
+ Distance: 1.675 
+ Distance: 1.691 
+ Distance: 1.699 
+ Distance: 1.718 
+ Distance: 1.718 
+ Distance: 1.726 
+ Distance: 1.746 
+ Distance: 1.753 
+ Distance: 1.773 
+ Distance: 1.773 
+ Distance: 1.781 
+ Distance: 1.800 
+ Distance: 1.820 
+ Distance: 1.843 
+ Distance: 1.843 
+ Distance: 1.851 
+ Distance: 1.875 
+ Distance: 1.882 
+ Distance: 1.906 
+ Distance: 1.906 
+ Distance: 1.917 
+ Distance: 1.941 
+ Distance: 1.949 
+ Distance: 1.972 
+ Distance: 1.972 
+ Distance: 2.000 
+ Distance: 2.023 
+ Distance: 2.035 
+ Distance: 2.058 
+ Distance: 2.058 
+ Distance: 2.074 
+ Distance: 2.097 
+ Distance: 2.113 
+ Distance: 2.140 
+ Distance: 2.140 
+ Distance: 2.152 
+ Distance: 2.183 
+ Distance: 2.210 
+ Distance: 2.242 
+ Distance: 2.242 
+ Distance: 2.257 
+ Distance: 2.289 
+ Distance: 2.304 
+ Distance: 2.335 
+ Distance: 2.335 
+ Distance: 2.351 
+ Distance: 2.386 
+ Distance: 2.402 
+ Distance: 2.437 
+ Distance: 2.437 
+ Distance: 2.476 
+ Distance: 2.511 
+ Distance: 2.531 
+ Distance: 2.570 
+ Distance: 2.570 
+ Distance: 2.593 
+ Distance: 2.632 
+ Distance: 2.652 
+ Distance: 2.695 
+ Distance: 2.695 
+ Distance: 2.718 
+ Distance: 2.765 
+ Distance: 2.812 
+ Distance: 2.859 
+ Distance: 2.859 Rendering rotation step 6 (angle: 60 degrees)...
 Rendering rotation step 7 (angle: 70 degrees)...
 Rendering rotation step 8 (angle: 80 degrees)...
 Rendering rotation step 9 (angle: 90 degrees)...
