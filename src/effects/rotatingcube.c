@@ -131,35 +131,18 @@ UBYTE calculateColor(WORD t_min, WORD t_max)
 {
     UBYTE color = 0;
     WORD t;
+    WORD step = FLOATTOFIX(0.113);
+    WORD distanceDiff;
 
     // Hit if t_min <= t_max and intersection is in front of camera
     if (t_min <= t_max && t_max > 0) {
         // t is the entry point (or exit if behind camera)
         t = t_min > 0 ? t_min : t_max;
 
-        // Debug: Log distance of a single line of the cube to the camera
-        // if(step == 5 && (ray_index >= (ROTATINGCUBE_SCREEN_HEIGHT / 2) * ROTATINGCUBE_SCREEN_WIDTH) && (ray_index < ((ROTATINGCUBE_SCREEN_HEIGHT / 2) * ROTATINGCUBE_SCREEN_WIDTH) + ROTATINGCUBE_SCREEN_WIDTH))
-        // {
-        //    char buf1[12];
-        //     writeLogFS("\n Distance: %s ", fixToStr(t, buf1));
-        // }
-
-        // Map distance to color index (closer = brighter)
-        // t ranges from ~2.0 (front face) to ~4.0 (back face) in fixed-point
-        // Map to palette index 1..15 (0 reserved for background)
-        // Use fixed-point arithmetic to preserve precision
-        {
-            WORD colorValue;
-            // Map t from range [2.0, 4.0] to color [15, 1]
-            // Formula: 15 - ((t - 2.0) * 14 / 2.0)
-            colorValue = t - FLOATTOFIX(2.0);  // Offset to 0
-            if (colorValue < 0) colorValue = 0;
-            // Scale by 14/2.0 = 7.0
-            colorValue = (colorValue * 7) >> FIXSHIFT;
-            color = (UBYTE)(15 - colorValue);
-            if (color < 1) color = 1;
-            if (color > 15) color = 15;
-        }
+        distanceDiff = t - FLOATTOFIX(1.5);
+        color = (UBYTE) FIXTOINT(safe_fixdiv(distanceDiff, step));
+        color++;
+        color = ((color > 15) ? 15 : color);
     } 
     else 
     {
