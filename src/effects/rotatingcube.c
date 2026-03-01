@@ -61,8 +61,9 @@ static void calcPixelNDC(UWORD px, UWORD py, UWORD width, UWORD height,
     temp_y = FIXMULT_LONG(temp_y, FLOATTOFIX_LONG(2.0));
     temp_y = FLOATTOFIX_LONG(1.0) - temp_y;
 
-    // Apply aspect ratio correction (width/height)
-    aspect = FIXDIV_LONG(INTTOFIX_LONG(width), INTTOFIX_LONG(height));
+    // Apply pixel aspect ratio correction for Amiga 320x256 PAL
+    // Use PIXEL_ASPECT_RATIO defined in header - adjust value there to get square cube
+    aspect = FIXTOLONG(PIXEL_ASPECT_RATIO);
     temp_x = FIXMULT_LONG(temp_x, aspect);
 
     // Convert from LONG 24.8 to WORD 8.8 with clamping
@@ -94,26 +95,38 @@ static void calcRayDirection(UWORD px, UWORD py, UWORD width, UWORD height,
 }
 
 //----------------------------------------
-// Multiply a 3D vector by an inverse Y-axis rotation matrix (optimized)
-// Optimized for Y-axis rotation which has many zeros and ones
-// Inverse Y-axis rotation matrix:
-// | cos(θ)   0  -sin(θ) |
-// |   0      1     0    |
-// | sin(θ)   0   cos(θ) |
-static void multiplyInverseRotationY(fix16 cosVal, fix16 sinVal,
-                                     const struct Vec3 *vector,
-                                     struct Vec3 *result) {
-    // result.x = cos(θ)*v.x + 0*v.y - sin(θ)*v.z
-    //          = cos(θ)*v.x - sin(θ)*v.z
-    result->x = safe_fixmult(cosVal, vector->x) - safe_fixmult(sinVal, vector->z);
+// Multiply a 3D vector by combined inverse X, Y, and Z rotation matrices
+// Applies inverse Z, then Y, then X-axis rotations
+// Combined matrix = Rx^-1 * Ry^-1 * Rz^-1
+//
+// Standard forward rotations:
+// Rx = | 1    0      0   |    Ry = | cos  0  sin |    Rz = | cos -sin  0 |
+//      | 0  cos  -sin    |         |  0   1   0  |         | sin  cos  0 |
+//      | 0  sin   cos    |         |-sin  0  cos |         |  0    0   1 |
+//
+// Inverse rotations (transpose):
+// Rx^-1 = | 1   0     0  |   Ry^-1 = | cos  0 -sin |   Rz^-1 = | cos  sin  0 |
+//         | 0  cos  sin  |           |  0   1   0  |           |-sin  cos  0 |
+//         | 0 -sin  cos  |           | sin  0  cos |           |  0    0   1 |
+static void multiplyInverseRotationXYZ(fix16 cosX, fix16 sinX, fix16 cosY, fix16 sinY, fix16 cosZ, fix16 sinZ,
+                                       const struct Vec3 *vector,
+                                       struct Vec3 *result) {
+    struct Vec3 temp1, temp2;
 
-    // result.y = 0*v.x + 1*v.y + 0*v.z
-    //          = v.y
-    result->y = vector->y;
+    // First apply inverse Z-axis rotation: Rz^-1
+    temp1.x = safe_fixmult(cosZ, vector->x) + safe_fixmult(sinZ, vector->y);
+    temp1.y = -safe_fixmult(sinZ, vector->x) + safe_fixmult(cosZ, vector->y);
+    temp1.z = vector->z;
 
-    // result.z = sin(θ)*v.x + 0*v.y + cos(θ)*v.z
-    //          = sin(θ)*v.x + cos(θ)*v.z
-    result->z = safe_fixmult(sinVal, vector->x) + safe_fixmult(cosVal, vector->z);
+    // Then apply inverse Y-axis rotation: Ry^-1
+    temp2.x = safe_fixmult(cosY, temp1.x) + safe_fixmult(sinY, temp1.z);
+    temp2.y = temp1.y;
+    temp2.z = -safe_fixmult(sinY, temp1.x) + safe_fixmult(cosY, temp1.z);
+
+    // Finally apply inverse X-axis rotation: Rx^-1
+    result->x = temp2.x;
+    result->y = safe_fixmult(cosX, temp2.y) + safe_fixmult(sinX, temp2.z);
+    result->z = -safe_fixmult(sinX, temp2.y) + safe_fixmult(cosX, temp2.z);
 }
 
 //----------------------------------------
@@ -231,27 +244,32 @@ static void renderAllRotationSteps(void) {
     writeLog("Rendering all rotation steps...\n");
 
     for (step = 0; step < ROTATION_STEPS; step++) {
-        fix16 sinVal, cosVal;
+        fix16 sinValX, cosValX, sinValY, cosValY, sinValZ, cosValZ;
         RayOrigin rotatedOrigin;
         RayDirection rotatedDirection;
         ULONG ray_index;
 
         angle = step * DEGREE_RESOLUTION;
-        sinVal = sinLookup[step];
-        cosVal = cosLookup[step];
+        // X and Z axis rotation for testing
+        sinValX = sinLookup[step];
+        cosValX = cosLookup[step];
+        sinValY = FLOATTOFIX(0.0);  // No Y rotation
+        cosValY = FLOATTOFIX(1.0);
+        sinValZ = sinLookup[step];
+        cosValZ = cosLookup[step];
 
         writeLogFS("Rendering rotation step %d (angle: %d degrees)...\n", step, angle);
 
-        // Transform ray origin with inverse rotation matrix
-        multiplyInverseRotationY(cosVal, sinVal, &ctx.rayOrigin, &rotatedOrigin);
+        // Transform ray origin with inverse rotation matrix (X and Z axes)
+        multiplyInverseRotationXYZ(cosValX, sinValX, cosValY, sinValY, cosValZ, sinValZ, &ctx.rayOrigin, &rotatedOrigin);
 
         // Transform all ray directions with inverse rotation matrix and raytrace
         for (ray_index = 0; ray_index < total_rays; ray_index++) {
             fix16 t_min, t_max;
 
-            multiplyInverseRotationY(cosVal, sinVal,
-                                     &ctx.rayDirections[ray_index],
-                                     &rotatedDirection);
+            multiplyInverseRotationXYZ(cosValX, sinValX, cosValY, sinValY, cosValZ, sinValZ,
+                                       &ctx.rayDirections[ray_index],
+                                       &rotatedDirection);
 
             // Ray-AABB intersection using slab method
             rayIntersectionWithSlab(&rotatedOrigin, &rotatedDirection, 
@@ -322,9 +340,9 @@ UWORD fsmRotatingCube(void) {
             convertChunkyToBitmap(ctx.rotationBuffers[stepIndex],
                                   ctx.screenBitmaps[ctx.currentBufferIndex]);
 
-            // Advance to next rotation step every 3 frames (slower rotation)
+            // Advance to next rotation step every 2 frames (slower rotation)
             frameCounter++;
-            if (frameCounter >= 3) {
+            if (frameCounter >= 2) {
                 frameCounter = 0;
                 stepIndex = (stepIndex < ROTATION_STEPS - 1) ? stepIndex + 1 : 0;
             }
@@ -371,13 +389,18 @@ UWORD initRotatingCube(void) {
 
     // Initialize color table for LoadRGB32 (AGA 8-bit per channel)
     // Format: (count<<16)|first_register, R, G, B, R, G, B, ..., 0
+    // Each RGB component is 32-bit: 0xRRRRRRRR (8-bit value repeated 4 times)
+    // Medium blue palette: varying blue intensity with some green, minimal red
     ctx.colorTable[0] = (ROTATINGCUBE_SCREEN_COLORS << 16) | 0;  // Load 32 colors starting at register 0
     for (i = 0; i < ROTATINGCUBE_SCREEN_COLORS; i++) {
         ULONG intensity = (i * 0xFF) / (ROTATINGCUBE_SCREEN_COLORS - 1);  // 0-255 range
-        ULONG intensity32 = (intensity << 24) | (intensity << 16) | (intensity << 8);  // RGB32 format
-        ctx.colorTable[1 + i * 3 + 0] = intensity32;  // Red
-        ctx.colorTable[1 + i * 3 + 1] = intensity32;  // Green
-        ctx.colorTable[1 + i * 3 + 2] = intensity32;  // Blue
+        ULONG red = intensity / 8;           // Very little red (1/8 intensity)
+        ULONG green = intensity / 2;         // Medium green (1/2 intensity)
+        ULONG blue = intensity;              // Full blue intensity
+        // Replicate 8-bit value across all 4 bytes: 0xRRRRRRRR
+        ctx.colorTable[1 + i * 3 + 0] = (red << 24) | (red << 16) | (red << 8) | red;       // Red channel
+        ctx.colorTable[1 + i * 3 + 1] = (green << 24) | (green << 16) | (green << 8) | green; // Green channel
+        ctx.colorTable[1 + i * 3 + 2] = (blue << 24) | (blue << 16) | (blue << 8) | blue;    // Blue channel
     }
     ctx.colorTable[1 + ROTATINGCUBE_SCREEN_COLORS * 3] = 0;  // Terminator
 

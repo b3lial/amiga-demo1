@@ -26,10 +26,15 @@ enum RotatingCubeState {
 #define CUBE_HALF_SIZE FLOATTOFIX(1.0)
 #define SCREEN_PLANE_Z FLOATTOFIX(1.0)
 
+// Pixel aspect ratio correction for Amiga PAL 320x256
+// Adjust this value to make the cube appear square on your display
+// Values to try: 1.0 (no correction), 1.2, 1.3, 1.4, 1.5
+#define PIXEL_ASPECT_RATIO FLOATTOFIX(1.5)
+
 // Cube related stuff
 #define CUBE_COLORS (ROTATINGCUBE_SCREEN_COLORS - 1)
-#define CUBE_MAX_DISTANCE FLOATTOFIX(3.2)
-#define CUBE_MIN_DISTANCE FLOATTOFIX(1.5)
+#define CUBE_MAX_DISTANCE FLOATTOFIX(3.45)
+#define CUBE_MIN_DISTANCE FLOATTOFIX(1.25)
 #define CUBE_EXTENT (CUBE_MAX_DISTANCE - CUBE_MIN_DISTANCE)
 #define CUBE_COLOR_SECTION_SIZE (FIXDIV(CUBE_EXTENT, INTTOFIX(CUBE_COLORS)))
 
