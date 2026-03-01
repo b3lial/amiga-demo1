@@ -40,35 +40,39 @@ static struct RotatingCubeContext ctx = {
 //----------------------------------------
 // Convert pixel coordinates to normalized device coordinates [-1, 1]
 // with aspect ratio correction
+// Uses LONG (32-bit) 24.8 fixed-point internally for precision, then converts to WORD 8.8
 static void calcPixelNDC(UWORD px, UWORD py, UWORD width, UWORD height,
                         WORD *ndc_x, WORD *ndc_y) {
     LONG temp_x, temp_y;
-    WORD aspect;
+    LONG aspect;
 
     // Convert to NDC [-1.0, 1.0] with 0.5 offset to sample pixel center
     // Formula: ((px + 0.5) / width) * 2.0 - 1.0
-    // Use LONG to avoid overflow (px can be up to 320, which overflows WORD when shifted)
-    temp_x = ((LONG)px << FIXSHIFT) + FLOATTOFIX(0.5);
-    temp_x = (temp_x << FIXSHIFT) / ((LONG)width << FIXSHIFT);  // Division
-    temp_x = (temp_x * FLOATTOFIX(2.0)) >> FIXSHIFT;  // Multiply by 2.0
-    *ndc_x = (WORD)(temp_x - FLOATTOFIX(1.0));
+    // Use LONG 24.8 format for full precision
+    temp_x = INTTOFIX_LONG(px) + FLOATTOFIX_LONG(0.5);
+    temp_x = FIXDIV_LONG(temp_x, INTTOFIX_LONG(width));
+    temp_x = FIXMULT_LONG(temp_x, FLOATTOFIX_LONG(2.0));
+    temp_x = temp_x - FLOATTOFIX_LONG(1.0);
 
     // Flip Y axis: screen Y goes down, world Y goes up
     // Formula: 1.0 - ((py + 0.5) / height) * 2.0
-    temp_y = ((LONG)py << FIXSHIFT) + FLOATTOFIX(0.5);
-    temp_y = (temp_y << FIXSHIFT) / ((LONG)height << FIXSHIFT);  // Division
-    temp_y = (temp_y * FLOATTOFIX(2.0)) >> FIXSHIFT;  // Multiply by 2.0
-    *ndc_y = (WORD)(FLOATTOFIX(1.0) - temp_y);
+    temp_y = INTTOFIX_LONG(py) + FLOATTOFIX_LONG(0.5);
+    temp_y = FIXDIV_LONG(temp_y, INTTOFIX_LONG(height));
+    temp_y = FIXMULT_LONG(temp_y, FLOATTOFIX_LONG(2.0));
+    temp_y = FLOATTOFIX_LONG(1.0) - temp_y;
 
     // Apply aspect ratio correction (width/height)
-    aspect = (WORD)(((LONG)width << FIXSHIFT) / (LONG)height);
-    *ndc_x = (WORD)(((LONG)*ndc_x * (LONG)aspect) >> FIXSHIFT);
+    aspect = FIXDIV_LONG(INTTOFIX_LONG(width), INTTOFIX_LONG(height));
+    temp_x = FIXMULT_LONG(temp_x, aspect);
 
-    // Clamp to valid range
-    if (*ndc_x > 32767) *ndc_x = 32767;
-    if (*ndc_x < -32768) *ndc_x = -32768;
-    if (*ndc_y > 32767) *ndc_y = 32767;
-    if (*ndc_y < -32768) *ndc_y = -32768;
+    // Convert from LONG 24.8 to WORD 8.8 with clamping
+    if (temp_x > WORD_MAX) temp_x = WORD_MAX;
+    if (temp_x < WORD_MIN) temp_x = WORD_MIN;
+    if (temp_y > WORD_MAX) temp_y = WORD_MAX;
+    if (temp_y < WORD_MIN) temp_y = WORD_MIN;
+
+    *ndc_x = LONGTOFIX(temp_x);
+    *ndc_y = LONGTOFIX(temp_y);
 }
 
 //----------------------------------------

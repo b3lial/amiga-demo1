@@ -8,17 +8,25 @@
 
 #define FIXSHIFT 8
 
-// convert float to fix (and back)
+//========================================
+// 16-bit fixed-point (8.8 format)
+//========================================
+
+// Convert float to fix (and back)
 #define FLOATTOFIX(x) ((WORD)((x) * (1 << FIXSHIFT)))
 #define FIXTOFLOAT(x) ((float)(x) / (1 << FIXSHIFT))
 
-// convert int to fix (and back)
+// Convert int to fix (and back)
 #define INTTOFIX(x) ((x) << FIXSHIFT)
 #define FIXTOINT(x) ((x) >> FIXSHIFT)
 
-// multiply and divide (unsafe - use safe_fixmult/safe_fixdiv instead)
+// Multiply and divide (unsafe - use safe_fixmult/safe_fixdiv instead)
 #define FIXMULT(x, y) (((x) * (y)) >> FIXSHIFT)
 #define FIXDIV(x, y) (((x) << FIXSHIFT) / (y))
+
+// Signed WORD range limits
+#define WORD_MIN -32768  // Minimum signed WORD value
+#define WORD_MAX  32767  // Maximum signed WORD value
 
 // Fixed-point range limits for signed WORD in 8.8 format
 #define FIX_MIN_INFINITY -32768  // -128.0 in 8.8 fixed-point (minimum WORD value)
@@ -39,5 +47,25 @@ static inline WORD safe_fixdiv(WORD x, WORD y) {
     if (result < -32768) return -32768;
     return (WORD)result;
 }
+
+//========================================
+// 32-bit fixed-point (24.8 format)
+//========================================
+
+// Uses LONG (32-bit) with 8 fractional bits, same precision as 16-bit but larger range
+
+// Convert float to fix
+#define FLOATTOFIX_LONG(x) ((LONG)((x) * (1 << FIXSHIFT)))
+
+// Convert int to fix
+#define INTTOFIX_LONG(x) ((LONG)(x) << FIXSHIFT)
+
+// Convert between 16-bit and 32-bit fixed-point
+#define FIXTOLONG(x) ((LONG)(x))  // Convert WORD 8.8 to LONG 24.8
+#define LONGTOFIX(x) ((WORD)(x))  // Convert LONG 24.8 back to WORD 8.8 (with potential overflow)
+
+// Multiply and divide
+#define FIXMULT_LONG(x, y) (((x) * (y)) >> FIXSHIFT)
+#define FIXDIV_LONG(x, y) (((x) << FIXSHIFT) / (y))
 
 #endif  // FIXEDPOINT_H
