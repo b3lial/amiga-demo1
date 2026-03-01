@@ -26,6 +26,13 @@ enum RotatingCubeState {
 #define CUBE_HALF_SIZE FLOATTOFIX(1.0)
 #define SCREEN_PLANE_Z FLOATTOFIX(1.0)
 
+// Cube related stuff
+#define CUBE_COLORS (ROTATINGCUBE_SCREEN_COLORS - 1)
+#define CUBE_MAX_DISTANCE FLOATTOFIX(3.2)
+#define CUBE_MIN_DISTANCE FLOATTOFIX(1.5)
+#define CUBE_EXTENT (CUBE_MAX_DISTANCE - CUBE_MIN_DISTANCE)
+#define CUBE_COLOR_SECTION_SIZE (FIXDIV(CUBE_EXTENT, INTTOFIX(CUBE_COLORS)))
+
 // 3D vector using fixed-point arithmetic
 struct Vec3 {
     fix16 x;

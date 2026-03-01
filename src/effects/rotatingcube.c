@@ -135,7 +135,6 @@ UBYTE calculateColor(fix16 t_min, fix16 t_max)
 {
     UBYTE color = 0;
     fix16 t;
-    fix16 step = FLOATTOFIX(0.113);
     fix16 distanceDiff;
 
     // Hit if t_min <= t_max and intersection is in front of camera
@@ -143,11 +142,11 @@ UBYTE calculateColor(fix16 t_min, fix16 t_max)
         // t is the entry point (or exit if behind camera)
         t = t_min > 0 ? t_min : t_max;
 
-        distanceDiff = t - FLOATTOFIX(1.5);
-        color = (UBYTE) FIXTOINT(safe_fixdiv(distanceDiff, step));
-        color = 14 - color;
+        distanceDiff = t - CUBE_MIN_DISTANCE;
+        color = (UBYTE) FIXTOINT(safe_fixdiv(distanceDiff, CUBE_COLOR_SECTION_SIZE));
+        color = (CUBE_COLORS - 1) - color;
         color++;
-        color = ((color > 15) ? 0 : color);
+        color = ((color > CUBE_COLORS) ? 0 : color);
     } 
     else 
     {
