@@ -28,15 +28,18 @@ enum RotatingCubeState {
 
 // 3D vector using fixed-point arithmetic
 struct Vec3 {
-    WORD x;
-    WORD y;
-    WORD z;
+    fix16 x;
+    fix16 y;
+    fix16 z;
 };
 
 // Ray direction vector (origin is shared across all rays, stored in context)
 // NOTE: Direction vectors are NOT normalized (for performance)
 // Ray intersection code must handle unnormalized directions
 typedef struct Vec3 RayDirection;
+
+// Ray origin point in 3D space
+typedef struct Vec3 RayOrigin;
 
 UWORD fsmRotatingCube(void);
 UWORD initRotatingCube(void);

@@ -9,6 +9,17 @@
 #define FIXSHIFT 8
 
 //========================================
+// Fixed-point type definitions
+//========================================
+
+// 16-bit fixed-point types (8.8 format)
+typedef WORD fix16;   // Signed 16-bit fixed-point
+typedef UWORD ufix16; // Unsigned 16-bit fixed-point
+
+// 32-bit fixed-point types (24.8 format)
+typedef LONG fix32;   // Signed 32-bit fixed-point
+
+//========================================
 // 16-bit fixed-point (8.8 format)
 //========================================
 
@@ -33,19 +44,19 @@
 #define FIX_MAX_INFINITY  32512  // +127.0 in 8.8 fixed-point (127 << 8)
 
 // Safe fixed-point operations with overflow protection
-static inline WORD safe_fixmult(WORD x, WORD y) {
+static inline fix16 safe_fixmult(fix16 x, fix16 y) {
     LONG result = ((LONG)x * (LONG)y) >> FIXSHIFT;
     if (result > 32767) return 32767;
     if (result < -32768) return -32768;
-    return (WORD)result;
+    return (fix16)result;
 }
 
-static inline WORD safe_fixdiv(WORD x, WORD y) {
+static inline fix16 safe_fixdiv(fix16 x, fix16 y) {
     if (y == 0) return 0;  // Division by zero protection
     LONG result = ((LONG)x << FIXSHIFT) / (LONG)y;
     if (result > 32767) return 32767;
     if (result < -32768) return -32768;
-    return (WORD)result;
+    return (fix16)result;
 }
 
 //========================================

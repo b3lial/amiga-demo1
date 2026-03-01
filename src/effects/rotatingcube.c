@@ -22,7 +22,7 @@ struct RotatingCubeContext {
     UWORD colorTable[ROTATINGCUBE_SCREEN_COLORS];
     UBYTE currentBufferIndex;  // 0 or 1
     RayDirection *rayDirections;  // Dynamically allocated array of ray directions
-    struct Vec3 rayOrigin;  // Shared origin for all rays (camera position)
+    RayOrigin rayOrigin;  // Shared origin for all rays (camera position)
     UBYTE *rotationBuffers[ROTATION_STEPS];  // Chunky buffers for each rotation step
 };
 
@@ -42,9 +42,9 @@ static struct RotatingCubeContext ctx = {
 // with aspect ratio correction
 // Uses LONG (32-bit) 24.8 fixed-point internally for precision, then converts to WORD 8.8
 static void calcPixelNDC(UWORD px, UWORD py, UWORD width, UWORD height,
-                        WORD *ndc_x, WORD *ndc_y) {
-    LONG temp_x, temp_y;
-    LONG aspect;
+                        fix16 *ndc_x, fix16 *ndc_y) {
+    fix32 temp_x, temp_y;
+    fix32 aspect;
 
     // Convert to NDC [-1.0, 1.0] with 0.5 offset to sample pixel center
     // Formula: ((px + 0.5) / width) * 2.0 - 1.0
@@ -80,7 +80,7 @@ static void calcPixelNDC(UWORD px, UWORD py, UWORD width, UWORD height,
 // Note: Direction vectors are NOT normalized - handle this in intersection code
 static void calcRayDirection(UWORD px, UWORD py, UWORD width, UWORD height,
                              RayDirection *direction) {
-    WORD ndc_x, ndc_y;
+    fix16 ndc_x, ndc_y;
 
     // Convert pixel to NDC
     calcPixelNDC(px, py, width, height, &ndc_x, &ndc_y);
@@ -100,7 +100,7 @@ static void calcRayDirection(UWORD px, UWORD py, UWORD width, UWORD height,
 // | cos(θ)   0  -sin(θ) |
 // |   0      1     0    |
 // | sin(θ)   0   cos(θ) |
-static void multiplyInverseRotationY(WORD cosVal, WORD sinVal,
+static void multiplyInverseRotationY(fix16 cosVal, fix16 sinVal,
                                      const struct Vec3 *vector,
                                      struct Vec3 *result) {
     // result.x = cos(θ)*v.x + 0*v.y - sin(θ)*v.z
@@ -131,12 +131,12 @@ static void convertChunkyToBitmap(UBYTE *sourceChunky, struct BitMap *destPlanar
 
 //----------------------------------------
 // Calculate pixel color based on distance to cube
-UBYTE calculateColor(WORD t_min, WORD t_max)
+UBYTE calculateColor(fix16 t_min, fix16 t_max)
 {
     UBYTE color = 0;
-    WORD t;
-    WORD step = FLOATTOFIX(0.113);
-    WORD distanceDiff;
+    fix16 t;
+    fix16 step = FLOATTOFIX(0.113);
+    fix16 distanceDiff;
 
     // Hit if t_min <= t_max and intersection is in front of camera
     if (t_min <= t_max && t_max > 0) {
@@ -160,9 +160,9 @@ UBYTE calculateColor(WORD t_min, WORD t_max)
 //----------------------------------------
 // Ray-AABB intersection using slab method
 // Cube bounds in object space: [-CUBE_HALF_SIZE, CUBE_HALF_SIZE] on each axis
-void rayIntersectionWithSlab(struct Vec3 *rotatedOrigin, RayDirection *rotatedDirection, WORD *t_min, WORD *t_max)
+void rayIntersectionWithSlab(RayOrigin *rotatedOrigin, RayDirection *rotatedDirection, fix16 *t_min, fix16 *t_max)
 {
-    WORD tx_min, tx_max, ty_min, ty_max, tz_min, tz_max;
+    fix16 tx_min, tx_max, ty_min, ty_max, tz_min, tz_max;
 
     // X slabs
     if (rotatedDirection->x != 0) {
@@ -225,15 +225,15 @@ void rayIntersectionWithSlab(struct Vec3 *rotatedOrigin, RayDirection *rotatedDi
 static void renderAllRotationSteps(void) {
     UBYTE step;
     USHORT angle;
-    WORD *sinLookup = getSinLookup();
-    WORD *cosLookup = getCosLookup();
+    fix16 *sinLookup = getSinLookup();
+    fix16 *cosLookup = getCosLookup();
     ULONG total_rays = (ULONG)ROTATINGCUBE_SCREEN_WIDTH * ROTATINGCUBE_SCREEN_HEIGHT;
 
     writeLog("Rendering all rotation steps...\n");
 
     for (step = 0; step < ROTATION_STEPS; step++) {
-        WORD sinVal, cosVal;
-        struct Vec3 rotatedOrigin;
+        fix16 sinVal, cosVal;
+        RayOrigin rotatedOrigin;
         RayDirection rotatedDirection;
         ULONG ray_index;
 
@@ -248,8 +248,8 @@ static void renderAllRotationSteps(void) {
 
         // Transform all ray directions with inverse rotation matrix and raytrace
         for (ray_index = 0; ray_index < total_rays; ray_index++) {
-            WORD t_min, t_max;
-            
+            fix16 t_min, t_max;
+
             multiplyInverseRotationY(cosVal, sinVal,
                                      &ctx.rayDirections[ray_index],
                                      &rotatedDirection);
