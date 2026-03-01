@@ -19,7 +19,7 @@ struct RotatingCubeContext {
     enum RotatingCubeState state;
     struct BitMap *screenBitmaps[2];
     struct Screen *cubeScreens[2];
-    UWORD colorTable[ROTATINGCUBE_SCREEN_COLORS];
+    ULONG colorTable[ROTATINGCUBE_SCREEN_COLORS * 3 + 2];  // LoadRGB32 format: (count<<16)|0, R, G, B, ..., 0
     UBYTE currentBufferIndex;  // 0 or 1
     RayDirection *rayDirections;  // Dynamically allocated array of ray directions
     RayOrigin rayOrigin;  // Shared origin for all rays (camera position)
@@ -369,11 +369,17 @@ UWORD initRotatingCube(void) {
         goto __exit_init_cube;
     }
 
-    // Initialize color table (simple grayscale for now)
+    // Initialize color table for LoadRGB32 (AGA 8-bit per channel)
+    // Format: (count<<16)|first_register, R, G, B, R, G, B, ..., 0
+    ctx.colorTable[0] = (ROTATINGCUBE_SCREEN_COLORS << 16) | 0;  // Load 32 colors starting at register 0
     for (i = 0; i < ROTATINGCUBE_SCREEN_COLORS; i++) {
-        UWORD intensity = (i * 0xf) / (ROTATINGCUBE_SCREEN_COLORS - 1);
-        ctx.colorTable[i] = (intensity << 8) | (intensity << 4) | intensity;
+        ULONG intensity = (i * 0xFF) / (ROTATINGCUBE_SCREEN_COLORS - 1);  // 0-255 range
+        ULONG intensity32 = (intensity << 24) | (intensity << 16) | (intensity << 8);  // RGB32 format
+        ctx.colorTable[1 + i * 3 + 0] = intensity32;  // Red
+        ctx.colorTable[1 + i * 3 + 1] = intensity32;  // Green
+        ctx.colorTable[1 + i * 3 + 2] = intensity32;  // Blue
     }
+    ctx.colorTable[1 + ROTATINGCUBE_SCREEN_COLORS * 3] = 0;  // Terminator
 
     // Allocate memory for ray direction array
     {
@@ -425,9 +431,9 @@ UWORD initRotatingCube(void) {
     // Init double buffering - start with buffer 0
     ctx.currentBufferIndex = 0;
 
-    // Load color tables for both screens
-    LoadRGB4(&ctx.cubeScreens[0]->ViewPort, ctx.colorTable, ROTATINGCUBE_SCREEN_COLORS);
-    LoadRGB4(&ctx.cubeScreens[1]->ViewPort, ctx.colorTable, ROTATINGCUBE_SCREEN_COLORS);
+    // Load color tables for both screens using AGA LoadRGB32
+    LoadRGB32(&ctx.cubeScreens[0]->ViewPort, ctx.colorTable);
+    LoadRGB32(&ctx.cubeScreens[1]->ViewPort, ctx.colorTable);
 
     // Make screen visible
     ScreenToFront(ctx.cubeScreens[ctx.currentBufferIndex]);
