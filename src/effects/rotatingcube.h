@@ -16,7 +16,7 @@ enum RotatingCubeState {
 #define ROTATINGCUBE_SCREEN_COLORS 32
 
 // Rotation parameters
-#define ROTATION_STEPS 35  // 0° to 350° in 10° increments (360° == 0°)
+#define ROTATION_STEPS 36  // 0° to 350° in 10° increments (360° == 0°)
 #define DEGREE_RESOLUTION 10  // 10 degrees per step
 
 // Scene constants (fixed-point)
