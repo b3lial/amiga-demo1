@@ -244,8 +244,9 @@ UWORD initShowLogo(void) {
     LoadRGB4(&ctx.logoscreens[0]->ViewPort, ctx.color0, SHOWLOGO_SCREEN_COLORS);
     LoadRGB4(&ctx.logoscreens[1]->ViewPort, ctx.color0, SHOWLOGO_SCREEN_COLORS);
 
-    createStars(AMOUNT_OF_STARS, SHOWLOGO_SCREEN_WIDTH + SHOWLOGO_SCREEN_BORDER,
-              SHOWLOGO_SCREEN_HEIGHT + SHOWLOGO_SCREEN_BORDER,
+    // Total dimensions include borders on both sides: width + 2*border
+    createStars(AMOUNT_OF_STARS, SHOWLOGO_SCREEN_WIDTH + 2 * SHOWLOGO_SCREEN_BORDER,
+              SHOWLOGO_SCREEN_HEIGHT + 2 * SHOWLOGO_SCREEN_BORDER,
               SHOWLOGO_SCREEN_BORDER, SHOWLOGO_SCREEN_BORDER);
 
     // Initialize circular movement controller with screen and logo dimensions.
@@ -556,7 +557,6 @@ static UWORD performFadeOut(void) {
                   0xC0, 0xff, 0);
     }
 
-    WaitTOF();
     ScreenToFront(ctx.logoscreens[ctx.currentBufferIndex]);
 
     step++;
