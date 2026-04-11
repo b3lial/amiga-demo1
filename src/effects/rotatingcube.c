@@ -315,6 +315,29 @@ static void calcScreenRays(UWORD width, UWORD height) {
 }
 
 //----------------------------------------
+static void draw(void) {
+    static UBYTE stepIndex = 0;
+    static UBYTE frameCounter = 0;
+
+    // Switch buffers
+    ctx.currentBufferIndex = 1 - ctx.currentBufferIndex;
+
+    // Convert current chunky buffer to planar bitmap of the back buffer
+    convertChunkyToBitmap(ctx.rotationBuffers[stepIndex],
+                          ctx.screenBitmaps[ctx.currentBufferIndex]);
+
+    // Advance to next rotation step every 2 frames (slower rotation)
+    frameCounter++;
+    if (frameCounter >= 2) {
+        frameCounter = 0;
+        stepIndex = (stepIndex < ROTATION_STEPS - 1) ? stepIndex + 1 : 0;
+    }
+
+    WaitTOF();
+    ScreenToFront(ctx.cubeScreens[ctx.currentBufferIndex]);
+}
+
+//----------------------------------------
 UWORD fsmRotatingCube(void) {
     if (mouseClick()) {
         ctx.state = ROTATINGCUBE_SHUTDOWN;
@@ -329,29 +352,9 @@ UWORD fsmRotatingCube(void) {
             ctx.state = ROTATINGCUBE_RUNNING;
             break;
         case ROTATINGCUBE_RUNNING:
-        {
-            static UBYTE stepIndex = 0;
-            static UBYTE frameCounter = 0;
-
-            // Switch buffers
-            ctx.currentBufferIndex = 1 - ctx.currentBufferIndex;
-
-            // Convert current chunky buffer to planar bitmap of the back buffer
-            convertChunkyToBitmap(ctx.rotationBuffers[stepIndex],
-                                  ctx.screenBitmaps[ctx.currentBufferIndex]);
-
-            // Advance to next rotation step every 2 frames (slower rotation)
-            frameCounter++;
-            if (frameCounter >= 2) {
-                frameCounter = 0;
-                stepIndex = (stepIndex < ROTATION_STEPS - 1) ? stepIndex + 1 : 0;
-            }
-
-            WaitTOF();
-            ScreenToFront(ctx.cubeScreens[ctx.currentBufferIndex]);
+            draw();
             ctx.state = ROTATINGCUBE_RUNNING;
             break;
-        }
         case ROTATINGCUBE_SHUTDOWN:
             exitRotatingCube();
             return FSM_STOP;
