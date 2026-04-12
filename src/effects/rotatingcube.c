@@ -23,7 +23,10 @@ struct RotatingCubeContext {
     UBYTE currentBufferIndex;  // 0 or 1
     RayDirection *rayDirections;  // Dynamically allocated array of ray directions
     RayOrigin rayOrigin;  // Shared origin for all rays (camera position)
-    UBYTE *rotationBuffers[ROTATION_STEPS];  // Chunky buffers for each rotation step
+    UBYTE *rotationBuffers[ROTATION_STEPS];    // Chunky buffers for each rotation step
+    UBYTE *silhouetteBuffers[ROTATION_STEPS];  // Silhouette masks for cookie cut blit (1=cube, 0=background)
+    struct BitMap *cubePlanarBitmap;           // Intermediate planar buffer for rendered cube
+    struct BitMap *silhouettePlanarBitmap;     // Intermediate planar buffer for silhouette mask (1 bitplane)
 };
 
 static struct RotatingCubeContext ctx = {
@@ -34,7 +37,10 @@ static struct RotatingCubeContext ctx = {
     .currentBufferIndex = 0,
     .rayDirections = NULL,
     .rayOrigin = {0, 0, 0},  // Will be set to cube object space in generate_screen_rays()
-    .rotationBuffers = {NULL}  // Will be allocated in initRotatingCube()
+    .rotationBuffers = {NULL},      // Will be allocated in initRotatingCube()
+    .silhouetteBuffers = {NULL},    // Will be allocated in initRotatingCube()
+    .cubePlanarBitmap = NULL,
+    .silhouettePlanarBitmap = NULL
 };
 
 //----------------------------------------
@@ -278,6 +284,9 @@ static void renderAllRotationSteps(void) {
 
             // calculate pixel color based on intersection distance
             ctx.rotationBuffers[step][ray_index] = calculateColor(t_min, t_max);
+
+            // silhouette: 1 where cube is present, 0 for background
+            ctx.silhouetteBuffers[step][ray_index] = (ctx.rotationBuffers[step][ray_index] != 0) ? 1 : 0;
         }
     }
 
@@ -314,8 +323,6 @@ static void calcScreenRays(UWORD width, UWORD height) {
     writeLogFS("Successfully generated %lu ray directions\n", (ULONG)width * height);
 }
 
-#define GRID_SPACING 32
-
 //----------------------------------------
 static void drawGrid(struct RastPort *rp) {
     UWORD x, y;
@@ -338,12 +345,22 @@ static void draw(void) {
     // Switch buffers
     ctx.currentBufferIndex = 1 - ctx.currentBufferIndex;
 
-    // Convert current chunky buffer to planar bitmap of the back buffer
-    convertChunkyToBitmap(ctx.rotationBuffers[stepIndex],
-                          ctx.screenBitmaps[ctx.currentBufferIndex]);
+    // Convert chunky buffers to intermediate planar bitmaps
+    convertChunkyToBitmap(ctx.rotationBuffers[stepIndex],   ctx.cubePlanarBitmap);
+    convertChunkyToBitmap(ctx.silhouetteBuffers[stepIndex], ctx.silhouettePlanarBitmap);
 
-    // Draw white grid on top of the cube (foreground, using AmigaOS RastPort)
+    // Draw white grid into the back screen buffer
     drawGrid(&ctx.cubeScreens[ctx.currentBufferIndex]->RastPort);
+
+    // Cookie cut blit: copy cube where silhouette=1, preserve background where silhouette=0
+    // A=mask(silhouette), B=source(cube), C=dest(background) → minterm 0xCA: (A AND B) OR (NOT A AND C)
+    BltMaskBitMapRastPort(ctx.cubePlanarBitmap, 0, 0,
+                          &ctx.cubeScreens[ctx.currentBufferIndex]->RastPort,
+                          0, 0,
+                          ROTATINGCUBE_SCREEN_WIDTH, ROTATINGCUBE_SCREEN_HEIGHT,
+                          0xCA,
+                          ctx.silhouettePlanarBitmap->Planes[0]);
+    WaitBlit();
 
     // Advance to next rotation step every 2 frames (slower rotation)
     frameCounter++;
@@ -463,6 +480,35 @@ UWORD initRotatingCube(void) {
     writeLogFS("Successfully allocated %d chunky buffers (%lu bytes each)\n",
                ROTATION_STEPS, (ULONG)ROTATINGCUBE_SCREEN_WIDTH * ROTATINGCUBE_SCREEN_HEIGHT);
 
+    // Allocate silhouette chunky buffers (one per rotation step)
+    writeLogFS("Allocating %d silhouette buffers for rotation steps...\n", ROTATION_STEPS);
+    for (i = 0; i < ROTATION_STEPS; i++) {
+        ULONG bufferSize = (ULONG)ROTATINGCUBE_SCREEN_WIDTH * ROTATINGCUBE_SCREEN_HEIGHT;
+        ctx.silhouetteBuffers[i] = AllocVec(bufferSize, MEMF_FAST | MEMF_CLEAR);
+        if (!ctx.silhouetteBuffers[i]) {
+            writeLogFS("Error: Could not allocate silhouette buffer %d (%lu bytes)\n", i, bufferSize);
+            goto __exit_init_cube;
+        }
+    }
+    writeLogFS("Successfully allocated %d silhouette buffers (%lu bytes each)\n",
+               ROTATION_STEPS, (ULONG)ROTATINGCUBE_SCREEN_WIDTH * ROTATINGCUBE_SCREEN_HEIGHT);
+
+    // Allocate intermediate planar bitmap for the rendered cube
+    ctx.cubePlanarBitmap = AllocBitMap(ROTATINGCUBE_SCREEN_WIDTH, ROTATINGCUBE_SCREEN_HEIGHT,
+                                       ROTATINGCUBE_SCREEN_DEPTH, BMF_CLEAR, NULL);
+    if (!ctx.cubePlanarBitmap) {
+        writeLog("Error: Could not allocate cube planar bitmap\n");
+        goto __exit_init_cube;
+    }
+
+    // Allocate intermediate planar bitmap for the silhouette mask (1 bitplane)
+    ctx.silhouettePlanarBitmap = AllocBitMap(ROTATINGCUBE_SCREEN_WIDTH, ROTATINGCUBE_SCREEN_HEIGHT,
+                                             1, BMF_CLEAR, NULL);
+    if (!ctx.silhouettePlanarBitmap) {
+        writeLog("Error: Could not allocate silhouette planar bitmap\n");
+        goto __exit_init_cube;
+    }
+
     // Create first screen
     ctx.cubeScreens[0] = createScreen(ctx.screenBitmaps[0], TRUE,
                                       0, 0,
@@ -514,6 +560,14 @@ void exitRotatingCube(void) {
         }
     }
 
+    // Free silhouette buffers
+    for (i = 0; i < ROTATION_STEPS; i++) {
+        if (ctx.silhouetteBuffers[i]) {
+            FreeVec(ctx.silhouetteBuffers[i]);
+            ctx.silhouetteBuffers[i] = NULL;
+        }
+    }
+
     // Free ray direction array
     if (ctx.rayDirections) {
         writeLog("Freeing ray direction array\n");
@@ -529,6 +583,16 @@ void exitRotatingCube(void) {
         }
     }
     WaitTOF();
+
+    if (ctx.cubePlanarBitmap) {
+        FreeBitMap(ctx.cubePlanarBitmap);
+        ctx.cubePlanarBitmap = NULL;
+    }
+
+    if (ctx.silhouettePlanarBitmap) {
+        FreeBitMap(ctx.silhouettePlanarBitmap);
+        ctx.silhouettePlanarBitmap = NULL;
+    }
 
     for (i = 0; i < 2; i++) {
         if (ctx.screenBitmaps[i]) {

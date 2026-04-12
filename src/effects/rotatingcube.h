@@ -38,6 +38,9 @@ enum RotatingCubeState {
 #define CUBE_EXTENT (CUBE_MAX_DISTANCE - CUBE_MIN_DISTANCE)
 #define CUBE_COLOR_SECTION_SIZE (FIXDIV(CUBE_EXTENT, INTTOFIX(CUBE_COLORS)))
 
+// Background stuff
+#define GRID_SPACING 32
+
 // 3D vector using fixed-point arithmetic
 struct Vec3 {
     fix16 x;
