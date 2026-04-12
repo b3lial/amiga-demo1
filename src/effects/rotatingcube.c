@@ -369,15 +369,9 @@ static void draw(void) {
                           ctx.silhouettePlanarBitmap->Planes[0]);
     WaitBlit();
 
-    // Advance to next rotation step every 2 frames (slower rotation)
-    frameCounter++;
-    if (frameCounter >= 2) {
-        frameCounter = 0;
-        stepIndex = (stepIndex < ROTATION_STEPS - 1) ? stepIndex + 1 : 0;
-    }
-
-    WaitTOF();
     ScreenToFront(ctx.cubeScreens[ctx.currentBufferIndex]);
+
+    stepIndex = (stepIndex < ROTATION_STEPS - 1) ? stepIndex + 1 : 0;
 }
 
 //----------------------------------------
