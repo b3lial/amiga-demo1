@@ -340,7 +340,6 @@ static void drawGrid(struct RastPort *rp) {
 //----------------------------------------
 static void draw(void) {
     static UBYTE stepIndex = 0;
-    static UBYTE frameCounter = 0;
 
     // Switch buffers
     ctx.currentBufferIndex = 1 - ctx.currentBufferIndex;
