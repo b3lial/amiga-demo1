@@ -349,16 +349,23 @@ static void draw(void) {
     convertChunkyToBitmap(ctx.rotationBuffers[stepIndex],   ctx.cubePlanarBitmap);
     convertChunkyToBitmap(ctx.silhouetteBuffers[stepIndex], ctx.silhouettePlanarBitmap);
 
+    // Clear back screen buffer to background color before compositing
+    SetRast(&ctx.cubeScreens[ctx.currentBufferIndex]->RastPort, 0);
+
     // Draw white grid into the back screen buffer
     drawGrid(&ctx.cubeScreens[ctx.currentBufferIndex]->RastPort);
 
-    // Cookie cut blit: copy cube where silhouette=1, preserve background where silhouette=0
-    // A=mask(silhouette), B=source(cube), C=dest(background) → minterm 0xCA: (A AND B) OR (NOT A AND C)
+    /*
+     * Cookie-cut blit: composite cube over grid background using silhouette mask.
+     * BltMaskBitMapRastPort uses channel assignment A=Source, B=Mask, C=Dest
+     * (unlike direct hardware blitter where A=Mask, B=Source, C=Dest).
+     * Minterm 0xE2 = AB + !BC: where mask=1 take source, where mask=0 keep dest.
+     */
     BltMaskBitMapRastPort(ctx.cubePlanarBitmap, 0, 0,
                           &ctx.cubeScreens[ctx.currentBufferIndex]->RastPort,
                           0, 0,
                           ROTATINGCUBE_SCREEN_WIDTH, ROTATINGCUBE_SCREEN_HEIGHT,
-                          0xCA,
+                          0xE2,
                           ctx.silhouettePlanarBitmap->Planes[0]);
     WaitBlit();
 
