@@ -158,8 +158,8 @@ UBYTE calculateColor(fix16 t_min, fix16 t_max)
         distanceDiff = t - CUBE_MIN_DISTANCE;
         color = (UBYTE) FIXTOINT(safe_fixdiv(distanceDiff, CUBE_COLOR_SECTION_SIZE));
         color = (CUBE_COLORS - 1) - color;
-        color++;
-        color = ((color > CUBE_COLORS) ? 0 : color);
+        color += 2;  // skip index 0 (background) and index 1 (reserved)
+        color = ((color >= ROTATINGCUBE_SCREEN_COLORS) ? 0 : color);
     } 
     else 
     {
@@ -314,6 +314,22 @@ static void calcScreenRays(UWORD width, UWORD height) {
     writeLogFS("Successfully generated %lu ray directions\n", (ULONG)width * height);
 }
 
+#define GRID_SPACING 32
+
+//----------------------------------------
+static void drawGrid(struct RastPort *rp) {
+    UWORD x, y;
+    SetAPen(rp, 1);  // palette index 1 = white
+    for (y = 0; y < ROTATINGCUBE_SCREEN_HEIGHT; y += GRID_SPACING) {
+        Move(rp, 0, y);
+        Draw(rp, ROTATINGCUBE_SCREEN_WIDTH - 1, y);
+    }
+    for (x = 0; x < ROTATINGCUBE_SCREEN_WIDTH; x += GRID_SPACING) {
+        Move(rp, x, 0);
+        Draw(rp, x, ROTATINGCUBE_SCREEN_HEIGHT - 1);
+    }
+}
+
 //----------------------------------------
 static void draw(void) {
     static UBYTE stepIndex = 0;
@@ -325,6 +341,9 @@ static void draw(void) {
     // Convert current chunky buffer to planar bitmap of the back buffer
     convertChunkyToBitmap(ctx.rotationBuffers[stepIndex],
                           ctx.screenBitmaps[ctx.currentBufferIndex]);
+
+    // Draw white grid on top of the cube (foreground, using AmigaOS RastPort)
+    drawGrid(&ctx.cubeScreens[ctx.currentBufferIndex]->RastPort);
 
     // Advance to next rotation step every 2 frames (slower rotation)
     frameCounter++;
@@ -395,15 +414,27 @@ UWORD initRotatingCube(void) {
     // Each RGB component is 32-bit: 0xRRRRRRRR (8-bit value repeated 4 times)
     // Medium blue palette: varying blue intensity with some green, minimal red
     ctx.colorTable[0] = (ROTATINGCUBE_SCREEN_COLORS << 16) | 0;  // Load 32 colors starting at register 0
-    for (i = 0; i < ROTATINGCUBE_SCREEN_COLORS; i++) {
-        ULONG intensity = (i * 0xFF) / (ROTATINGCUBE_SCREEN_COLORS - 1);  // 0-255 range
+
+    // Index 0: background (black)
+    ctx.colorTable[1 + 0 * 3 + 0] = 0x00000000;
+    ctx.colorTable[1 + 0 * 3 + 1] = 0x00000000;
+    ctx.colorTable[1 + 0 * 3 + 2] = 0x00000000;
+
+    // Index 1: reserved color (white)
+    ctx.colorTable[1 + 1 * 3 + 0] = 0xFFFFFFFF;
+    ctx.colorTable[1 + 1 * 3 + 1] = 0xFFFFFFFF;
+    ctx.colorTable[1 + 1 * 3 + 2] = 0xFFFFFFFF;
+
+    // Indices 2..31: cube depth gradient (CUBE_COLORS = 30 steps)
+    for (i = 2; i < ROTATINGCUBE_SCREEN_COLORS; i++) {
+        ULONG intensity = ((i - 2) * 0xFF) / (CUBE_COLORS - 1);  // 0-255 range across 30 steps
         ULONG red = intensity / 8;           // Very little red (1/8 intensity)
         ULONG green = intensity / 2;         // Medium green (1/2 intensity)
         ULONG blue = intensity;              // Full blue intensity
         // Replicate 8-bit value across all 4 bytes: 0xRRRRRRRR
-        ctx.colorTable[1 + i * 3 + 0] = (red << 24) | (red << 16) | (red << 8) | red;       // Red channel
-        ctx.colorTable[1 + i * 3 + 1] = (green << 24) | (green << 16) | (green << 8) | green; // Green channel
-        ctx.colorTable[1 + i * 3 + 2] = (blue << 24) | (blue << 16) | (blue << 8) | blue;    // Blue channel
+        ctx.colorTable[1 + i * 3 + 0] = (red << 24) | (red << 16) | (red << 8) | red;
+        ctx.colorTable[1 + i * 3 + 1] = (green << 24) | (green << 16) | (green << 8) | green;
+        ctx.colorTable[1 + i * 3 + 2] = (blue << 24) | (blue << 16) | (blue << 8) | blue;
     }
     ctx.colorTable[1 + ROTATINGCUBE_SCREEN_COLORS * 3] = 0;  // Terminator
 
