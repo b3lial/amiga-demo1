@@ -142,8 +142,8 @@ static void convertChunkyToBitmap(UBYTE *sourceChunky, struct BitMap *destPlanar
     c2p.bmap = destPlanar;
     c2p.startX = 0;
     c2p.startY = 0;
-    c2p.width = ROTATINGCUBE_SCREEN_WIDTH;
-    c2p.height = ROTATINGCUBE_SCREEN_HEIGHT;
+    c2p.width = CUBE_INNER_WIDTH;
+    c2p.height = CUBE_INNER_HEIGHT;
     c2p.chunkybuffer = sourceChunky;
     ChunkyToPlanarAsm(&c2p);
 }
@@ -245,7 +245,7 @@ static void renderAllRotationSteps(void) {
     USHORT angle;
     fix16 *sinLookup = getSinLookup();
     fix16 *cosLookup = getCosLookup();
-    ULONG total_rays = (ULONG)ROTATINGCUBE_SCREEN_WIDTH * ROTATINGCUBE_SCREEN_HEIGHT;
+    ULONG total_rays = (ULONG)CUBE_INNER_WIDTH * CUBE_INNER_HEIGHT;
 
     writeLog("Rendering all rotation steps...\n");
 
@@ -302,9 +302,11 @@ static void calcScreenRays(UWORD width, UWORD height) {
 
     writeLog("Generating ray directions for each screen pixel...\n");
 
-    // Generate ray direction for each pixel (in world space)
-    for (py = 0; py < height; py++) {
-        for (px = 0; px < width; px++) {
+    // Generate ray directions for the inner region only.
+    // NDC is calculated against the full screen dims to preserve correct projection.
+    // Pixel (BORDER_WIDTH + x, BORDER_HEIGHT + y) is stored at inner index (y * CUBE_INNER_WIDTH + x).
+    for (py = BORDER_HEIGHT; py < height - BORDER_HEIGHT; py++) {
+        for (px = BORDER_WIDTH; px < width - BORDER_WIDTH; px++) {
             calcRayDirection(px, py, width, height, &ctx.rayDirections[ray_index]);
             ray_index++;
         }
@@ -362,8 +364,8 @@ static void draw(void) {
      */
     BltMaskBitMapRastPort(ctx.cubePlanarBitmap, 0, 0,
                           &ctx.cubeScreens[ctx.currentBufferIndex]->RastPort,
-                          0, 0,
-                          ROTATINGCUBE_SCREEN_WIDTH, ROTATINGCUBE_SCREEN_HEIGHT,
+                          BORDER_WIDTH, BORDER_HEIGHT,
+                          CUBE_INNER_WIDTH, CUBE_INNER_HEIGHT,
                           0xE2,
                           ctx.silhouettePlanarBitmap->Planes[0]);
     WaitBlit();
@@ -457,7 +459,7 @@ UWORD initRotatingCube(void) {
 
     // Allocate memory for ray direction array
     {
-        ULONG total_rays = (ULONG)ROTATINGCUBE_SCREEN_WIDTH * ROTATINGCUBE_SCREEN_HEIGHT;
+        ULONG total_rays = (ULONG)CUBE_INNER_WIDTH * CUBE_INNER_HEIGHT;
         writeLogFS("Allocating memory for %lu ray directions (%lu bytes)\n",
                    total_rays, total_rays * sizeof(RayDirection));
         ctx.rayDirections = AllocVec(total_rays * sizeof(RayDirection), MEMF_ANY);
@@ -470,7 +472,7 @@ UWORD initRotatingCube(void) {
     // Allocate chunky buffers for each rotation step
     writeLogFS("Allocating %d chunky buffers for rotation steps...\n", ROTATION_STEPS);
     for (i = 0; i < ROTATION_STEPS; i++) {
-        ULONG bufferSize = (ULONG)ROTATINGCUBE_SCREEN_WIDTH * ROTATINGCUBE_SCREEN_HEIGHT;
+        ULONG bufferSize = (ULONG)CUBE_INNER_WIDTH * CUBE_INNER_HEIGHT;
         ctx.rotationBuffers[i] = AllocVec(bufferSize, MEMF_FAST | MEMF_CLEAR);
         if (!ctx.rotationBuffers[i]) {
             writeLogFS("Error: Could not allocate chunky buffer %d (%lu bytes)\n", i, bufferSize);
@@ -478,12 +480,12 @@ UWORD initRotatingCube(void) {
         }
     }
     writeLogFS("Successfully allocated %d chunky buffers (%lu bytes each)\n",
-               ROTATION_STEPS, (ULONG)ROTATINGCUBE_SCREEN_WIDTH * ROTATINGCUBE_SCREEN_HEIGHT);
+               ROTATION_STEPS, (ULONG)CUBE_INNER_WIDTH * CUBE_INNER_HEIGHT);
 
     // Allocate silhouette chunky buffers (one per rotation step)
     writeLogFS("Allocating %d silhouette buffers for rotation steps...\n", ROTATION_STEPS);
     for (i = 0; i < ROTATION_STEPS; i++) {
-        ULONG bufferSize = (ULONG)ROTATINGCUBE_SCREEN_WIDTH * ROTATINGCUBE_SCREEN_HEIGHT;
+        ULONG bufferSize = (ULONG)CUBE_INNER_WIDTH * CUBE_INNER_HEIGHT;
         ctx.silhouetteBuffers[i] = AllocVec(bufferSize, MEMF_FAST | MEMF_CLEAR);
         if (!ctx.silhouetteBuffers[i]) {
             writeLogFS("Error: Could not allocate silhouette buffer %d (%lu bytes)\n", i, bufferSize);
@@ -491,10 +493,10 @@ UWORD initRotatingCube(void) {
         }
     }
     writeLogFS("Successfully allocated %d silhouette buffers (%lu bytes each)\n",
-               ROTATION_STEPS, (ULONG)ROTATINGCUBE_SCREEN_WIDTH * ROTATINGCUBE_SCREEN_HEIGHT);
+               ROTATION_STEPS, (ULONG)CUBE_INNER_WIDTH * CUBE_INNER_HEIGHT);
 
     // Allocate intermediate planar bitmap for the rendered cube
-    ctx.cubePlanarBitmap = AllocBitMap(ROTATINGCUBE_SCREEN_WIDTH, ROTATINGCUBE_SCREEN_HEIGHT,
+    ctx.cubePlanarBitmap = AllocBitMap(CUBE_INNER_WIDTH, CUBE_INNER_HEIGHT,
                                        ROTATINGCUBE_SCREEN_DEPTH, BMF_CLEAR, NULL);
     if (!ctx.cubePlanarBitmap) {
         writeLog("Error: Could not allocate cube planar bitmap\n");
@@ -502,7 +504,7 @@ UWORD initRotatingCube(void) {
     }
 
     // Allocate intermediate planar bitmap for the silhouette mask (1 bitplane)
-    ctx.silhouettePlanarBitmap = AllocBitMap(ROTATINGCUBE_SCREEN_WIDTH, ROTATINGCUBE_SCREEN_HEIGHT,
+    ctx.silhouettePlanarBitmap = AllocBitMap(CUBE_INNER_WIDTH, CUBE_INNER_HEIGHT,
                                              1, BMF_CLEAR, NULL);
     if (!ctx.silhouettePlanarBitmap) {
         writeLog("Error: Could not allocate silhouette planar bitmap\n");

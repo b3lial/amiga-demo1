@@ -38,6 +38,14 @@ enum RotatingCubeState {
 #define CUBE_EXTENT (CUBE_MAX_DISTANCE - CUBE_MIN_DISTANCE)
 #define CUBE_COLOR_SECTION_SIZE (FIXDIV(CUBE_EXTENT, INTTOFIX(CUBE_COLORS)))
 
+// Border: defines how many pixels to skip on each side when rendering the cube.
+// The cube is rendered into a smaller inner region to save CPU and RAM.
+// NDC calculation still uses the full screen dimensions for correct projection.
+#define BORDER_WIDTH  48
+#define BORDER_HEIGHT 32
+#define CUBE_INNER_WIDTH  (ROTATINGCUBE_SCREEN_WIDTH  - 2 * BORDER_WIDTH)
+#define CUBE_INNER_HEIGHT (ROTATINGCUBE_SCREEN_HEIGHT - 2 * BORDER_HEIGHT)
+
 // Background stuff
 #define GRID_SPACING 32
 
