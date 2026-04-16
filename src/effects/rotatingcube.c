@@ -325,12 +325,22 @@ static void calcScreenRays(UWORD width, UWORD height) {
     writeLogFS("Successfully generated %lu ray directions\n", (ULONG)width * height);
 }
 
+#define GRID_DIRECTION_FRAMES 80  // frames before direction flips
+
 //----------------------------------------
 static void drawGrid(struct RastPort *rp) {
     static UWORD gridOffset = 0;
+    static WORD  gridDirection = 1;
+    static UWORD directionCounter = 0;
     WORD x, y;
 
-    gridOffset = (gridOffset + 1) % GRID_SPACING;
+    directionCounter++;
+    if (directionCounter >= GRID_DIRECTION_FRAMES) {
+        directionCounter = 0;
+        gridDirection = -gridDirection;
+    }
+
+    gridOffset = (gridOffset + GRID_SPACING + gridDirection) % GRID_SPACING;
 
     SetAPen(rp, 1);  // palette index 1 = white
 
