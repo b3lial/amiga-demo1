@@ -327,13 +327,23 @@ static void calcScreenRays(UWORD width, UWORD height) {
 
 //----------------------------------------
 static void drawGrid(struct RastPort *rp) {
-    UWORD x, y;
+    static UWORD gridOffset = 0;
+    WORD x, y;
+
+    gridOffset = (gridOffset + 1) % GRID_SPACING;
+
     SetAPen(rp, 1);  // palette index 1 = white
-    for (y = 0; y < ROTATINGCUBE_SCREEN_HEIGHT; y += GRID_SPACING) {
+
+    // Horizontal lines scroll downward
+    for (y = (WORD)gridOffset - GRID_SPACING; y < ROTATINGCUBE_SCREEN_HEIGHT; y += GRID_SPACING) {
+        if (y < 0) continue;
         Move(rp, 0, y);
         Draw(rp, ROTATINGCUBE_SCREEN_WIDTH - 1, y);
     }
-    for (x = 0; x < ROTATINGCUBE_SCREEN_WIDTH; x += GRID_SPACING) {
+
+    // Vertical lines scroll rightward
+    for (x = (WORD)gridOffset - GRID_SPACING; x < ROTATINGCUBE_SCREEN_WIDTH; x += GRID_SPACING) {
+        if (x < 0) continue;
         Move(rp, x, 0);
         Draw(rp, x, ROTATINGCUBE_SCREEN_HEIGHT - 1);
     }
