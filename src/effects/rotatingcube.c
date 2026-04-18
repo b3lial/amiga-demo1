@@ -247,12 +247,9 @@ void rayIntersectionWithSlab(RayOrigin *rotatedOrigin, RayDirection *rotatedDire
 // Each step rotates the cube by DEGREE_RESOLUTION degrees
 static void renderAllRotationSteps(void) {
     UBYTE step;
-    USHORT angle;
     fix16 *sinLookup = getSinLookup();
     fix16 *cosLookup = getCosLookup();
     ULONG total_rays = (ULONG)CUBE_INNER_WIDTH * CUBE_INNER_HEIGHT;
-
-    writeLog("Rendering all rotation steps...\n");
 
     for (step = 0; step < ROTATION_STEPS; step++) {
         fix16 sinValX, cosValX, sinValY, cosValY, sinValZ, cosValZ;
@@ -260,7 +257,6 @@ static void renderAllRotationSteps(void) {
         RayDirection rotatedDirection;
         ULONG ray_index;
 
-        angle = step * DEGREE_RESOLUTION;
         // X and Z axis rotation for testing
         sinValX = sinLookup[step];
         cosValX = cosLookup[step];
@@ -268,8 +264,6 @@ static void renderAllRotationSteps(void) {
         cosValY = FLOATTOFIX(1.0);
         sinValZ = sinLookup[step];
         cosValZ = cosLookup[step];
-
-        writeLogFS("Rendering rotation step %d (angle: %d degrees)...\n", step, angle);
 
         // Transform ray origin with inverse rotation matrix (X and Z axes)
         multiplyInverseRotationXYZ(cosValX, sinValX, cosValY, sinValY, cosValZ, sinValZ, &ctx.rayOrigin, &rotatedOrigin);
@@ -294,8 +288,6 @@ static void renderAllRotationSteps(void) {
             ctx.silhouetteBuffers[step][ray_index] = (ctx.rotationBuffers[step][ray_index] != 0) ? 1 : 0;
         }
     }
-
-    writeLogFS("Successfully rendered %d rotation steps\n", ROTATION_STEPS);
 }
 
 //----------------------------------------
@@ -304,8 +296,6 @@ static void renderAllRotationSteps(void) {
 static void calcScreenRays(UWORD width, UWORD height) {
     ULONG ray_index = 0;
     UWORD px, py;
-
-    writeLog("Generating ray directions for each screen pixel...\n");
 
     // Generate ray directions for the inner region only.
     // NDC is calculated against the full screen dims to preserve correct projection.
@@ -324,10 +314,6 @@ static void calcScreenRays(UWORD width, UWORD height) {
     ctx.rayOrigin.x = 0 - CUBE_CENTER_X;  // 0 - 0 = 0
     ctx.rayOrigin.y = 0 - CUBE_CENTER_Y;  // 0 - 0 = 0
     ctx.rayOrigin.z = 0 - CUBE_CENTER_Z;  // 0 - 3 = -3
-
-    writeLogFS("Ray origin in cube object space: (%d, %d, %d) [fixed-point]\n",
-               FIXTOINT(ctx.rayOrigin.x), FIXTOINT(ctx.rayOrigin.y), FIXTOINT(ctx.rayOrigin.z));
-    writeLogFS("Successfully generated %lu ray directions\n", (ULONG)width * height);
 }
 
 #define SIGF_CUBE_PREPARE_DONE (1L << 16)  // Signal bit for background task completion
