@@ -316,7 +316,65 @@ static void calcScreenRays(UWORD width, UWORD height) {
     ctx.rayOrigin.z = 0 - CUBE_CENTER_Z;  // 0 - 3 = -3
 }
 
-#define SIGF_CUBE_PREPARE_DONE (1L << 16)  // Signal bit for background task completion
+static void prepareRaytracingTask(void);  // forward declaration
+
+//----------------------------------------
+static UWORD prepareRaytracing(void) {
+    UBYTE i;
+
+    // Allocate memory for ray direction array
+    {
+        ULONG total_rays = (ULONG)CUBE_INNER_WIDTH * CUBE_INNER_HEIGHT;
+        ctx.rayDirections = AllocVec(total_rays * sizeof(RayDirection), MEMF_ANY);
+        if (!ctx.rayDirections) {
+            return FSM_ERROR;
+        }
+    }
+
+    // Allocate chunky buffers for each rotation step
+    for (i = 0; i < ROTATION_STEPS; i++) {
+        ULONG bufferSize = (ULONG)CUBE_INNER_WIDTH * CUBE_INNER_HEIGHT;
+        ctx.rotationBuffers[i] = AllocVec(bufferSize, MEMF_FAST | MEMF_CLEAR);
+        if (!ctx.rotationBuffers[i]) {
+            return FSM_ERROR;
+        }
+    }
+
+    // Allocate silhouette chunky buffers (one per rotation step)
+    for (i = 0; i < ROTATION_STEPS; i++) {
+        ULONG bufferSize = (ULONG)CUBE_INNER_WIDTH * CUBE_INNER_HEIGHT;
+        ctx.silhouetteBuffers[i] = AllocVec(bufferSize, MEMF_FAST | MEMF_CLEAR);
+        if (!ctx.silhouetteBuffers[i]) {
+            return FSM_ERROR;
+        }
+    }
+
+    // Allocate intermediate planar bitmap for the rendered cube
+    ctx.cubePlanarBitmap = AllocBitMap(CUBE_INNER_WIDTH, CUBE_INNER_HEIGHT,
+                                       ROTATINGCUBE_SCREEN_DEPTH, BMF_CLEAR, NULL);
+    if (!ctx.cubePlanarBitmap) {
+        return FSM_ERROR;
+    }
+
+    // Allocate intermediate planar bitmap for the silhouette mask (1 bitplane)
+    ctx.silhouettePlanarBitmap = AllocBitMap(CUBE_INNER_WIDTH, CUBE_INNER_HEIGHT,
+                                             1, BMF_CLEAR, NULL);
+    if (!ctx.silhouettePlanarBitmap) {
+        return FSM_ERROR;
+    }
+
+    // Start background raytracing task
+    ctx.mainTask = FindTask(NULL);
+    SetSignal(0, SIGF_CUBE_PREPARE_DONE);
+    ctx.bgTask = (struct Task *)CreateTask(
+        (CONST_STRPTR)"PrepareRaytracing", 0,
+        (APTR)prepareRaytracingTask, 4096);
+    if (!ctx.bgTask) {
+        return FSM_ERROR;
+    }
+
+    return FSM_ROTATINGCUBE;
+}
 
 //----------------------------------------
 static void prepareRaytracingTask(void) {
@@ -328,8 +386,6 @@ static void prepareRaytracingTask(void) {
 
     Signal(ctx.mainTask, SIGF_CUBE_PREPARE_DONE);
 }
-
-#define GRID_DIRECTION_FRAMES 80  // frames before a new random direction is picked
 
 // Four diagonal directions: (dirX, dirY) pairs
 // 0=bottom-right, 1=bottom-left, 2=top-right, 3=top-left
@@ -417,19 +473,18 @@ UWORD fsmRotatingCube(void) {
             ctx.state = ROTATINGCUBE_PREPARE;
             break;
         case ROTATINGCUBE_PREPARE:
-            ctx.mainTask = FindTask(NULL);
-            SetSignal(0, SIGF_CUBE_PREPARE_DONE);
-            ctx.bgTask = (struct Task *)CreateTask(
-                (CONST_STRPTR)"PrepareRaytracing", 0,
-                (APTR)prepareRaytracingTask, 4096);
-            if (!ctx.bgTask) {
-                writeLog("Error: Could not create raytracing background task\n");
+            if (prepareRaytracing() == FSM_ERROR)
+            {
+                writeLog("Error: Could not prepare raytracing\n");
                 ctx.state = ROTATINGCUBE_SHUTDOWN;
-            } else {
+            } 
+            else
+            {
                 ctx.state = ROTATINGCUBE_WAIT_PREPARE;
             }
             break;
-        case ROTATINGCUBE_WAIT_PREPARE: {
+        case ROTATINGCUBE_WAIT_PREPARE: 
+        {
             ULONG receivedSignals;
             // Yield CPU so the lower-priority background task can run
             WaitTOF();
@@ -506,60 +561,6 @@ UWORD initRotatingCube(void) {
         ctx.colorTable[1 + i * 3 + 2] = (blue << 24) | (blue << 16) | (blue << 8) | blue;
     }
     ctx.colorTable[1 + ROTATINGCUBE_SCREEN_COLORS * 3] = 0;  // Terminator
-
-    // Allocate memory for ray direction array
-    {
-        ULONG total_rays = (ULONG)CUBE_INNER_WIDTH * CUBE_INNER_HEIGHT;
-        writeLogFS("Allocating memory for %lu ray directions (%lu bytes)\n",
-                   total_rays, total_rays * sizeof(RayDirection));
-        ctx.rayDirections = AllocVec(total_rays * sizeof(RayDirection), MEMF_ANY);
-        if (!ctx.rayDirections) {
-            writeLog("Error: Could not allocate memory for ray directions\n");
-            goto __exit_init_cube;
-        }
-    }
-
-    // Allocate chunky buffers for each rotation step
-    writeLogFS("Allocating %d chunky buffers for rotation steps...\n", ROTATION_STEPS);
-    for (i = 0; i < ROTATION_STEPS; i++) {
-        ULONG bufferSize = (ULONG)CUBE_INNER_WIDTH * CUBE_INNER_HEIGHT;
-        ctx.rotationBuffers[i] = AllocVec(bufferSize, MEMF_FAST | MEMF_CLEAR);
-        if (!ctx.rotationBuffers[i]) {
-            writeLogFS("Error: Could not allocate chunky buffer %d (%lu bytes)\n", i, bufferSize);
-            goto __exit_init_cube;
-        }
-    }
-    writeLogFS("Successfully allocated %d chunky buffers (%lu bytes each)\n",
-               ROTATION_STEPS, (ULONG)CUBE_INNER_WIDTH * CUBE_INNER_HEIGHT);
-
-    // Allocate silhouette chunky buffers (one per rotation step)
-    writeLogFS("Allocating %d silhouette buffers for rotation steps...\n", ROTATION_STEPS);
-    for (i = 0; i < ROTATION_STEPS; i++) {
-        ULONG bufferSize = (ULONG)CUBE_INNER_WIDTH * CUBE_INNER_HEIGHT;
-        ctx.silhouetteBuffers[i] = AllocVec(bufferSize, MEMF_FAST | MEMF_CLEAR);
-        if (!ctx.silhouetteBuffers[i]) {
-            writeLogFS("Error: Could not allocate silhouette buffer %d (%lu bytes)\n", i, bufferSize);
-            goto __exit_init_cube;
-        }
-    }
-    writeLogFS("Successfully allocated %d silhouette buffers (%lu bytes each)\n",
-               ROTATION_STEPS, (ULONG)CUBE_INNER_WIDTH * CUBE_INNER_HEIGHT);
-
-    // Allocate intermediate planar bitmap for the rendered cube
-    ctx.cubePlanarBitmap = AllocBitMap(CUBE_INNER_WIDTH, CUBE_INNER_HEIGHT,
-                                       ROTATINGCUBE_SCREEN_DEPTH, BMF_CLEAR, NULL);
-    if (!ctx.cubePlanarBitmap) {
-        writeLog("Error: Could not allocate cube planar bitmap\n");
-        goto __exit_init_cube;
-    }
-
-    // Allocate intermediate planar bitmap for the silhouette mask (1 bitplane)
-    ctx.silhouettePlanarBitmap = AllocBitMap(CUBE_INNER_WIDTH, CUBE_INNER_HEIGHT,
-                                             1, BMF_CLEAR, NULL);
-    if (!ctx.silhouettePlanarBitmap) {
-        writeLog("Error: Could not allocate silhouette planar bitmap\n");
-        goto __exit_init_cube;
-    }
 
     // Create first screen
     ctx.cubeScreens[0] = createScreen(ctx.screenBitmaps[0], TRUE,

@@ -48,8 +48,11 @@ enum RotatingCubeState {
 #define CUBE_INNER_WIDTH  (ROTATINGCUBE_SCREEN_WIDTH  - 2 * BORDER_WIDTH)
 #define CUBE_INNER_HEIGHT (ROTATINGCUBE_SCREEN_HEIGHT - 2 * BORDER_HEIGHT)
 
+#define SIGF_CUBE_PREPARE_DONE (1L << 16)  // Signal bit for background task completion
+
 // Background stuff
 #define GRID_SPACING 32
+#define GRID_DIRECTION_FRAMES 80  // frames before a new random direction is picked
 
 // 3D vector using fixed-point arithmetic
 struct Vec3 {
