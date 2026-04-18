@@ -7,6 +7,7 @@
 #include <string.h>
 
 #include "showlogo.h"
+#include "rotatingcube.h"
 
 #include "fsmstates.h"
 #include "utils/utils.h"
@@ -469,7 +470,16 @@ static UWORD performDelay(void) {
 static UWORD performRotation(void) {
     static UBYTE i = 1;
     static UBYTE loopCounter = 0;
+    static BOOL raytracingStarted = FALSE;
     UWORD positionIndex;
+
+    // Start cube raytracing in background on the first call
+    if (!raytracingStarted) {
+        raytracingStarted = TRUE;
+        if (!prepareRaytracing()) {
+            writeLog("Error: Could not start cube raytracing background task\n");
+        }
+    }
 
     positionIndex = paint(getRotationDestinationBuffer(i), FALSE);
 

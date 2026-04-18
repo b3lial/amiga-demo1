@@ -48,7 +48,7 @@ enum RotatingCubeState {
 #define CUBE_INNER_WIDTH  (ROTATINGCUBE_SCREEN_WIDTH  - 2 * BORDER_WIDTH)
 #define CUBE_INNER_HEIGHT (ROTATINGCUBE_SCREEN_HEIGHT - 2 * BORDER_HEIGHT)
 
-#define SIGF_CUBE_PREPARE_DONE (1L << 16)  // Signal bit for background task completion
+#define SIGF_CUBE_PREPARE_DONE (1L << 17)  // Signal bit for cube raytracing task completion (bit 16 is used by showlogo)
 
 // Background stuff
 #define GRID_SPACING 32
@@ -69,6 +69,7 @@ typedef struct Vec3 RayDirection;
 // Ray origin point in 3D space
 typedef struct Vec3 RayOrigin;
 
+BOOL prepareRaytracing(void);
 UWORD fsmRotatingCube(void);
 UWORD initRotatingCube(void);
 void exitRotatingCube(void);

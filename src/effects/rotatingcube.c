@@ -30,6 +30,7 @@ struct RotatingCubeContext {
     struct BitMap *silhouettePlanarBitmap;     // Intermediate planar buffer for silhouette mask (1 bitplane)
     struct Task *mainTask;                     // Main task pointer for signaling
     struct Task *bgTask;                       // Background raytracing preparation task
+    BOOL raytracingStarted;                    // TRUE if prepareRaytracing() has already been called
 };
 
 static struct RotatingCubeContext ctx = {
@@ -45,7 +46,8 @@ static struct RotatingCubeContext ctx = {
     .cubePlanarBitmap = NULL,
     .silhouettePlanarBitmap = NULL,
     .mainTask = NULL,
-    .bgTask = NULL
+    .bgTask = NULL,
+    .raytracingStarted = FALSE
 };
 
 //----------------------------------------
@@ -319,7 +321,7 @@ static void calcScreenRays(UWORD width, UWORD height) {
 static void prepareRaytracingTask(void);  // forward declaration
 
 //----------------------------------------
-static UWORD prepareRaytracing(void) {
+BOOL prepareRaytracing(void) {
     UBYTE i;
 
     // Allocate memory for ray direction array
@@ -327,7 +329,7 @@ static UWORD prepareRaytracing(void) {
         ULONG total_rays = (ULONG)CUBE_INNER_WIDTH * CUBE_INNER_HEIGHT;
         ctx.rayDirections = AllocVec(total_rays * sizeof(RayDirection), MEMF_ANY);
         if (!ctx.rayDirections) {
-            return FSM_ERROR;
+            return FALSE;
         }
     }
 
@@ -336,7 +338,7 @@ static UWORD prepareRaytracing(void) {
         ULONG bufferSize = (ULONG)CUBE_INNER_WIDTH * CUBE_INNER_HEIGHT;
         ctx.rotationBuffers[i] = AllocVec(bufferSize, MEMF_FAST | MEMF_CLEAR);
         if (!ctx.rotationBuffers[i]) {
-            return FSM_ERROR;
+            return FALSE;
         }
     }
 
@@ -345,7 +347,7 @@ static UWORD prepareRaytracing(void) {
         ULONG bufferSize = (ULONG)CUBE_INNER_WIDTH * CUBE_INNER_HEIGHT;
         ctx.silhouetteBuffers[i] = AllocVec(bufferSize, MEMF_FAST | MEMF_CLEAR);
         if (!ctx.silhouetteBuffers[i]) {
-            return FSM_ERROR;
+            return FALSE;
         }
     }
 
@@ -353,14 +355,14 @@ static UWORD prepareRaytracing(void) {
     ctx.cubePlanarBitmap = AllocBitMap(CUBE_INNER_WIDTH, CUBE_INNER_HEIGHT,
                                        ROTATINGCUBE_SCREEN_DEPTH, BMF_CLEAR, NULL);
     if (!ctx.cubePlanarBitmap) {
-        return FSM_ERROR;
+        return FALSE;
     }
 
     // Allocate intermediate planar bitmap for the silhouette mask (1 bitplane)
     ctx.silhouettePlanarBitmap = AllocBitMap(CUBE_INNER_WIDTH, CUBE_INNER_HEIGHT,
                                              1, BMF_CLEAR, NULL);
     if (!ctx.silhouettePlanarBitmap) {
-        return FSM_ERROR;
+        return FALSE;
     }
 
     // Start background raytracing task
@@ -370,10 +372,11 @@ static UWORD prepareRaytracing(void) {
         (CONST_STRPTR)"PrepareRaytracing", 0,
         (APTR)prepareRaytracingTask, 4096);
     if (!ctx.bgTask) {
-        return FSM_ERROR;
+        return FALSE;
     }
 
-    return FSM_ROTATINGCUBE;
+    ctx.raytracingStarted = TRUE;
+    return TRUE;
 }
 
 //----------------------------------------
@@ -470,10 +473,12 @@ UWORD fsmRotatingCube(void) {
 
     switch (ctx.state) {
         case ROTATINGCUBE_INIT:
-            ctx.state = ROTATINGCUBE_PREPARE;
+            // If prepareRaytracing() was already called externally (e.g. from showlogo),
+            // skip straight to waiting for the signal
+            ctx.state = ctx.raytracingStarted ? ROTATINGCUBE_WAIT_PREPARE : ROTATINGCUBE_PREPARE;
             break;
         case ROTATINGCUBE_PREPARE:
-            if (prepareRaytracing() == FSM_ERROR)
+            if (!prepareRaytracing())
             {
                 writeLog("Error: Could not prepare raytracing\n");
                 ctx.state = ROTATINGCUBE_SHUTDOWN;
@@ -666,4 +671,5 @@ void exitRotatingCube(void) {
     }
 
     ctx.state = ROTATINGCUBE_INIT;
+    ctx.raytracingStarted = FALSE;
 }
