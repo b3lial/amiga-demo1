@@ -5,6 +5,7 @@
 #include <clib/intuition_protos.h>
 #include <clib/exec_protos.h>
 #include <clib/dos_protos.h>
+#include <clib/alib_protos.h>
 
 #include "rotatingcube.h"
 
@@ -27,6 +28,8 @@ struct RotatingCubeContext {
     UBYTE *silhouetteBuffers[ROTATION_STEPS];  // Silhouette masks for cookie cut blit (1=cube, 0=background)
     struct BitMap *cubePlanarBitmap;           // Intermediate planar buffer for rendered cube
     struct BitMap *silhouettePlanarBitmap;     // Intermediate planar buffer for silhouette mask (1 bitplane)
+    struct Task *mainTask;                     // Main task pointer for signaling
+    struct Task *bgTask;                       // Background raytracing preparation task
 };
 
 static struct RotatingCubeContext ctx = {
@@ -40,7 +43,9 @@ static struct RotatingCubeContext ctx = {
     .rotationBuffers = {NULL},      // Will be allocated in initRotatingCube()
     .silhouetteBuffers = {NULL},    // Will be allocated in initRotatingCube()
     .cubePlanarBitmap = NULL,
-    .silhouettePlanarBitmap = NULL
+    .silhouettePlanarBitmap = NULL,
+    .mainTask = NULL,
+    .bgTask = NULL
 };
 
 //----------------------------------------
@@ -325,6 +330,19 @@ static void calcScreenRays(UWORD width, UWORD height) {
     writeLogFS("Successfully generated %lu ray directions\n", (ULONG)width * height);
 }
 
+#define SIGF_CUBE_PREPARE_DONE (1L << 16)  // Signal bit for background task completion
+
+//----------------------------------------
+static void prepareRaytracingTask(void) {
+    // Lower priority so main task keeps running smoothly
+    SetTaskPri(FindTask(NULL), -5);
+
+    calcScreenRays(ROTATINGCUBE_SCREEN_WIDTH, ROTATINGCUBE_SCREEN_HEIGHT);
+    renderAllRotationSteps();
+
+    Signal(ctx.mainTask, SIGF_CUBE_PREPARE_DONE);
+}
+
 #define GRID_DIRECTION_FRAMES 80  // frames before a new random direction is picked
 
 // Four diagonal directions: (dirX, dirY) pairs
@@ -410,15 +428,34 @@ UWORD fsmRotatingCube(void) {
 
     switch (ctx.state) {
         case ROTATINGCUBE_INIT:
-            // Generate rays for raytracing
-            calcScreenRays(ROTATINGCUBE_SCREEN_WIDTH, ROTATINGCUBE_SCREEN_HEIGHT);
-            // Render all rotation steps into chunky buffers
-            renderAllRotationSteps();
-            ctx.state = ROTATINGCUBE_RUNNING;
+            ctx.state = ROTATINGCUBE_PREPARE;
             break;
+        case ROTATINGCUBE_PREPARE:
+            ctx.mainTask = FindTask(NULL);
+            SetSignal(0, SIGF_CUBE_PREPARE_DONE);
+            ctx.bgTask = (struct Task *)CreateTask(
+                (CONST_STRPTR)"PrepareRaytracing", 0,
+                (APTR)prepareRaytracingTask, 4096);
+            if (!ctx.bgTask) {
+                writeLog("Error: Could not create raytracing background task\n");
+                ctx.state = ROTATINGCUBE_SHUTDOWN;
+            } else {
+                ctx.state = ROTATINGCUBE_WAIT_PREPARE;
+            }
+            break;
+        case ROTATINGCUBE_WAIT_PREPARE: {
+            ULONG receivedSignals;
+            // Yield CPU so the lower-priority background task can run
+            WaitTOF();
+            receivedSignals = SetSignal(0, 0);
+            if (receivedSignals & SIGF_CUBE_PREPARE_DONE) {
+                ctx.bgTask = NULL;
+                ctx.state = ROTATINGCUBE_RUNNING;
+            }
+            break;
+        }
         case ROTATINGCUBE_RUNNING:
             draw();
-            ctx.state = ROTATINGCUBE_RUNNING;
             break;
         case ROTATINGCUBE_SHUTDOWN:
             exitRotatingCube();
@@ -579,6 +616,17 @@ __exit_init_cube:
 //----------------------------------------
 void exitRotatingCube(void) {
     UBYTE i;
+
+    // Wait for background task to finish if still running
+    if (ctx.bgTask) {
+        ULONG receivedSignals = SetSignal(0, 0);
+        if (!(receivedSignals & SIGF_CUBE_PREPARE_DONE)) {
+            writeLog("Waiting for raytracing background task to complete...\n");
+            Wait(SIGF_CUBE_PREPARE_DONE);
+        }
+        SetSignal(0, SIGF_CUBE_PREPARE_DONE);
+        ctx.bgTask = NULL;
+    }
     writeLog("\n== exitRotatingCube() ==\n");
 
     // Free chunky rotation buffers
