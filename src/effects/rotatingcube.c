@@ -325,34 +325,41 @@ static void calcScreenRays(UWORD width, UWORD height) {
     writeLogFS("Successfully generated %lu ray directions\n", (ULONG)width * height);
 }
 
-#define GRID_DIRECTION_FRAMES 80  // frames before direction flips
+#define GRID_DIRECTION_FRAMES 80  // frames before a new random direction is picked
+
+// Four diagonal directions: (dirX, dirY) pairs
+// 0=bottom-right, 1=bottom-left, 2=top-right, 3=top-left
+static const WORD gridDirX[4] = { 1, -1,  1, -1 };
+static const WORD gridDirY[4] = { 1,  1, -1, -1 };
 
 //----------------------------------------
 static void drawGrid(struct RastPort *rp) {
-    static UWORD gridOffset = 0;
-    static WORD  gridDirection = 1;
+    static UWORD gridOffsetX = 0;
+    static UWORD gridOffsetY = 0;
     static UWORD directionCounter = 0;
+    static UBYTE currentDir = 0;
     WORD x, y;
 
     directionCounter++;
     if (directionCounter >= GRID_DIRECTION_FRAMES) {
         directionCounter = 0;
-        gridDirection = -gridDirection;
+        currentDir = (UBYTE) RangeRand(4);
     }
 
-    gridOffset = (gridOffset + GRID_SPACING + gridDirection) % GRID_SPACING;
+    gridOffsetX = (gridOffsetX + GRID_SPACING + gridDirX[currentDir]) % GRID_SPACING;
+    gridOffsetY = (gridOffsetY + GRID_SPACING + gridDirY[currentDir]) % GRID_SPACING;
 
     SetAPen(rp, 1);  // palette index 1 = white
 
-    // Horizontal lines scroll downward
-    for (y = (WORD)gridOffset - GRID_SPACING; y < ROTATINGCUBE_SCREEN_HEIGHT; y += GRID_SPACING) {
+    // Horizontal lines
+    for (y = (WORD)gridOffsetY - GRID_SPACING; y < ROTATINGCUBE_SCREEN_HEIGHT; y += GRID_SPACING) {
         if (y < 0) continue;
         Move(rp, 0, y);
         Draw(rp, ROTATINGCUBE_SCREEN_WIDTH - 1, y);
     }
 
-    // Vertical lines scroll rightward
-    for (x = (WORD)gridOffset - GRID_SPACING; x < ROTATINGCUBE_SCREEN_WIDTH; x += GRID_SPACING) {
+    // Vertical lines
+    for (x = (WORD)gridOffsetX - GRID_SPACING; x < ROTATINGCUBE_SCREEN_WIDTH; x += GRID_SPACING) {
         if (x < 0) continue;
         Move(rp, x, 0);
         Draw(rp, x, ROTATINGCUBE_SCREEN_HEIGHT - 1);
