@@ -31,6 +31,7 @@ struct RotatingCubeContext {
     struct Task *mainTask;                     // Main task pointer for signaling
     struct Task *bgTask;                       // Background raytracing preparation task
     BOOL raytracingStarted;                    // TRUE if prepareRaytracing() has already been called
+    UWORD fadeInOffset;                        // Current viewport Y offset during fade-in (0 → SCREEN_HEIGHT)
 };
 
 static struct RotatingCubeContext ctx = {
@@ -47,7 +48,8 @@ static struct RotatingCubeContext ctx = {
     .silhouettePlanarBitmap = NULL,
     .mainTask = NULL,
     .bgTask = NULL,
-    .raytracingStarted = FALSE
+    .raytracingStarted = FALSE,
+    .fadeInOffset = 0
 };
 
 //----------------------------------------
@@ -396,12 +398,14 @@ static const WORD gridDirX[4] = { 1, -1,  1, -1 };
 static const WORD gridDirY[4] = { 1,  1, -1, -1 };
 
 //----------------------------------------
-static void drawGrid(struct RastPort *rp) {
+static void drawGrid(struct RastPort *rp, UWORD yBase) {
     static UWORD gridOffsetX = 0;
     static UWORD gridOffsetY = 0;
     static UWORD directionCounter = 0;
     static UBYTE currentDir = 0;
     WORD x, y;
+    WORD yTop = (WORD)yBase;
+    WORD yBottom = (WORD)(yBase + ROTATINGCUBE_SCREEN_HEIGHT - 1);
 
     directionCounter++;
     if (directionCounter >= GRID_DIRECTION_FRAMES) {
@@ -414,37 +418,41 @@ static void drawGrid(struct RastPort *rp) {
 
     SetAPen(rp, 1);  // palette index 1 = white
 
-    // Horizontal lines
+    // Horizontal lines (offset into the active region)
     for (y = (WORD)gridOffsetY - GRID_SPACING; y < ROTATINGCUBE_SCREEN_HEIGHT; y += GRID_SPACING) {
-        if (y < 0) continue;
-        Move(rp, 0, y);
-        Draw(rp, ROTATINGCUBE_SCREEN_WIDTH - 1, y);
+        WORD absY = yTop + y;
+        if (absY < yTop) continue;
+        Move(rp, 0, absY);
+        Draw(rp, ROTATINGCUBE_SCREEN_WIDTH - 1, absY);
     }
 
-    // Vertical lines
+    // Vertical lines (span the full active region height)
     for (x = (WORD)gridOffsetX - GRID_SPACING; x < ROTATINGCUBE_SCREEN_WIDTH; x += GRID_SPACING) {
         if (x < 0) continue;
-        Move(rp, x, 0);
-        Draw(rp, x, ROTATINGCUBE_SCREEN_HEIGHT - 1);
+        Move(rp, x, yTop);
+        Draw(rp, x, yBottom);
     }
 }
 
 //----------------------------------------
-static void draw(void) {
+static void draw(UWORD yBase) {
     static UBYTE stepIndex = 0;
+    struct RastPort *rp;
 
     // Switch buffers
     ctx.currentBufferIndex = 1 - ctx.currentBufferIndex;
+    rp = &ctx.cubeScreens[ctx.currentBufferIndex]->RastPort;
 
     // Convert chunky buffers to intermediate planar bitmaps
     convertChunkyToBitmap(ctx.rotationBuffers[stepIndex],   ctx.cubePlanarBitmap);
     convertChunkyToBitmap(ctx.silhouetteBuffers[stepIndex], ctx.silhouettePlanarBitmap);
 
-    // Clear back screen buffer to background color before compositing
-    SetRast(&ctx.cubeScreens[ctx.currentBufferIndex]->RastPort, 0);
+    // Clear only the active region (bottom half when using oversized bitmaps)
+    SetAPen(rp, 0);
+    RectFill(rp, 0, yBase, ROTATINGCUBE_SCREEN_WIDTH - 1, yBase + ROTATINGCUBE_SCREEN_HEIGHT - 1);
 
-    // Draw white grid into the back screen buffer
-    drawGrid(&ctx.cubeScreens[ctx.currentBufferIndex]->RastPort);
+    // Draw white grid into the active region
+    drawGrid(rp, yBase);
 
     /*
      * Cookie-cut blit: composite cube over grid background using silhouette mask.
@@ -453,8 +461,8 @@ static void draw(void) {
      * Minterm 0xE2 = AB + !BC: where mask=1 take source, where mask=0 keep dest.
      */
     BltMaskBitMapRastPort(ctx.cubePlanarBitmap, 0, 0,
-                          &ctx.cubeScreens[ctx.currentBufferIndex]->RastPort,
-                          BORDER_WIDTH, BORDER_HEIGHT,
+                          rp,
+                          BORDER_WIDTH, yBase + BORDER_HEIGHT,
                           CUBE_INNER_WIDTH, CUBE_INNER_HEIGHT,
                           0xE2,
                           ctx.silhouettePlanarBitmap->Planes[0]);
@@ -488,7 +496,7 @@ UWORD fsmRotatingCube(void) {
                 ctx.state = ROTATINGCUBE_WAIT_PREPARE;
             }
             break;
-        case ROTATINGCUBE_WAIT_PREPARE: 
+        case ROTATINGCUBE_WAIT_PREPARE:
         {
             ULONG receivedSignals;
             // Yield CPU so the lower-priority background task can run
@@ -496,12 +504,28 @@ UWORD fsmRotatingCube(void) {
             receivedSignals = SetSignal(0, 0);
             if (receivedSignals & SIGF_CUBE_PREPARE_DONE) {
                 ctx.bgTask = NULL;
+                ctx.state = ROTATINGCUBE_FADEIN;
+            }
+            break;
+        }
+        case ROTATINGCUBE_FADEIN:
+        {
+            UBYTE i;
+            draw(ROTATINGCUBE_SCREEN_HEIGHT);
+            // Scroll both viewports to the same offset so switching screens stays consistent
+            for (i = 0; i < 2; i++) {
+                ctx.cubeScreens[i]->ViewPort.RasInfo->RyOffset = (WORD)ctx.fadeInOffset;
+                ScrollVPort(&ctx.cubeScreens[i]->ViewPort);
+            }
+            ctx.fadeInOffset += FADEIN_SPEED;
+            if (ctx.fadeInOffset >= ROTATINGCUBE_SCREEN_HEIGHT) {
+                ctx.fadeInOffset = ROTATINGCUBE_SCREEN_HEIGHT;
                 ctx.state = ROTATINGCUBE_RUNNING;
             }
             break;
         }
         case ROTATINGCUBE_RUNNING:
-            draw();
+            draw(ROTATINGCUBE_SCREEN_HEIGHT);
             break;
         case ROTATINGCUBE_SHUTDOWN:
             exitRotatingCube();
@@ -516,9 +540,9 @@ UWORD initRotatingCube(void) {
     UBYTE i;
     writeLog("\n\n== initRotatingCube() ==\n");
 
-    // Allocate first screen bitmap
+    // Allocate first screen bitmap (double height: top half stays black, cube rendered in bottom half)
     ctx.screenBitmaps[0] = AllocBitMap(ROTATINGCUBE_SCREEN_WIDTH,
-                                       ROTATINGCUBE_SCREEN_HEIGHT,
+                                       ROTATINGCUBE_SCREEN_HEIGHT * 2,
                                        ROTATINGCUBE_SCREEN_DEPTH,
                                        BMF_DISPLAYABLE | BMF_CLEAR,
                                        NULL);
@@ -527,9 +551,9 @@ UWORD initRotatingCube(void) {
         goto __exit_init_cube;
     }
 
-    // Allocate second screen bitmap for double buffering
+    // Allocate second screen bitmap for double buffering (also double height)
     ctx.screenBitmaps[1] = AllocBitMap(ROTATINGCUBE_SCREEN_WIDTH,
-                                       ROTATINGCUBE_SCREEN_HEIGHT,
+                                       ROTATINGCUBE_SCREEN_HEIGHT * 2,
                                        ROTATINGCUBE_SCREEN_DEPTH,
                                        BMF_DISPLAYABLE | BMF_CLEAR,
                                        NULL);
@@ -672,4 +696,5 @@ void exitRotatingCube(void) {
 
     ctx.state = ROTATINGCUBE_INIT;
     ctx.raytracingStarted = FALSE;
+    ctx.fadeInOffset = 0;
 }
