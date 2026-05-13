@@ -11,6 +11,7 @@
 
 #include "fsmstates.h"
 #include "utils/utils.h"
+#include "utils/timecontroller.h"
 #include "gfx/graphicscontroller.h"
 #include "gfx/fixedpoint.h"
 #include "gfx/rotation.h"
@@ -32,6 +33,7 @@ struct RotatingCubeContext {
     struct Task *bgTask;                       // Background raytracing preparation task
     BOOL raytracingStarted;                    // TRUE if prepareRaytracing() has already been called
     UWORD fadeInOffset;                        // Current viewport Y offset during fade-in (0 → SCREEN_HEIGHT)
+    ULONG runningStartTime;                    // System time (seconds) when ROTATINGCUBE_RUNNING was entered
 };
 
 static struct RotatingCubeContext ctx = {
@@ -49,7 +51,8 @@ static struct RotatingCubeContext ctx = {
     .mainTask = NULL,
     .bgTask = NULL,
     .raytracingStarted = FALSE,
-    .fadeInOffset = 0
+    .fadeInOffset = 0,
+    .runningStartTime = 0
 };
 
 //----------------------------------------
@@ -525,7 +528,13 @@ UWORD fsmRotatingCube(void) {
             break;
         }
         case ROTATINGCUBE_RUNNING:
+            if (ctx.runningStartTime == 0) {
+                ctx.runningStartTime = getSystemTime();
+            }
             draw(ROTATINGCUBE_SCREEN_HEIGHT);
+            if ((getSystemTime() - ctx.runningStartTime) >= 10) {
+                ctx.state = ROTATINGCUBE_SHUTDOWN;
+            }
             break;
         case ROTATINGCUBE_SHUTDOWN:
             exitRotatingCube();
@@ -697,4 +706,5 @@ void exitRotatingCube(void) {
     ctx.state = ROTATINGCUBE_INIT;
     ctx.raytracingStarted = FALSE;
     ctx.fadeInOffset = 0;
+    ctx.runningStartTime = 0;
 }
