@@ -446,6 +446,8 @@ static void draw(UWORD yBase, WORD cubeX) {
     static UBYTE stepIndex = 0;
     struct RastPort *rp;
 
+    WaitTOF();
+
     // Switch buffers
     ctx.currentBufferIndex = 1 - ctx.currentBufferIndex;
     rp = &ctx.cubeScreens[ctx.currentBufferIndex]->RastPort;
