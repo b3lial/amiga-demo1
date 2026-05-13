@@ -541,12 +541,16 @@ UWORD fsmRotatingCube(void) {
             if ((getSystemTime() - ctx.runningStartTime) >= 10) {
                 ctx.cubeX = BORDER_WIDTH;
                 ctx.cubeMoveDirX = 1;
+                ctx.runningStartTime = 0;
                 ctx.state = ROTATINGCUBE_MOVING;
             }
             break;
         case ROTATINGCUBE_MOVING:
         {
             WORD maxX = ROTATINGCUBE_SCREEN_WIDTH - CUBE_INNER_WIDTH;
+            if (ctx.runningStartTime == 0) {
+                ctx.runningStartTime = getSystemTime();
+            }
             draw(ROTATINGCUBE_SCREEN_HEIGHT, ctx.cubeX);
             ctx.cubeX += ctx.cubeMoveDirX * CUBE_MOVE_SPEED;
             if (ctx.cubeX >= maxX) {
@@ -555,6 +559,9 @@ UWORD fsmRotatingCube(void) {
             } else if (ctx.cubeX <= 0) {
                 ctx.cubeX = 0;
                 ctx.cubeMoveDirX = 1;
+            }
+            if ((getSystemTime() - ctx.runningStartTime) >= 12) {
+                ctx.state = ROTATINGCUBE_SHUTDOWN;
             }
             break;
         }
