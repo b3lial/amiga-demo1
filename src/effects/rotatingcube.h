@@ -10,10 +10,12 @@ enum RotatingCubeState {
     ROTATINGCUBE_WAIT_PREPARE = 2,
     ROTATINGCUBE_FADEIN = 3,
     ROTATINGCUBE_RUNNING = 4,
-    ROTATINGCUBE_SHUTDOWN = 5
+    ROTATINGCUBE_SHUTDOWN = 5,
+    ROTATINGCUBE_MOVING = 6
 };
 
-#define FADEIN_SPEED 4  // pixels scrolled per frame during fade-in (~1.3s for 256px at 50Hz)
+#define FADEIN_SPEED 4      // pixels scrolled per frame during fade-in (~1.3s for 256px at 50Hz)
+#define CUBE_MOVE_SPEED 2   // pixels moved per frame during horizontal movement at 50Hz
 
 #define ROTATINGCUBE_SCREEN_WIDTH 320
 #define ROTATINGCUBE_SCREEN_HEIGHT 256

@@ -34,6 +34,8 @@ struct RotatingCubeContext {
     BOOL raytracingStarted;                    // TRUE if prepareRaytracing() has already been called
     UWORD fadeInOffset;                        // Current viewport Y offset during fade-in (0 → SCREEN_HEIGHT)
     ULONG runningStartTime;                    // System time (seconds) when ROTATINGCUBE_RUNNING was entered
+    WORD cubeX;                               // Current horizontal blit position during ROTATINGCUBE_MOVING
+    WORD cubeMoveDirX;                        // Movement direction: +1 = right, -1 = left
 };
 
 static struct RotatingCubeContext ctx = {
@@ -52,7 +54,9 @@ static struct RotatingCubeContext ctx = {
     .bgTask = NULL,
     .raytracingStarted = FALSE,
     .fadeInOffset = 0,
-    .runningStartTime = 0
+    .runningStartTime = 0,
+    .cubeX = BORDER_WIDTH,
+    .cubeMoveDirX = 1
 };
 
 //----------------------------------------
@@ -438,7 +442,7 @@ static void drawGrid(struct RastPort *rp, UWORD yBase) {
 }
 
 //----------------------------------------
-static void draw(UWORD yBase) {
+static void draw(UWORD yBase, WORD cubeX) {
     static UBYTE stepIndex = 0;
     struct RastPort *rp;
 
@@ -465,7 +469,7 @@ static void draw(UWORD yBase) {
      */
     BltMaskBitMapRastPort(ctx.cubePlanarBitmap, 0, 0,
                           rp,
-                          BORDER_WIDTH, yBase + BORDER_HEIGHT,
+                          cubeX, yBase + BORDER_HEIGHT,
                           CUBE_INNER_WIDTH, CUBE_INNER_HEIGHT,
                           0xE2,
                           ctx.silhouettePlanarBitmap->Planes[0]);
@@ -514,7 +518,7 @@ UWORD fsmRotatingCube(void) {
         case ROTATINGCUBE_FADEIN:
         {
             UBYTE i;
-            draw(ROTATINGCUBE_SCREEN_HEIGHT);
+            draw(ROTATINGCUBE_SCREEN_HEIGHT, BORDER_WIDTH);
             // Scroll both viewports to the same offset so switching screens stays consistent
             for (i = 0; i < 2; i++) {
                 ctx.cubeScreens[i]->ViewPort.RasInfo->RyOffset = (WORD)ctx.fadeInOffset;
@@ -531,11 +535,27 @@ UWORD fsmRotatingCube(void) {
             if (ctx.runningStartTime == 0) {
                 ctx.runningStartTime = getSystemTime();
             }
-            draw(ROTATINGCUBE_SCREEN_HEIGHT);
+            draw(ROTATINGCUBE_SCREEN_HEIGHT, BORDER_WIDTH);
             if ((getSystemTime() - ctx.runningStartTime) >= 10) {
-                ctx.state = ROTATINGCUBE_SHUTDOWN;
+                ctx.cubeX = BORDER_WIDTH;
+                ctx.cubeMoveDirX = 1;
+                ctx.state = ROTATINGCUBE_MOVING;
             }
             break;
+        case ROTATINGCUBE_MOVING:
+        {
+            WORD maxX = ROTATINGCUBE_SCREEN_WIDTH - CUBE_INNER_WIDTH;
+            draw(ROTATINGCUBE_SCREEN_HEIGHT, ctx.cubeX);
+            ctx.cubeX += ctx.cubeMoveDirX * CUBE_MOVE_SPEED;
+            if (ctx.cubeX >= maxX) {
+                ctx.cubeX = maxX;
+                ctx.cubeMoveDirX = -1;
+            } else if (ctx.cubeX <= 0) {
+                ctx.cubeX = 0;
+                ctx.cubeMoveDirX = 1;
+            }
+            break;
+        }
         case ROTATINGCUBE_SHUTDOWN:
             exitRotatingCube();
             return FSM_STOP;
@@ -707,4 +727,6 @@ void exitRotatingCube(void) {
     ctx.raytracingStarted = FALSE;
     ctx.fadeInOffset = 0;
     ctx.runningStartTime = 0;
+    ctx.cubeX = BORDER_WIDTH;
+    ctx.cubeMoveDirX = 1;
 }
