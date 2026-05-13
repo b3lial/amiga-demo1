@@ -569,7 +569,7 @@ static UWORD performFadeOut(void) {
 
     ScreenToFront(ctx.logoscreens[ctx.currentBufferIndex]);
 
-    step++;
+    step+=STEP_SIZE;
 
     // Continue effect for a few iterations, then shutdown
     if (step > SHOWLOGO_SCREEN_WIDTH) {
