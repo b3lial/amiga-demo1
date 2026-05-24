@@ -566,8 +566,7 @@ UWORD fsmRotatingCube(void) {
             break;
         }
         case ROTATINGCUBE_SHUTDOWN:
-            exitRotatingCube();
-            return FSM_STOP;
+            return FSM_ROTATINGCUBE_FINISHED;
     }
 
     return FSM_ROTATINGCUBE;
