@@ -13,3 +13,4 @@ starlight-gcc-build
 starlight-sasc-build
 starlight-demo
 .clangd
+.DS_Store
