@@ -141,15 +141,23 @@ UWORD initMandelbrot(void) {
 
     // Initialize color table (LoadRGB4 format: 0x0RGB per entry, 4 bits per channel)
     // Index 0: black (in-set pixels)
-    // Indices 1..15: gradient from dark blue to bright cyan
-    ctx.colorTable[0] = 0x0000;
-    for (i = 1; i < MANDELBROT_SCREEN_COLORS; i++) {
-        UWORD t = ((UWORD)(i - 1) * 0xF) / (MANDELBROT_SCREEN_COLORS - 2);
-        UWORD r = t / 4;
-        UWORD g = t / 2;
-        UWORD b = t;
-        ctx.colorTable[i] = ((r & 0xF) << 8) | ((g & 0xF) << 4) | (b & 0xF);
-    }
+    // Indices 1..15: blue → cyan → green → yellow → red
+    ctx.colorTable[0]  = 0x0000;  // black (in-set)
+    ctx.colorTable[1]  = 0x000F;  // H=240° blue        (outermost)
+    ctx.colorTable[2]  = 0x060F;  // H=264°
+    ctx.colorTable[3]  = 0x0C0F;  // H=288° violet
+    ctx.colorTable[4]  = 0x0F0C;  // H=312°
+    ctx.colorTable[5]  = 0x0F06;  // H=336°
+    ctx.colorTable[6]  = 0x0F00;  // H=0°   red
+    ctx.colorTable[7]  = 0x0F60;  // H=24°
+    ctx.colorTable[8]  = 0x0FC0;  // H=48°
+    ctx.colorTable[9]  = 0x0CF0;  // H=72°  yellow-green
+    ctx.colorTable[10] = 0x06F0;  // H=96°
+    ctx.colorTable[11] = 0x00F0;  // H=120° green
+    ctx.colorTable[12] = 0x00F6;  // H=144°
+    ctx.colorTable[13] = 0x00FC;  // H=168°
+    ctx.colorTable[14] = 0x00CF;  // H=192°
+    ctx.colorTable[15] = 0x006F;  // H=216° (innermost)
 
     // Create screens
     ctx.screens[0] = createScreen(ctx.screenBitmaps[0], TRUE,
