@@ -24,7 +24,7 @@ struct MandelbrotContext {
     enum MandelbrotState state;
     struct BitMap *screenBitmaps[2];   // Chip RAM, displayable (double buffered)
     struct Screen *screens[2];
-    struct BitMap *fastBitmap;         // Fast RAM bitmap for CPU rendering
+    struct BitMap *fastBitmap;             // Fast RAM bitmap for CPU rendering
     UWORD colorTable[MANDELBROT_SCREEN_COLORS];  // LoadRGB4 format: 0x0RGB per entry
     UBYTE currentBufferIndex;          // 0 or 1
 };
@@ -142,22 +142,40 @@ UWORD initMandelbrot(void) {
     // Initialize color table (LoadRGB4 format: 0x0RGB per entry, 4 bits per channel)
     // Index 0: black (in-set pixels)
     // Indices 1..15: blue → cyan → green → yellow → red
+    // 31 hues evenly spaced at 360/31 ≈ 11.6° steps, starting at H=240° (blue).
+    // HSV S=1 V=1 → converted to 4-bit RGB (0x0RGB).
     ctx.colorTable[0]  = 0x0000;  // black (in-set)
-    ctx.colorTable[1]  = 0x000F;  // H=240° blue        (outermost)
-    ctx.colorTable[2]  = 0x060F;  // H=264°
-    ctx.colorTable[3]  = 0x0C0F;  // H=288° violet
-    ctx.colorTable[4]  = 0x0F0C;  // H=312°
-    ctx.colorTable[5]  = 0x0F06;  // H=336°
-    ctx.colorTable[6]  = 0x0F00;  // H=0°   red
-    ctx.colorTable[7]  = 0x0F60;  // H=24°
-    ctx.colorTable[8]  = 0x0FC0;  // H=48°
-    ctx.colorTable[9]  = 0x0CF0;  // H=72°  yellow-green
-    ctx.colorTable[10] = 0x06F0;  // H=96°
-    ctx.colorTable[11] = 0x00F0;  // H=120° green
-    ctx.colorTable[12] = 0x00F6;  // H=144°
-    ctx.colorTable[13] = 0x00FC;  // H=168°
-    ctx.colorTable[14] = 0x00CF;  // H=192°
-    ctx.colorTable[15] = 0x006F;  // H=216° (innermost)
+    ctx.colorTable[1]  = 0x000F;  // H=240° blue
+    ctx.colorTable[2]  = 0x030F;  // H=252°
+    ctx.colorTable[3]  = 0x060F;  // H=263°
+    ctx.colorTable[4]  = 0x090F;  // H=275°
+    ctx.colorTable[5]  = 0x0C0F;  // H=286°
+    ctx.colorTable[6]  = 0x0F0F;  // H=298° magenta
+    ctx.colorTable[7]  = 0x0F0D;  // H=310°
+    ctx.colorTable[8]  = 0x0F0A;  // H=321°
+    ctx.colorTable[9]  = 0x0F07;  // H=333°
+    ctx.colorTable[10] = 0x0F04;  // H=345°
+    ctx.colorTable[11] = 0x0F01;  // H=356°
+    ctx.colorTable[12] = 0x0F20;  // H=8°
+    ctx.colorTable[13] = 0x0F50;  // H=19°
+    ctx.colorTable[14] = 0x0F80;  // H=31°
+    ctx.colorTable[15] = 0x0FB0;  // H=43°
+    ctx.colorTable[16] = 0x0FE0;  // H=54°
+    ctx.colorTable[17] = 0x0EF0;  // H=66°
+    ctx.colorTable[18] = 0x0BF0;  // H=77°
+    ctx.colorTable[19] = 0x08F0;  // H=89°
+    ctx.colorTable[20] = 0x05F0;  // H=101°
+    ctx.colorTable[21] = 0x02F0;  // H=112°
+    ctx.colorTable[22] = 0x00F1;  // H=124°
+    ctx.colorTable[23] = 0x00F4;  // H=135°
+    ctx.colorTable[24] = 0x00F7;  // H=147°
+    ctx.colorTable[25] = 0x00FA;  // H=159°
+    ctx.colorTable[26] = 0x00FD;  // H=170°
+    ctx.colorTable[27] = 0x00FF;  // H=182° cyan
+    ctx.colorTable[28] = 0x00CF;  // H=194°
+    ctx.colorTable[29] = 0x009F;  // H=205°
+    ctx.colorTable[30] = 0x006F;  // H=217°
+    ctx.colorTable[31] = 0x003F;  // H=229°
 
     // Create screens
     ctx.screens[0] = createScreen(ctx.screenBitmaps[0], TRUE,
@@ -183,7 +201,7 @@ UWORD initMandelbrot(void) {
     LoadRGB4(&ctx.screens[1]->ViewPort, ctx.colorTable, MANDELBROT_SCREEN_COLORS);
 
     // Calculate Mandelbrot set into Fast RAM bitmap.
-    // Default view: full set x=[-2.5, 1.0], y=[-1.25, 1.25], 15 iterations = 15 exterior colors.
+    // Full view: x=[-2.5, 1.0], y=[-1.25, 1.25], 31 exterior colors.
     writeLog("Calculating Mandelbrot...\n");
     calculateMandelbrot(
         FLOAT_TO_MFIX(-2.5), FLOAT_TO_MFIX(-1.25),

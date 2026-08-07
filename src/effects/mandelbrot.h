@@ -11,12 +11,13 @@ enum MandelbrotState {
 
 #define MANDELBROT_SCREEN_WIDTH  320
 #define MANDELBROT_SCREEN_HEIGHT 256
-#define MANDELBROT_SCREEN_DEPTH  4
-#define MANDELBROT_SCREEN_COLORS 16
+#define MANDELBROT_SCREEN_DEPTH  5
+#define MANDELBROT_SCREEN_COLORS 32
 
 // Mandelbrot pixel resolution (each pixel rendered as 2x2 block)
 #define MANDELBROT_WIDTH  160
 #define MANDELBROT_HEIGHT 128
+
 
 UWORD fsmMandelbrot(void);
 UWORD initMandelbrot(void);
