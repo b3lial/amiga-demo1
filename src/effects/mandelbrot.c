@@ -5,7 +5,6 @@
 #include <clib/graphics_protos.h>
 #include <clib/intuition_protos.h>
 #include <clib/exec_protos.h>
-
 #include "mandelbrot.h"
 #include "fsmstates.h"
 #include "utils/utils.h"
@@ -20,13 +19,25 @@
 #define FLOAT_TO_MFIX(x) ((LONG)((x) * MFIX_ONE))
 #define MFIX_MUL(a, b)   ((LONG)((LONG)(a) * (LONG)(b)) >> MFIX_SHIFT)
 
+// LoadRGB32 table layout: 1 header ULONG + 3 ULONGs per color + 1 terminator
+#define PALETTE_TABLE_SIZE (1 + MANDELBROT_SCREEN_COLORS * 3 + 1)
+
+// Smooth iteration value per pixel (UWORD, 6 fractional bits).
+// Encoding: sv = iter * 64 + (255 - log2_frac8(|z|²)) / 4
+// This keeps max sv = (MANDELBROT_MAX_ITER-1)*64+63 = 31999 safely in UWORD.
+// In-set sentinel: 0xFFFF (never reachable by escaped pixels).
+#define MAND_INSET   ((UWORD)0xFFFF)
+#define MAND_MAX_SV  ((UWORD)((MANDELBROT_MAX_ITER - 1) * 64 + 63))
+#define HIST_BINS    512
+
 struct MandelbrotContext {
     enum MandelbrotState state;
     struct BitMap *screenBitmaps[2];   // Chip RAM, displayable (double buffered)
     struct Screen *screens[2];
-    struct BitMap *fastBitmap;             // Fast RAM bitmap for CPU rendering
-    UWORD colorTable[MANDELBROT_SCREEN_COLORS];  // LoadRGB4 format: 0x0RGB per entry
-    UBYTE currentBufferIndex;          // 0 or 1
+    struct BitMap *fastBitmap;         // Fast RAM bitmap for CPU rendering
+    UWORD *iterBuf;                    // [SCREEN_HEIGHT * SCREEN_WIDTH] smooth values, Fast RAM
+    ULONG colorTable32[PALETTE_TABLE_SIZE];  // LoadRGB32 format
+    UBYTE currentBufferIndex;
 };
 
 static struct MandelbrotContext ctx = {
@@ -34,65 +45,278 @@ static struct MandelbrotContext ctx = {
     .screenBitmaps = {NULL, NULL},
     .screens = {NULL, NULL},
     .fastBitmap = NULL,
-    .colorTable = {0},
+    .iterBuf = NULL,
+    .colorTable32 = {0},
     .currentBufferIndex = 0
 };
 
 //----------------------------------------
-// Render the Mandelbrot set into dest (a Fast RAM bitmap).
-// Coordinates are in 14-bit fixed-point (MFIX_SHIFT).
-// Each Mandelbrot pixel is written as a 2x2 block into the 320x256 bitplane layout.
-// Pure CPU writes only — no blitter, no graphics.library (dest is in Fast RAM).
-static void calculateMandelbrot(LONG x_start, LONG y_start, LONG x_end, LONG y_end,
-                                UBYTE maxIterations, struct BitMap *dest) {
+// Oklab palette — integer only, no libm.
+//
+// Fixed-point scale: PFIX = 256 (8 fractional bits).
+// Oklab L/a/b values scaled by 256.  Oklab L range 0..1 → 0..256.
+// a/b range roughly -0.4..+0.4 → -102..+102 in this scale.
+//
+// sRGB gamma approximation via integer sqrt (no powf):
+//   true gamma:  srgb = 1.055 * lin^(1/2.4) - 0.055
+//   approx:      srgb ≈ sqrt(lin)  (error < 3%, invisible at 8-bit depth)
+//   We use a bit-by-bit integer sqrt on the 0..65535 scale.
+//----------------------------------------
+
+#define PFIX 256
+
+// Knot positions in units of (255 * PFIX) — i.e. scaled t * 255 * 256
+static const UWORD knot_pos[12] = {
+      0,  4608,  9984, 16640, 23296, 29952,
+  36608, 43264, 49920, 55296, 60672, 65280
+};
+
+// Oklab knot colours, L/a/b each scaled by PFIX=256
+// L: 0..256, a/b: signed, range ≈ -128..+128
+typedef struct { WORD L, a, b; } OklabI;
+static const OklabI knot_col[12] = {
+    { 26,   0, -51},  // deep navy
+    { 64,  -3, -77},  // blue
+    {123, -18, -56},  // blue-cyan
+    {179, -33, -18},  // cyan
+    {223, -20,  -3},  // light cyan
+    {243,   0,  13},  // near white
+    {225,  -5,  56},  // yellow
+    {171,  33,  49},  // orange
+    {120,  51,  18},  // red
+    { 79,  41,   8},  // dark red
+    { 44,  23,   3},  // very dark red
+    { 13,   3,   1},  // near-black
+};
+
+// Integer square root (bit-by-bit), input 0..65535, output 0..255
+static UWORD isqrt16(UWORD n) {
+    UWORD res = 0, bit = 0x4000;
+    while (bit > 0) {
+        UWORD tmp = res | bit;
+        if ((ULONG)tmp * tmp <= (ULONG)n) res = tmp;
+        bit >>= 1;
+    }
+    return res;
+}
+
+// Convert linear light [0..255] to sRGB [0..255] via sqrt approximation
+static UBYTE linear_to_srgb8(WORD lin) {
+    if (lin <= 0) return 0;
+    if (lin >= 255) return 255;
+    // sqrt(lin/255) * 255 = sqrt(lin*255)
+    return (UBYTE)isqrt16((UWORD)((UWORD)lin * 255));
+}
+
+static void buildPalette(void) {
+    UWORD i;
+    UBYTE k;
+
+    // Header: 256 colors starting at register 0
+    ctx.colorTable32[0] = ((ULONG)MANDELBROT_SCREEN_COLORS << 16) | 0UL;
+
+    // Index 0: black (in-set)
+    ctx.colorTable32[1] = 0x00000000;
+    ctx.colorTable32[2] = 0x00000000;
+    ctx.colorTable32[3] = 0x00000000;
+
+    // Indices 1..255: interpolate through knots in Oklab, then convert to sRGB
+    for (i = 1; i < MANDELBROT_SCREEN_COLORS; i++) {
+        // t in range 0..(255*PFIX), same scale as knot_pos
+        ULONG t = (ULONG)i * (ULONG)(255 * PFIX) / (ULONG)(MANDELBROT_SCREEN_COLORS - 1);
+        ULONG base = 1 + (ULONG)i * 3;
+        WORD  iL, ia, ib;
+        LONG  l_, m_, s_, l, m, s;
+        WORD  rl, gl, bl;
+        UBYTE r, g, b;
+        WORD  alpha256;
+
+        // Find surrounding knot pair
+        k = 0;
+        while (k < 10 && (ULONG)knot_pos[k + 1] < t) k++;
+
+        {
+            UWORD span = knot_pos[k+1] - knot_pos[k];
+            UWORD dt   = (UWORD)(t - (ULONG)knot_pos[k]);
+            // alpha in 0..256 (256 = 1.0)
+            alpha256 = (span > 0) ? (WORD)((ULONG)dt * 256 / span) : 0;
+        }
+
+        // Interpolate L/a/b
+        iL = knot_col[k].L + (WORD)(((LONG)(knot_col[k+1].L - knot_col[k].L) * alpha256) >> 8);
+        ia = knot_col[k].a + (WORD)(((LONG)(knot_col[k+1].a - knot_col[k].a) * alpha256) >> 8);
+        ib = knot_col[k].b + (WORD)(((LONG)(knot_col[k+1].b - knot_col[k].b) * alpha256) >> 8);
+
+        // Oklab → linear RGB (all values scaled by PFIX=256)
+        // Coefficients from the Oklab spec, scaled by 256:
+        //   l_ = L + 0.3963*a + 0.2158*b  → *256: +101*a/256 + 55*b/256
+        //   m_ = L - 0.1056*a - 0.0639*b  → *256: -27*a/256  - 16*b/256
+        //   s_ = L - 0.0895*a - 1.2915*b  → *256: -23*a/256  - 331*b/256
+        l_ = (LONG)iL + ((LONG)101 * ia + (LONG)55 * ib) / 256;
+        m_ = (LONG)iL - ((LONG) 27 * ia + (LONG)16 * ib) / 256;
+        s_ = (LONG)iL - ((LONG) 23 * ia + (LONG)331 * ib) / 256;
+
+        // cube — values are in PFIX scale (0..256), cube overflows LONG if not clamped
+        // clamp to 0..256 first
+        if (l_ < 0) l_ = 0; else if (l_ > 256) l_ = 256;
+        if (m_ < 0) m_ = 0; else if (m_ > 256) m_ = 256;
+        if (s_ < 0) s_ = 0; else if (s_ > 256) s_ = 256;
+        // cube: (l_/256)^3 * 256 = l_^3 / 256^2
+        l = (l_ * l_ / 256) * l_ / 256;
+        m = (m_ * m_ / 256) * m_ / 256;
+        s = (s_ * s_ / 256) * s_ / 256;
+
+        // Linear RGB from LMS (Oklab matrix, coefficients *256, then >>8 to keep PFIX scale)
+        //  R =  4.0767*l - 3.3077*m + 0.2310*s
+        //  G = -1.2684*l + 2.6098*m - 0.3413*s
+        //  B = -0.0042*l - 0.7034*m + 1.7076*s
+        rl = (WORD)(( 1044L * l - 847L * m +  59L * s) / 256);
+        gl = (WORD)(( -325L * l + 668L * m -  87L * s) / 256);
+        bl = (WORD)((   -1L * l - 180L * m + 437L * s) / 256);
+
+        r = linear_to_srgb8(rl);
+        g = linear_to_srgb8(gl);
+        b = linear_to_srgb8(bl);
+
+        ctx.colorTable32[base]     = (ULONG)r << 24;
+        ctx.colorTable32[base + 1] = (ULONG)g << 24;
+        ctx.colorTable32[base + 2] = (ULONG)b << 24;
+    }
+
+    // Terminator
+    ctx.colorTable32[PALETTE_TABLE_SIZE - 1] = 0x00000000;
+}
+
+//----------------------------------------
+// 8 fractional bits of log2(x), for x > 0.
+// Returns the bits below the leading 1 of x, packed into a byte.
+// Used for smooth coloring: gives fractional part of log2(|z|²) at escape.
+static UBYTE log2_frac8(ULONG x) {
+    UBYTE k = 0;
+    ULONG t = x;
+    if (t >= 0x10000UL) { t >>= 16; k += 16; }
+    if (t >= 0x100UL)   { t >>= 8;  k += 8;  }
+    if (t >= 0x10UL)    { t >>= 4;  k += 4;  }
+    if (t >= 0x4UL)     { t >>= 2;  k += 2;  }
+    if (t >= 0x2UL)     { t >>= 1;  k += 1;  }
+    // k = floor(log2(x)); extract the 8 bits just below the leading 1
+    if (k >= 8)
+        return (UBYTE)(x >> (k - 8)) & 0xFF;
+    else
+        return (UBYTE)(x << (8 - k)) & 0xFF;
+}
+
+//----------------------------------------
+// Fill ctx.iterBuf with smooth iteration values (UWORD per pixel, 6 frac bits).
+// Encoding: sv = iter*64 + (63 - log2_frac8(|z|²)/4)
+//   MAND_INSET (0xFFFF) → all 4 subsamples inside (true interior, black)
+//   0..MAND_MAX_SV      → exterior
+// Uses 2×2 supersampling. Coordinates in 14-bit fixed-point.
+static void calculateMandelbrot(LONG x_start, LONG y_start, LONG x_end, LONG y_end) {
     UWORD mx, my;
-    UWORD bytesPerRow = dest->BytesPerRow;
-    LONG dx = (x_end - x_start) / MANDELBROT_WIDTH;
-    LONG dy = (y_end - y_start) / MANDELBROT_HEIGHT;
+    LONG dx = (x_end - x_start) / MANDELBROT_SCREEN_WIDTH;
+    LONG dy = (y_end - y_start) / MANDELBROT_SCREEN_HEIGHT;
+    LONG hdx = dx >> 1;
+    LONG hdy = dy >> 1;
 
-    for (my = 0; my < MANDELBROT_HEIGHT; my++) {
-        LONG c_i = y_start + (LONG)my * dy;
-        UWORD sy = my * 2;  // screen Y of the 2x2 block top row
+    for (my = 0; my < MANDELBROT_SCREEN_HEIGHT; my++) {
+        LONG base_ci = y_start + (LONG)my * dy;
+        for (mx = 0; mx < MANDELBROT_SCREEN_WIDTH; mx++) {
+            LONG base_cr = x_start + (LONG)mx * dx;
+            ULONG sum = 0;
+            UBYTE inset_count = 0;
+            UBYTE s;
 
-        for (mx = 0; mx < MANDELBROT_WIDTH; mx++) {
-            LONG c_r = x_start + (LONG)mx * dx;
-            LONG z_r = 0, z_i = 0;
-            UBYTE iter = 0;
+            for (s = 0; s < 4; s++) {
+                LONG c_r = base_cr + ((s & 1) ? hdx : 0);
+                LONG c_i = base_ci + ((s & 2) ? hdy : 0);
+                LONG z_r = 0, z_i = 0, z_r2 = 0, z_i2 = 0, new_zr;
+                UWORD iter = 0;
 
-            // Iterate z = z² + c.
-            // Escape is checked before the multiply so z is always bounded
-            // by 2.0 at the time of multiplication — keeping products in 32 bits.
-            while (iter < maxIterations) {
-                LONG z_r2 = MFIX_MUL(z_r, z_r);
-                LONG z_i2 = MFIX_MUL(z_i, z_i);
-                if (z_r2 + z_i2 > 4L * MFIX_ONE) break;  // escaped
-                LONG new_zr = z_r2 - z_i2 + c_r;
-                z_i = 2L * MFIX_MUL(z_r, z_i) + c_i;
-                z_r = new_zr;
-                iter++;
+                while (iter < MANDELBROT_MAX_ITER) {
+                    z_r2 = MFIX_MUL(z_r, z_r);
+                    z_i2 = MFIX_MUL(z_i, z_i);
+                    if (z_r2 + z_i2 > 4L * MFIX_ONE) break;
+                    new_zr = z_r2 - z_i2 + c_r;
+                    z_i = 2L * MFIX_MUL(z_r, z_i) + c_i;
+                    z_r = new_zr;
+                    iter++;
+                }
+
+                if (iter >= MANDELBROT_MAX_ITER) {
+                    inset_count++;
+                    sum += (ULONG)MAND_MAX_SV;  // in-set subsample → max exterior value for avg
+                } else {
+                    UBYTE frac = log2_frac8((ULONG)(z_r2 + z_i2));
+                    sum += (ULONG)iter * 64 + (ULONG)(63 - (frac >> 2));
+                }
             }
 
-            // Color: 0 = in-set (never escaped), 1..maxIterations = escaped after N steps
-            UBYTE color = (iter >= maxIterations) ? 0 : (UBYTE)(iter + 1);
+            // Only mark as in-set if ALL 4 subsamples are inside
+            if (inset_count == 4)
+                ctx.iterBuf[(ULONG)my * MANDELBROT_SCREEN_WIDTH + mx] = MAND_INSET;
+            else
+                ctx.iterBuf[(ULONG)my * MANDELBROT_SCREEN_WIDTH + mx] = (UWORD)(sum >> 2);
+        }
+    }
+}
 
-            // Write 2x2 block into bitplanes via CPU.
-            // sx is always even (mx*2), so both pixels always fall in the same byte.
-            UWORD sx = mx * 2;
-            UWORD byteIdx = sx >> 3;           // byte within the row
-            UBYTE bitMask = 0xC0 >> (sx & 7);  // two adjacent bits
+//----------------------------------------
+// Map ctx.iterBuf → ctx.fastBitmap planes via histogram equalization.
+// 85% equalization blended with 15% log mapping for natural contrast.
+// HIST_BINS buckets cover [0..MAND_MAX_SV], in-set pixels (MAND_INSET) → color 0.
+static void renderToPlanes(void) {
+    ULONG hist[HIST_BINS];
+    UWORD mx, my;
+    ULONG total_exterior = 0;
+    ULONG cumsum, i;
+    UWORD bytesPerRow = ctx.fastBitmap->BytesPerRow;
 
-            UBYTE p;
+    // Build histogram over exterior pixels
+    for (i = 0; i < HIST_BINS; i++) hist[i] = 0;
+    for (i = 0; i < (ULONG)MANDELBROT_SCREEN_WIDTH * MANDELBROT_SCREEN_HEIGHT; i++) {
+        UWORD sv = ctx.iterBuf[i];
+        if (sv != MAND_INSET) {
+            hist[(ULONG)sv * (HIST_BINS - 1) / MAND_MAX_SV]++;
+            total_exterior++;
+        }
+    }
+
+    // Build cumulative histogram → equalized palette index (1..255)
+    // eq_map[bin] = 1 + cumulative_fraction * 254
+    // Stored in hist[] in-place to save memory: overwrite with mapped value.
+    cumsum = 0;
+    for (i = 0; i < HIST_BINS; i++) {
+        cumsum += hist[i];
+        // 85% equalized + 15% linear (log-like at natural scale)
+        if (total_exterior > 0) {
+            ULONG eq_part  = cumsum * 254 / total_exterior;
+            ULONG lin_part = i * 254 / (HIST_BINS - 1);
+            hist[i] = (UBYTE)(1 + (eq_part * 85 + lin_part * 15) / 100);
+        } else {
+            hist[i] = 1;
+        }
+    }
+
+    // Write planes
+    for (my = 0; my < MANDELBROT_SCREEN_HEIGHT; my++) {
+        for (mx = 0; mx < MANDELBROT_SCREEN_WIDTH; mx++) {
+            UWORD sv = ctx.iterBuf[(ULONG)my * MANDELBROT_SCREEN_WIDTH + mx];
+            UBYTE color, p;
+            UWORD byteIdx = mx >> 3;
+            UBYTE bitMask = 0x80 >> (mx & 7);
+
+            if (sv == MAND_INSET) {
+                color = 0;
+            } else {
+                ULONG bin = (ULONG)sv * (HIST_BINS - 1) / MAND_MAX_SV;
+                color = (UBYTE)hist[bin];
+            }
+
             for (p = 0; p < MANDELBROT_SCREEN_DEPTH; p++) {
-                UBYTE *plane = (UBYTE *)dest->Planes[p];
-                UBYTE *row0 = plane + (ULONG)sy       * bytesPerRow + byteIdx;
-                UBYTE *row1 = plane + (ULONG)(sy + 1) * bytesPerRow + byteIdx;
-                if (color & (1 << p)) {
-                    *row0 |= bitMask;
-                    *row1 |= bitMask;
-                } else {
-                    *row0 &= ~bitMask;
-                    *row1 &= ~bitMask;
-                }
+                UBYTE *row = (UBYTE *)ctx.fastBitmap->Planes[p]
+                           + (ULONG)my * bytesPerRow + byteIdx;
+                if (color & (1 << p)) *row |= bitMask; else *row &= ~bitMask;
             }
         }
     }
@@ -121,6 +345,15 @@ UWORD initMandelbrot(void) {
         goto __exit_init_mandelbrot;
     }
 
+    // Allocate Fast RAM iteration buffer (one UWORD per pixel)
+    ctx.iterBuf = (UWORD *)AllocVec(
+        (ULONG)MANDELBROT_SCREEN_WIDTH * MANDELBROT_SCREEN_HEIGHT * sizeof(UWORD),
+        MEMF_FAST | MEMF_CLEAR);
+    if (!ctx.iterBuf) {
+        writeLog("Error: Could not allocate iterBuf\n");
+        goto __exit_init_mandelbrot;
+    }
+
     // Allocate Fast RAM bitmap for CPU rendering.
     // Planes are explicitly placed in Fast RAM so the blitter never touches them.
     ctx.fastBitmap = (struct BitMap *)AllocVec(sizeof(struct BitMap), MEMF_ANY | MEMF_CLEAR);
@@ -139,43 +372,8 @@ UWORD initMandelbrot(void) {
         }
     }
 
-    // Initialize color table (LoadRGB4 format: 0x0RGB per entry, 4 bits per channel)
-    // Index 0: black (in-set pixels)
-    // Indices 1..15: blue → cyan → green → yellow → red
-    // 31 hues evenly spaced at 360/31 ≈ 11.6° steps, starting at H=240° (blue).
-    // HSV S=1 V=1 → converted to 4-bit RGB (0x0RGB).
-    ctx.colorTable[0]  = 0x0000;  // black (in-set)
-    ctx.colorTable[1]  = 0x000F;  // H=240° blue
-    ctx.colorTable[2]  = 0x030F;  // H=252°
-    ctx.colorTable[3]  = 0x060F;  // H=263°
-    ctx.colorTable[4]  = 0x090F;  // H=275°
-    ctx.colorTable[5]  = 0x0C0F;  // H=286°
-    ctx.colorTable[6]  = 0x0F0F;  // H=298° magenta
-    ctx.colorTable[7]  = 0x0F0D;  // H=310°
-    ctx.colorTable[8]  = 0x0F0A;  // H=321°
-    ctx.colorTable[9]  = 0x0F07;  // H=333°
-    ctx.colorTable[10] = 0x0F04;  // H=345°
-    ctx.colorTable[11] = 0x0F01;  // H=356°
-    ctx.colorTable[12] = 0x0F20;  // H=8°
-    ctx.colorTable[13] = 0x0F50;  // H=19°
-    ctx.colorTable[14] = 0x0F80;  // H=31°
-    ctx.colorTable[15] = 0x0FB0;  // H=43°
-    ctx.colorTable[16] = 0x0FE0;  // H=54°
-    ctx.colorTable[17] = 0x0EF0;  // H=66°
-    ctx.colorTable[18] = 0x0BF0;  // H=77°
-    ctx.colorTable[19] = 0x08F0;  // H=89°
-    ctx.colorTable[20] = 0x05F0;  // H=101°
-    ctx.colorTable[21] = 0x02F0;  // H=112°
-    ctx.colorTable[22] = 0x00F1;  // H=124°
-    ctx.colorTable[23] = 0x00F4;  // H=135°
-    ctx.colorTable[24] = 0x00F7;  // H=147°
-    ctx.colorTable[25] = 0x00FA;  // H=159°
-    ctx.colorTable[26] = 0x00FD;  // H=170°
-    ctx.colorTable[27] = 0x00FF;  // H=182° cyan
-    ctx.colorTable[28] = 0x00CF;  // H=194°
-    ctx.colorTable[29] = 0x009F;  // H=205°
-    ctx.colorTable[30] = 0x006F;  // H=217°
-    ctx.colorTable[31] = 0x003F;  // H=229°
+    // Build 256-color Oklab palette
+    buildPalette();
 
     // Create screens
     ctx.screens[0] = createScreen(ctx.screenBitmaps[0], TRUE,
@@ -197,18 +395,18 @@ UWORD initMandelbrot(void) {
     }
 
     ctx.currentBufferIndex = 0;
-    LoadRGB4(&ctx.screens[0]->ViewPort, ctx.colorTable, MANDELBROT_SCREEN_COLORS);
-    LoadRGB4(&ctx.screens[1]->ViewPort, ctx.colorTable, MANDELBROT_SCREEN_COLORS);
+    LoadRGB32(&ctx.screens[0]->ViewPort, ctx.colorTable32);
+    LoadRGB32(&ctx.screens[1]->ViewPort, ctx.colorTable32);
 
     // Calculate Mandelbrot set into Fast RAM bitmap.
-    // Full view: x=[-2.5, 1.0], y=[-1.25, 1.25], 31 exterior colors.
+    // Triple Spiral Valley: centred on (-0.088, 0.654), half-width 0.1, half-height 0.075.
     writeLog("Calculating Mandelbrot...\n");
     calculateMandelbrot(
-        FLOAT_TO_MFIX(-2.5), FLOAT_TO_MFIX(-1.25),
-        FLOAT_TO_MFIX(1.0),  FLOAT_TO_MFIX(1.25),
-        MANDELBROT_SCREEN_COLORS - 1,
-        ctx.fastBitmap
+        FLOAT_TO_MFIX(-0.050), FLOAT_TO_MFIX( 0.635),
+        FLOAT_TO_MFIX( 0.030), FLOAT_TO_MFIX( 0.695)
     );
+    writeLog("Rendering to planes...\n");
+    renderToPlanes();
     writeLog("Mandelbrot done.\n");
 
     ScreenToFront(ctx.screens[ctx.currentBufferIndex]);
@@ -277,6 +475,11 @@ void exitMandelbrot(void) {
             FreeBitMap(ctx.screenBitmaps[i]);
             ctx.screenBitmaps[i] = NULL;
         }
+    }
+
+    if (ctx.iterBuf) {
+        FreeVec(ctx.iterBuf);
+        ctx.iterBuf = NULL;
     }
 
     if (ctx.fastBitmap) {
