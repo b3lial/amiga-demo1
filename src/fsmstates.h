@@ -9,11 +9,9 @@ enum MainFSMState {
     FSM_SHOWLOGO_FINISHED = 4,
     FSM_ROTATINGCUBE = 5,
     FSM_ROTATINGCUBE_FINISHED = 6,
-    FSM_MANDELBROT = 7,
-    FSM_MANDELBROT_FINISHED = 8,
-    FSM_STOP = 9,
-    FSM_ERROR = 10,
-    FSM_QUIT = 11
+    FSM_STOP = 7,
+    FSM_ERROR = 8,
+    FSM_QUIT = 9
 };
 
 #endif

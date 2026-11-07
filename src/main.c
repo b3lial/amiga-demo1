@@ -13,7 +13,7 @@
 #include "effects/textscroller.h"
 #include "effects/showlogo.h"
 #include "effects/rotatingcube.h"
-#include "effects/mandelbrot.h"
+
 
 int main(void) {
     enum MainFSMState fsmCurrentState = FSM_START;
@@ -86,16 +86,7 @@ int main(void) {
                 break;
 
             case FSM_ROTATINGCUBE_FINISHED:
-                fsmNextState = initMandelbrot();
                 exitRotatingCube();
-                break;
-
-            case FSM_MANDELBROT:
-                fsmNextState = fsmMandelbrot();
-                break;
-
-            case FSM_MANDELBROT_FINISHED:
-                exitMandelbrot();
                 fsmNextState = FSM_STOP;
                 break;
 
