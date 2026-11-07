@@ -1,6 +1,14 @@
 #!/bin/bash
 SERVICE_NAME=amiga-gcc-build-process
 IMAGE=amiga-gcc-builder
+
+# Check if container engine is running, start it if not
+if ! container system status > /dev/null 2>&1; then
+    echo "Container engine not running. Starting container system..."
+    container system start
+    sleep 2
+fi
+
 PROCESS_RUNNING=`container ls -a | grep $SERVICE_NAME`
 
 if [ ! -f demo-1-gcc ]
