@@ -14,7 +14,7 @@ struct PlasmaContext {
     enum PlasmaState state;
     struct BitMap *screenBitmaps[2];
     struct Screen *plasmaScreens[2];
-    ULONG colorTable32[1 + PLASMA_SCREEN_COLORS * 3 + 1];
+    ULONG colorTable32[COLORMAP32_LONG_SIZE(PLASMA_SCREEN_COLORS)];
     UBYTE currentBufferIndex;
 };
 
@@ -64,46 +64,33 @@ UWORD initPlasma(void) {
         goto __exit_init_plasma;
     }
 
-    // Build beautiful rainbow plasma palette using LoadRGB32 format (AGA 8-bit per channel)
-    // Format: header=(count<<16)|start_reg, then RGB triplets as 0xRRRRRRRR/0xGGGGGGGG/0xBBBBBBBB
+    // Build cyclic rainbow palette in LoadRGB32 format (AGA 8-bit per channel)
+    // Format: header=(count<<16)|start_reg, RGB triplets, 0 terminator
     ctx.colorTable32[0] = ((ULONG)PLASMA_SCREEN_COLORS << 16) | 0;
 
-    // Generate smooth rainbow gradient through multiple hues
+    // Walk the hue circle as 6 sectors of 256 steps each (full saturation/value).
+    // Last entry wraps seamlessly back to entry 0, so the palette can be cycled.
     for (UWORD i = 0; i < PLASMA_SCREEN_COLORS; i++) {
-        ULONG hue = (i * 360) / PLASMA_SCREEN_COLORS;
-        
-        // HSV to RGB conversion (integer math, no libm)
-        UBYTE sector = (hue / 60) % 6;
-        ULONG fractionalHue = (hue * 256) / 60;
-        UBYTE p = 0;
-        UBYTE q = (256 * (256 - fractionalHue)) >> 8;
-        UBYTE t = (256 * fractionalHue) >> 8;
-        
-        // Full saturation and value for vibrant colors
+        UWORD pos = (ULONG)i * 6 * 256 / PLASMA_SCREEN_COLORS;
+        UBYTE sector = pos >> 8;
+        UBYTE rise = pos & 0xFF;
+        UBYTE fall = 255 - rise;
         UBYTE r, g, b;
-        
+
         switch (sector) {
-            case 0: // Red to yellow
-                r = 255; g = t; b = p; break;
-            case 1: // Yellow to green
-                r = q; g = 255; b = p; break;
-            case 2: // Green to cyan
-                r = p; g = 255; b = t; break;
-            case 3: // Cyan to blue
-                r = p; g = q; b = 255; break;
-            case 4: // Blue to magenta
-                r = t; g = p; b = 255; break;
-            case 5: // Magenta to red
-                r = 255; g = p; b = q; break;
-            default:
-                r = 255; g = 0; b = 0; break;
+            case 0:  r = 255;  g = rise; b = 0;    break; // red -> yellow
+            case 1:  r = fall; g = 255;  b = 0;    break; // yellow -> green
+            case 2:  r = 0;    g = 255;  b = rise; break; // green -> cyan
+            case 3:  r = 0;    g = fall; b = 255;  break; // cyan -> blue
+            case 4:  r = rise; g = 0;    b = 255;  break; // blue -> magenta
+            default: r = 255;  g = 0;    b = fall; break; // magenta -> red
         }
-        
-        // Replicate 8-bit value across all 4 bytes for LoadRGB32
-        ctx.colorTable32[1 + i * 3 + 0] = ((ULONG)r << 24) | ((ULONG)r << 16) | ((ULONG)r << 8) | r;
-        ctx.colorTable32[1 + i * 3 + 1] = ((ULONG)g << 24) | ((ULONG)g << 16) | ((ULONG)g << 8) | g;
-        ctx.colorTable32[1 + i * 3 + 2] = ((ULONG)b << 24) | ((ULONG)b << 16) | ((ULONG)b << 8) | b;
+
+        ctx.colorTable32[1 + i * 3 + 0] = SPREAD(r);
+        ctx.colorTable32[1 + i * 3 + 1] = SPREAD(g);
+        ctx.colorTable32[1 + i * 3 + 2] = SPREAD(b);
     }
+    ctx.colorTable32[COLORMAP32_LONG_SIZE(PLASMA_SCREEN_COLORS) - 1] = 0;
 
     // Create first screen (hidden initially)
     ctx.plasmaScreens[0] = createScreen(ctx.screenBitmaps[0], TRUE,
