@@ -9,6 +9,11 @@ enum PlasmaState {
     PLASMA_EXIT = 2
 };
 
+#define PLASMA_SCREEN_WIDTH  320
+#define PLASMA_SCREEN_HEIGHT 256
+#define PLASMA_SCREEN_DEPTH  8
+#define PLASMA_SCREEN_COLORS 256
+
 UWORD fsmPlasma(void);
 UWORD initPlasma(void);
 void exitPlasma(void);
