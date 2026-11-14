@@ -13,6 +13,7 @@
 #include "effects/textscroller.h"
 #include "effects/showlogo.h"
 #include "effects/rotatingcube.h"
+#include "effects/plasma.h"
 
 
 int main(void) {
@@ -86,7 +87,16 @@ int main(void) {
                 break;
 
             case FSM_ROTATINGCUBE_FINISHED:
+                fsmNextState = initPlasma();
                 exitRotatingCube();
+                break;
+
+            case FSM_PLASMA:
+                fsmNextState = fsmPlasma();
+                break;
+
+            case FSM_PLASMA_FINISHED:
+                exitPlasma();
                 fsmNextState = FSM_STOP;
                 break;
 
