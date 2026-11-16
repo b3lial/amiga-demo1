@@ -54,7 +54,7 @@ static struct TextScrollerContext ctx = {
     .textScrollerscreen1 = NULL
 };
 
-__far extern struct Custom custom;
+extern struct Custom custom;
 
 //----------------------------------------
 UWORD fsmTextScroller(void) {

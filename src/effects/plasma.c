@@ -46,6 +46,14 @@ UWORD fsmPlasma(void) {
 }
 
 UWORD initPlasma(void) {
+    UWORD i;
+    UWORD pos;
+    UBYTE sector;
+    UBYTE rise;
+    UBYTE fall;
+    UBYTE r;
+    UBYTE g;
+    UBYTE b;
     writeLog("\n\n== initPlasma() ==\n");
 
     // Allocate first screen bitmap for double buffering
@@ -70,12 +78,11 @@ UWORD initPlasma(void) {
 
     // Walk the hue circle as 6 sectors of 256 steps each (full saturation/value).
     // Last entry wraps seamlessly back to entry 0, so the palette can be cycled.
-    for (UWORD i = 0; i < PLASMA_SCREEN_COLORS; i++) {
-        UWORD pos = (ULONG)i * 6 * 256 / PLASMA_SCREEN_COLORS;
-        UBYTE sector = pos >> 8;
-        UBYTE rise = pos & 0xFF;
-        UBYTE fall = 255 - rise;
-        UBYTE r, g, b;
+    for (i = 0; i < PLASMA_SCREEN_COLORS; i++) {
+        pos = (UWORD)((ULONG)i * 6 * 256 / PLASMA_SCREEN_COLORS);
+        sector = (UBYTE)(pos >> 8);
+        rise = (UBYTE)(pos & 0xFF);
+        fall = (UBYTE)(255 - rise);
 
         switch (sector) {
             case 0:  r = 255;  g = rise; b = 0;    break; // red -> yellow

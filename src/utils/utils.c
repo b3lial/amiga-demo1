@@ -14,7 +14,7 @@
 #include "utils.h"
 
 static BOOL mousePressed = FALSE;
-__far extern struct CIA ciaa;
+extern struct CIA ciaa;
 
 BOOL mouseClick(void) {
     if (!mousePressed && mouseCiaStatus()) {

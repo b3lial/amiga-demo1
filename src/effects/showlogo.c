@@ -43,7 +43,7 @@ static struct ShowLogoContext ctx = {
     .bgTask = NULL
 };
 
-__far extern struct Custom custom;
+extern struct Custom custom;
 
 #define SIGF_PREPARATION_DONE (1L << 16)  // Signal bit for background task completion
 
@@ -167,6 +167,7 @@ UWORD fsmShowLogo(void) {
 //----------------------------------------
 UWORD initShowLogo(void) {
     UWORD i = 0;
+    WORD logoX, logoY;
     struct Rectangle logoClip;
     writeLog("\n\n== initShowLogo() ==\n");
 
@@ -257,7 +258,6 @@ UWORD initShowLogo(void) {
         SHOWLOGO_SCREEN_HEIGHT + SHOWLOGO_SCREEN_BORDER,
         SHOWLOGO_DAWN_WIDTH, SHOWLOGO_DAWN_HEIGHT
     );
-    WORD logoX, logoY;
     getNextPosition(&logoX, &logoY);
 
     // blit logo into screenBitmap and delete old bitmap

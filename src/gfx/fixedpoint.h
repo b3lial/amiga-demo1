@@ -52,8 +52,10 @@ static inline fix16 safe_fixmult(fix16 x, fix16 y) {
 }
 
 static inline fix16 safe_fixdiv(fix16 x, fix16 y) {
+    LONG result;  // C89: declarations must come before statements
+
     if (y == 0) return 0;  // Division by zero protection
-    LONG result = ((LONG)x << FIXSHIFT) / (LONG)y;
+    result = ((LONG)x << FIXSHIFT) / (LONG)y;
     if (result > 32767) return 32767;
     if (result < -32768) return -32768;
     return (fix16)result;
