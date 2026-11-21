@@ -14,6 +14,11 @@ enum PlasmaState {
 #define PLASMA_SCREEN_DEPTH  8
 #define PLASMA_SCREEN_COLORS 256
 
+// Plasma is computed at half resolution and scaled up 2x by the blitter.
+// Width must be a multiple of 32 so the c2p takes its fast longword path.
+#define PLASMA_CHUNKY_WIDTH  (PLASMA_SCREEN_WIDTH / 2)
+#define PLASMA_CHUNKY_HEIGHT (PLASMA_SCREEN_HEIGHT / 2)
+
 UWORD fsmPlasma(void);
 UWORD initPlasma(void);
 void exitPlasma(void);

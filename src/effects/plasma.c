@@ -1,6 +1,7 @@
 #include <exec/types.h>
 #include <exec/memory.h>
 #include <graphics/gfx.h>
+#include <graphics/scale.h>
 #include <clib/graphics_protos.h>
 #include <clib/intuition_protos.h>
 #include <clib/exec_protos.h>
@@ -9,6 +10,7 @@
 #include "fsmstates.h"
 #include "utils/utils.h"
 #include "gfx/graphicscontroller.h"
+#include "gfx/chunkyconverter.h"
 
 struct PlasmaContext {
     enum PlasmaState state;
@@ -16,6 +18,9 @@ struct PlasmaContext {
     struct Screen *plasmaScreens[2];
     ULONG colorTable32[COLORMAP32_LONG_SIZE(PLASMA_SCREEN_COLORS)];
     UBYTE currentBufferIndex;
+    UBYTE *chunkyBuffer;          // half resolution plasma, fast RAM
+    struct BitMap *smallBitmap;   // half resolution planar copy, chip RAM (blitter source)
+    UWORD frame;
 };
 
 static struct PlasmaContext ctx = {
@@ -23,10 +28,61 @@ static struct PlasmaContext ctx = {
     .screenBitmaps = {NULL, NULL},
     .plasmaScreens = {NULL, NULL},
     .colorTable32 = {0},
-    .currentBufferIndex = 0
+    .currentBufferIndex = 0,
+    .chunkyBuffer = NULL,
+    .smallBitmap = NULL,
+    .frame = 0
 };
 
+//----------------------------------------
+// Fill the half resolution chunky buffer.
+// TODO: replace this placeholder pattern with the real plasma
+static void computePlasma(void) {
+    UBYTE *pixel = ctx.chunkyBuffer;
+    UWORD x;
+    UWORD y;
+
+    for (y = 0; y < PLASMA_CHUNKY_HEIGHT; y++) {
+        for (x = 0; x < PLASMA_CHUNKY_WIDTH; x++) {
+            *pixel++ = (UBYTE)(x + y + ctx.frame);
+        }
+    }
+}
+
+//----------------------------------------
+// chunky (fast RAM) -> c2p -> small planar bitmap -> blitter 2x scale -> screen bitmap
+static void renderFrame(struct BitMap *destination) {
+    struct c2pStruct c2p;
+    struct BitScaleArgs scale = {0};
+
+    computePlasma();
+
+    c2p.bmap = ctx.smallBitmap;
+    c2p.startX = 0;
+    c2p.startY = 0;
+    c2p.width = PLASMA_CHUNKY_WIDTH;
+    c2p.height = PLASMA_CHUNKY_HEIGHT;
+    c2p.chunkybuffer = ctx.chunkyBuffer;
+    ChunkyToPlanarAsm(&c2p);
+
+    scale.bsa_SrcWidth = PLASMA_CHUNKY_WIDTH;
+    scale.bsa_SrcHeight = PLASMA_CHUNKY_HEIGHT;
+    scale.bsa_XSrcFactor = 1;
+    scale.bsa_YSrcFactor = 1;
+    scale.bsa_XDestFactor = 2;
+    scale.bsa_YDestFactor = 2;
+    scale.bsa_SrcBitMap = ctx.smallBitmap;
+    scale.bsa_DestBitMap = destination;
+    BitMapScale(&scale);
+    WaitBlit();
+
+    ctx.frame++;
+}
+
+//----------------------------------------
 UWORD fsmPlasma(void) {
+    UBYTE backBuffer;
+
     if (mouseClick()) {
         ctx.state = PLASMA_EXIT;
     }
@@ -36,7 +92,12 @@ UWORD fsmPlasma(void) {
             ctx.state = PLASMA_ANIMATE;
             break;
         case PLASMA_ANIMATE:
-            // TODO: implement plasma effect
+            // render into the hidden screen, then show it at vertical blank
+            backBuffer = 1 - ctx.currentBufferIndex;
+            renderFrame(ctx.screenBitmaps[backBuffer]);
+            WaitTOF();
+            ScreenToFront(ctx.plasmaScreens[backBuffer]);
+            ctx.currentBufferIndex = backBuffer;
             break;
         case PLASMA_EXIT:
             return FSM_PLASMA_FINISHED;
@@ -69,6 +130,21 @@ UWORD initPlasma(void) {
                                        PLASMA_SCREEN_DEPTH, BMF_DISPLAYABLE | BMF_CLEAR, NULL);
     if (!ctx.screenBitmaps[1]) {
         writeLog("Error: Could not allocate plasma bitmap 1\n");
+        goto __exit_init_plasma;
+    }
+
+    // Half resolution chunky buffer in fast RAM (CPU renders here)
+    ctx.chunkyBuffer = AllocVec(PLASMA_CHUNKY_WIDTH * PLASMA_CHUNKY_HEIGHT, MEMF_ANY | MEMF_CLEAR);
+    if (!ctx.chunkyBuffer) {
+        writeLog("Error: Could not allocate plasma chunky buffer\n");
+        goto __exit_init_plasma;
+    }
+
+    // Half resolution planar bitmap in chip RAM, source for the blitter scaling
+    ctx.smallBitmap = AllocBitMap(PLASMA_CHUNKY_WIDTH, PLASMA_CHUNKY_HEIGHT,
+                                  PLASMA_SCREEN_DEPTH, BMF_CLEAR, NULL);
+    if (!ctx.smallBitmap) {
+        writeLog("Error: Could not allocate plasma small bitmap\n");
         goto __exit_init_plasma;
     }
 
@@ -124,6 +200,10 @@ UWORD initPlasma(void) {
     LoadRGB32(&ctx.plasmaScreens[0]->ViewPort, ctx.colorTable32);
     LoadRGB32(&ctx.plasmaScreens[1]->ViewPort, ctx.colorTable32);
 
+    // Render the first frame before showing the screen, otherwise the
+    // cleared bitmap would flash in palette color 0 (red)
+    renderFrame(ctx.screenBitmaps[ctx.currentBufferIndex]);
+
     // Make screen visible
     ScreenToFront(ctx.plasmaScreens[ctx.currentBufferIndex]);
 
@@ -157,9 +237,20 @@ void exitPlasma(void) {
         }
     }
 
-    // Reset state and buffer index
+    if (ctx.smallBitmap) {
+        FreeBitMap(ctx.smallBitmap);
+        ctx.smallBitmap = NULL;
+    }
+
+    if (ctx.chunkyBuffer) {
+        FreeVec(ctx.chunkyBuffer);
+        ctx.chunkyBuffer = NULL;
+    }
+
+    // Reset state, buffer index and animation
     ctx.state = PLASMA_INIT;
     ctx.currentBufferIndex = 0;
+    ctx.frame = 0;
 
     writeLog("Plasma effect cleaned up\n");
 }
